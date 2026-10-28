@@ -60,6 +60,7 @@ Fuentes: enunciados "[RETO 6] El salto profesional" y "[RETO 9] La documentació
 | D23 | 19/10 | Descanso: contador pasivo sin alarma | Pablo lo ve pesado; ACSM 2026: el descanso no cambia la fuerza |
 | D24 | 19/10 | Nombre: BUDDY. IA: Claude (API de Anthropic) | Decisión de Pablo |
 | D25 | 19/10 | Precio premium: 5 €/mes [hipótesis] | Franja baja frente a referencias (Hevy, Strong, SensAI, Fitbod; ver PRD sección 14) |
+| D26 | 28/10 | Supabase con claves publishable/secret, no `anon`/`service_role` | Las legacy dejan de funcionar a finales de 2026; las nuevas se rotan sin caída y la secreta se rechaza desde navegador ([Supabase — migrating to new API keys](https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys)) |
 | — | 19/10 | Copyright del PAR-Q+: riesgo conocido, aceptado para la demo | Se revisa si el producto evoluciona |
 
 ## 4. Abierto

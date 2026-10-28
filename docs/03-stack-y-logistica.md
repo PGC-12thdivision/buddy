@@ -16,7 +16,7 @@
 `feature/<tarea>` → PR a `staging` → prueba en la URL de staging → PR a `main` → producción. Nada directo a `main` (rama protegida). Commits pequeños y frecuentes.
 
 ## Variables de entorno (por entorno)
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `CRON_SECRET`.
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `CRON_SECRET`.
 Ninguna clave en el repo; en local, `.env.local` (dentro de `.gitignore`).
 
 ## Dónde se trabaja cada cosa
@@ -41,9 +41,9 @@ Estimación: la de 3–5 jornadas ya no es válida porque el alcance creció en 
 
 ## Checklist de la fase 0 (Pablo)
 - [x] Crear el proyecto de Claude y subir estos documentos.
-- [ ] Repo vacío en GitHub.
-- [ ] Copiar al repo: `CLAUDE.md` en la raíz; `01-contexto-y-criterios.md`, `02-prd-v1.md` y `03-stack-y-logistica.md` en `docs/`.
-- [ ] Dos proyectos Supabase en la región UE: `staging` y `prod`.
+- [x] Repo en GitHub (público): `PGC-12thdivision/buddy`, ramas `main` (protegida) y `staging`.
+- [x] Copiar al repo: `CLAUDE.md` en la raíz; `01-contexto-y-criterios.md`, `02-prd-v1.md` y `03-stack-y-logistica.md` en `docs/`.
+- [x] Dos proyectos Supabase en la región UE: `staging` y `prod`.
 - [ ] API key de Anthropic en la Console, con créditos.
 - [ ] Stripe en modo test y Resend: claves disponibles (las cuentas ya existen).
 - [ ] Vercel conectado a GitHub.
