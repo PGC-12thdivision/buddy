@@ -30,7 +30,7 @@ Ninguna clave en el repo; en local, `.env.local` (dentro de `.gitignore`).
 ## Fases
 | Fase | Pablo | Claude |
 |---|---|---|
-| 0. Bases | Cuentas, proyectos y accesos | Esqueleto del repo, ramas, Vercel, Supabase ×2 |
+| 0. Bases ✓ | Cuentas, proyectos y accesos | Esqueleto del repo, ramas, Vercel, Supabase ×2 |
 | 1. Producto ✓ | Decide alcance, cuestionario y reglas | PRD v1 cerrado (19/10); revisión con GStack en Claude Code |
 | 2. Diseño | Lidera flujos y pantallas | Propone y prototipa; mini sistema de diseño |
 | 3. Plan | Valida el modelo de datos | Plan con Compound Engineering, esquema y RLS |
@@ -46,4 +46,4 @@ Estimación: la de 3–5 jornadas ya no es válida porque el alcance creció en 
 - [x] Dos proyectos Supabase en la región UE: `staging` y `prod`.
 - [ ] API key de Anthropic en la Console, con créditos.
 - [ ] Stripe en modo test y Resend: claves disponibles (las cuentas ya existen).
-- [ ] Vercel conectado a GitHub.
+- [x] Vercel conectado a GitHub, con variables de Supabase en Production (prod) y Preview de `staging` (staging).
