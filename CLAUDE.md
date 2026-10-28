@@ -29,6 +29,7 @@ Si el código y el PRD se contradicen, para y pregunta. No resuelvas la contradi
 ## Stack
 - Next.js (App Router) + TypeScript (`strict`) + Tailwind + shadcn/ui.
 - Supabase: Auth, Postgres con RLS y migraciones versionadas con Supabase CLI. Dos proyectos Free en la región UE: `staging` y `prod`. Los proyectos Free se pausan tras un periodo sin actividad; si staging no responde, comprobar eso primero.
+  - Project refs: **staging** `jrzicjoyraqhwioeinwa` · **prod** `pfxyjotwlwvegqyzrrwl`. Antes de cualquier `db push`, comprueba a qué ref está vinculada la CLI.
 - IA: API de Anthropic (Claude), llamada **solo desde rutas de servidor**. El modelo por uso (Sonnet 5.5 o Haiku 5.5) se decide midiendo calidad y coste.
 - Stripe en modo test (Checkout + webhook).
 - Resend: 3 emails (bienvenida, confirmación de compra, inactividad > 14 días por cron diario). Sin dominio propio solo puede enviar a la dirección de Pablo (D7): los envíos a otras direcciones fallarán.
@@ -44,9 +45,10 @@ Si el código y el PRD se contradicen, para y pregunta. No resuelvas la contradi
 - Los cambios de esquema van siempre como migración en el repo. Nunca se edita la BBDD de prod a mano. El MCP de Supabase se usa para inspeccionar, no para cambiar prod.
 
 ## Variables de entorno
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `CRON_SECRET`.
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `CRON_SECRET`.
 - Ninguna clave en el repo. En local van en `.env.local`, que está en `.gitignore`. Mantén un `.env.example` sin valores.
-- Las claves de servidor (`SERVICE_ROLE`, `ANTHROPIC`, `STRIPE_SECRET`, `RESEND`) no pueden aparecer nunca en código de cliente.
+- Las claves de servidor (`SUPABASE_SECRET_KEY`, `ANTHROPIC`, `STRIPE_SECRET`, `RESEND`) no pueden aparecer nunca en código de cliente.
+- Supabase usa las claves nuevas (`sb_publishable_…` / `sb_secret_…`), no las legacy `anon` / `service_role` (D26). Van en la cabecera `apikey`, nunca en `Authorization: Bearer`.
 
 ## Guardarraíles del dominio (no negociables)
 Traducidos a reglas de ingeniería:
