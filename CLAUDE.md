@@ -6,15 +6,17 @@ Guía para Claude Code en este repo. Léela entera antes de cualquier tarea.
 Web app (móvil primero) para personas que entrenan por su cuenta en gimnasio: un wizard de onboarding genera un plan con IA a partir de su foco, disponibilidad, equipo de su gimnasio y limitaciones. Después registran cada sesión, y unas reglas deterministas les dicen qué peso toca. Es el proyecto final del bootcamp Vibe Code Builder (No Code Hackers), con vocación de poder evolucionar a producto real.
 
 ## Documentos de referencia (fuente de verdad funcional)
-- `docs/02-prd-v1.md`: PRD. Ante cualquier duda funcional, manda el PRD.
-- `docs/01-contexto-y-criterios.md`: criterios de entrega y registro de decisiones (D1–D26).
+- `docs/02-prd-v1.md`: PRD (versión 1.1). Ante cualquier duda funcional, manda el PRD.
+- `docs/01-contexto-y-criterios.md`: criterios de entrega y registro de decisiones (D1–D37).
+- `docs/04-revision-ceo-prd-v1.md`: revisión CEO del PRD (28/10), con su razonamiento y requisitos "debe probarse" para la revisión de ingeniería.
+- `TODOS.md`: trabajo aplazado y bloqueantes para producción real.
 - `docs/03-stack-y-logistica.md`: stack, entornos y fases.
 - `plan.md`: plan de construcción (lo genera Compound Engineering; hasta entonces no existe).
 
 Si el código y el PRD se contradicen, para y pregunta. No resuelvas la contradicción por tu cuenta.
 
 ## Estado actual
-**Fase 0: bases, cerrada** (esqueleto, ramas, Vercel y Supabase ×2). Pendiente de su fase: claves de Anthropic, Stripe y Resend. Siguiente: revisión del PRD con GStack → diseño (prototipo y mini sistema de diseño) → plan con Compound Engineering → build.
+**Fase 0: bases, cerrada** (esqueleto, ramas, Vercel y Supabase ×2). **Fase 1: revisión del PRD con GStack, cerrada** (28/10, PRD v1.1). Pendiente de su fase: claves de Anthropic, Stripe y Resend. Siguiente: diseño (prototipo y mini sistema de diseño) → plan con Compound Engineering → revisión de ingeniería → build. **Entrega: viernes 6/11/2026** (D33).
 
 ## Comandos
 - `npm run dev`: servidor local (http://localhost:3000).
@@ -56,35 +58,30 @@ Traducidos a reglas de ingeniería:
 
 1. **No es consejo médico.** El disclaimer aparece en la bienvenida, en la pantalla del plan y en los términos.
 2. **Catálogo cerrado.** La IA solo puede devolver IDs de ejercicios y tipos de equipo que existan en el catálogo. Toda salida de IA se valida contra un esquema (zod). Si no valida, se reintenta y, como último recurso, se muestra un error claro al usuario. Nunca se guarda una salida no validada.
-3. **La IA nunca toca cargas.** Los pesos los calculan funciones puras deterministas (calibración y doble progresión, PRD secciones 8 y 10), cubiertas por tests unitarios. La IA solo elige ejercicios (plan inicial) y ajusta volumen y ejercicios dentro de topes (check-in, PRD sección 11).
-4. **Topes de volumen** validados en código, no en el prompt: suelo de ≥2 veces por semana por grupo muscular principal, techo de 20 series por grupo y semana, y mínimo de 2 series por ejercicio.
+3. **La IA nunca toca cargas.** Los pesos los calculan funciones puras deterministas (calibración y doble progresión, PRD secciones 8 y 10), cubiertas por tests unitarios y compartidas por servidor y móvil (D28). La IA solo elige ejercicios (plan inicial) y ajusta volumen y ejercicios dentro de topes (funciones premium, PRD sección 11).
+4. **Topes de volumen** validados en código, no en el prompt, con un único validador compartido por todas las salidas de IA: suelo de ≥2 veces por semana por grupo muscular principal, techo de 20 series por grupo y semana, y mínimo de 2 series por ejercicio.
 5. **Cribado.** Una respuesta de riesgo bloquea la generación del plan. La excepción es la pregunta articular, que obliga a marcar la zona en limitaciones (PRD sección 13).
-6. **Limitaciones → exclusión determinista** por etiquetas de articulaciones. Sin texto libre.
+6. **Limitaciones → exclusión determinista** por etiquetas de articulaciones. Sin texto libre. Si cambian las limitaciones o el equipo, el plan se refiltra de forma determinista y gratis (D35): ningún plan, gratis o premium, puede incumplir una limitación.
 7. **"Molestia" = parar** ese ejercicio hoy, sin subida de carga y con el ejercicio marcado. Nunca se "empuja".
 8. **RGPD.** Los datos de salud son categoría especial:
    - Consentimiento explícito, con casilla sin premarcar, antes de guardar cualquier dato de salud.
    - Mínimo dato necesario: no se piden peso, altura ni sexo.
-   - **Ningún dato de salud en eventos de analítica, en logs ni en mensajes de error.**
-9. **Fotos de máquinas: nunca se persisten.** Nada en Storage, BBDD ni logs. Se procesan en memoria en la ruta de servidor y se descartan. No registres el cuerpo de esas peticiones.
+   - **Ningún dato de salud en eventos de analítica, en logs ni en mensajes de error.** Molestias y bloqueos del cribado: solo contador diario en el servidor, sin `user_id` (D30).
+   - **Ningún dato de salud en los prompts de IA** (D29): lista cerrada de campos permitidos, con test.
+9. **Fotos de máquinas: nunca se persisten** (función aplazada, D27; la regla aplica cuando se retome). Nada en Storage, BBDD ni logs. Se procesan en memoria en la ruta de servidor y se descartan. No registres el cuerpo de esas peticiones.
 10. **RLS activado en todas las tablas.** Cada usuario solo ve sus datos; el panel de admin va por rol.
 11. Solo mayores de 18 años (confirmación en el registro).
 12. Límite de generaciones de IA por usuario, y registro de cada llamada (tipo, tokens y coste aproximado) para el panel de admin.
 
 ## Freemium (PRD sección 14)
-Premium: sugerencia de carga diaria (doble progresión), check-in semanal con ajuste IA, regenerar plan y gráficas completas. El resto es gratis. El acceso se controla por `subscription_status`, que actualiza el webhook de Stripe.
+Gratis (determinista): plan inicial, registro, refiltrado y **sugerencia de carga diaria** (D31). Premium: las 5 funciones con IA de la sección 11 (coach que explica, detector de estancamiento, semana adaptada, sesión exprés y pregúntale a BUDDY), regenerar plan y gráficas completas (D32). Prueba de 14 días (D36). "Es premium" sale de una única función con dos entradas: el reloj de la prueba y `subscription_status`, que actualiza el webhook de Stripe.
 
 ## Fuera de alcance (fase 2): no construir
-Multi-gimnasio, nutrición y kcal, wearables, Apple Health, Notion, recalibración automática por actividades externas, PWA offline completa, edición libre del plan, app nativa, dominio propio.
+Multi-gimnasio, nutrición y kcal, wearables, Apple Health, Notion, recalibración automática por actividades externas, PWA offline completa, edición libre del plan, app nativa, dominio propio, foto de máquina (D27).
 
-## Orden de construcción [propuesta: se confirma en `plan.md`]
-1. Auth + wizard de onboarding + cribado.
-2. Catálogo + generación del plan.
-3. Sesión del día + calibración + progresión.
-4. Check-in semanal.
-5. Stripe.
-6. Resend.
-7. Panel de admin y analítica.
-8. Foto de máquina (la última: es la primera candidata a recortar).
+## Orden de construcción (PRD sección 20, D33; se detalla en `plan.md`)
+Demo completa: 1. Auth + wizard + cribado → 2. Catálogo semilla + plan + refiltrado + registro de llamadas de IA → 3. Sesión del día + calibración + progresión → 4. Coach que explica (check-in) → 5. Stripe + prueba → 6. Resend.
+**Línea de corte**; después, solo si hay tiempo y en este orden: 7. Panel de admin → 8. Cola local → 9. Estancamiento → 10. Semana adaptada → 11. Registro de actividades → 12. Gráficas completas → 13. Sesión exprés → 14. Pregúntale a BUDDY.
 
 ## Cómo trabajar con Pablo
 - Pablo decide alcance, reglas y diseño; tú ejecutas. No avances de fase sin su confirmación.

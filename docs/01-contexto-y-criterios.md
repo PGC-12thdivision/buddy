@@ -61,12 +61,27 @@ Fuentes: enunciados "[RETO 6] El salto profesional" y "[RETO 9] La documentació
 | D24 | 19/10 | Nombre: BUDDY. IA: Claude (API de Anthropic) | Decisión de Pablo |
 | D25 | 19/10 | Precio premium: 5 €/mes [hipótesis] | Franja baja frente a referencias (Hevy, Strong, SensAI, Fitbod; ver PRD sección 14) |
 | D26 | 28/10 | Supabase con claves publishable/secret, no `anon`/`service_role` | Las legacy dejan de funcionar a finales de 2026; las nuevas se rotan sin caída y la secreta se rechaza desde navegador ([Supabase — migrating to new API keys](https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys)) |
-| — | 19/10 | Copyright del PAR-Q+: riesgo conocido, aceptado para la demo | Se revisa si el producto evoluciona |
+| — | 19/10 | Copyright del PAR-Q+: riesgo conocido, aceptado para la demo | Se revisa si el producto evoluciona (`TODOS.md`) |
+
+Revisión CEO del PRD (28/10, `04-revision-ceo-prd-v1.md`; las respuestas de esa revisión se citan allí como CEO-D1…D17):
+
+| # | Fecha | Decisión | Motivo |
+|---|---|---|---|
+| D27 | 28/10 | Foto de máquina y solicitudes de máquinas al admin, aplazadas a después de la entrega (sustituye a D14 en el MVP) | La integración más cara, con pendientes abiertos; los presets cubren la demo |
+| D28 | 28/10 | Cola local (D16) con contrato: IDs de serie y sesión generados en el móvil, restricción única, precarga con pendientes y el servidor manda al sincronizar | Evita que duplicados o sesiones sin enviar falseen la progresión |
+| D29 | 28/10 | Ningún dato de salud en los prompts de IA (lista cerrada de campos con test); el consentimiento nombra a Anthropic como encargado | Mínimo dato (RGPD): la exclusión ya es determinista |
+| D30 | 28/10 | Molestias y bloqueos del cribado solo como contador diario en el servidor, sin `user_id` (complementa D15) | El PRD contradecía el guardarraíl "ningún dato de salud en analítica" |
+| D31 | 28/10 | La sugerencia de carga diaria pasa a ser gratis; premium = funciones con IA (sustituye a D4) | La promesa central (§3) para todos; las reglas no cuestan nada, la IA sí |
+| D32 | 28/10 | Premium con 5 funciones de IA: coach que explica, detector de estancamiento, semana adaptada, sesión exprés y pregúntale a BUDDY (PRD §11) | Diferencial frente a Hevy/Strong dentro de los guardarraíles; < 1 $/usuario/mes estimado |
+| D33 | 28/10 | Entrega el viernes 6/11/2026; orden de build con línea de corte "demo completa" (PRD §20) | ~30 h para todo el MVP: el núcleo llega siempre |
+| D34 | 28/10 | Se mantiene la confirmación por email; sin dominio solo llega a Pablo (D7). Dominio propio: requisito para producción (`TODOS.md`) | Producto que parezca profesional y multiusuario |
+| D35 | 28/10 | Refiltrado determinista y gratis del plan al cambiar limitaciones o equipo | Garantiza el guardarraíl 6 también en el plan gratis |
+| D36 | 28/10 | Se mantiene la prueba premium de 14 días; "es premium" sale de una única función (reloj + `subscription_status`) | Palanca de conversión, con una sola fuente de verdad en código |
+| D37 | 28/10 | Bloqueantes legales para producción (PAR-Q+, revisión legal, DPA con Anthropic) en `TODOS.md` | No son código y bloquean el lanzamiento |
 
 ## 4. Abierto
 - Modelo de IA por uso: Sonnet 5.5 o Haiku 5.5 (se mide en el build).
-- Foto de máquina: ¿gratis o premium? ¿Límite por usuario?
-- Prueba premium de 14 días [hipótesis].
 - Redacción del cribado frente al PAR-Q+ oficial.
-- Política de retención de la API de Anthropic para las fotos.
-- Re-estimación del build.
+- Límite de generaciones de IA por usuario (cifra, en `plan.md`).
+- Contenido de las gráficas básica y completas (diseño).
+- Verificar: límite de duración de funciones en Vercel Hobby y crons en previews.
