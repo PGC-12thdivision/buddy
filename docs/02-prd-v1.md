@@ -1,6 +1,6 @@
-# 02 — PRD v1 (listo para GStack)
+# 02 — PRD v1.1
 
-> Versión 1, 19/10/2026. Sustituye a `02-prd-borrador.md`. Lo marcado **[hipótesis]** está sin validar; lo marcado **[pendiente]** está sin decidir; lo marcado **[propuesta]** es criterio propio sin respaldo explícito en una guía. Decisiones en `01-contexto-y-criterios.md` (D9–D25).
+> Versión 1.1, 28/10/2026: incorpora la revisión CEO (`04-revision-ceo-prd-v1.md`, decisiones D27–D37 de `01`). Versión 1: 19/10/2026. Lo marcado **[hipótesis]** está sin validar; lo marcado **[pendiente]** está sin decidir; lo marcado **[propuesta]** es criterio propio sin respaldo explícito en una guía. Decisiones en `01-contexto-y-criterios.md` (D9–D37).
 
 ## 1. Problema
 Quien entrena por su cuenta en el gimnasio no sabe qué rutina seguir para su objetivo, ni cuándo subir peso, y suele abandonar o estancarse. Un entrenador personal es caro; las apps genéricas no se adaptan a sus limitaciones ni a las máquinas de su gimnasio.
@@ -18,19 +18,19 @@ Adulto (18+) que entrena de forma independiente en un gimnasio con máquinas, de
 | Wizard de onboarding (sección 5), registro antes de los datos de salud | Multi-gimnasio |
 | Cribado con bloqueo + disclaimer permanente | Nutrición / kcal (TMB) |
 | "Mi gimnasio": presets + catálogo visual de tipos de equipo (incluye cardio) | Wearables, Apple Health, Notion |
-| Foto de máquina no catalogada → clasificación IA, foto descartada | Recalibración diaria automática por actividades externas |
-| Plan inicial: plantilla determinista + IA elige ejercicios del catálogo | App abierta sin conexión (PWA completa) |
+| Plan inicial: plantilla determinista + IA elige ejercicios del catálogo | Recalibración diaria automática por actividades externas |
+| Refiltrado determinista gratis al cambiar limitaciones o equipo (D35) | App abierta sin conexión (PWA completa) |
 | Sesión de calibración | Edición libre del plan |
 | Sesión del día: precargado, +/−, contador pasivo, botón "Molestia" | App nativa, dominio propio, emails a cualquier destinatario |
-| Hacer después / Sustituir / Saltar (deterministas) | |
-| Doble progresión por reglas + sugerencia de carga (premium) | |
-| Check-in semanal → ajuste del plan por IA (premium) | |
+| Hacer después / Sustituir / Saltar (deterministas) | **Foto de máquina no catalogada** (aplazada, D27; ver `TODOS.md`) |
+| Doble progresión por reglas + sugerencia de carga (**gratis**, D31) | |
+| Premium con IA: 5 funciones (sección 11, D32) | |
 | Registro de actividades externas (contexto del check-in) | |
-| Guardado local y envío al reconectar | |
+| Guardado local y envío al reconectar (contrato en sección 9, D28) | |
 | Panel de admin + analítica de producto | |
 | Stripe test, 3 emails Resend, staging + prod | |
 
-Nota: el alcance ha crecido respecto al borrador (check-in, foto de máquina, panel de admin, actividades externas). La estimación de 3–5 jornadas de `03` deja de ser válida; se re-estima con el plan de Compound Engineering.
+Nota: el alcance supera la estimación inicial de 3–5 jornadas. Entrega el **viernes 6/11/2026** (unas 30 h de trabajo) con una línea de corte "demo completa" (sección 20, D33): lo que está después de la línea solo entra si hay tiempo.
 
 ## 5. Onboarding (wizard)
 Una pregunta por pantalla, barra de progreso, respuestas con tarjetas tocables. Cada pantalla emite eventos de analítica (vista, completada, abandonada, tiempo) sin incluir respuestas de salud.
@@ -42,9 +42,9 @@ Una pregunta por pantalla, barra de progreso, respuestas con tarjetas tocables. 
 | 3 | Experiencia | Nunca he entrenado con máquinas · < 6 meses · 6 meses–2 años · > 2 años |
 | 4 | Disponibilidad | Días/semana: 2 · 3 · 4 · 5. Minutos/sesión: 30 · 45 · 60 · 75+ |
 | 5 | Otros deportes | Opcional, selección múltiple sobre el catálogo de actividades (pádel, correr, natación, clase dirigida, bici…) |
-| 6 | Mi gimnasio | Presets (Completo / Básico / Solo peso libre) → desmarcar por zona → "¿Falta una máquina? Haz una foto" |
-| — | **Registro** | Email + contraseña + confirmación de mayoría de edad. Las respuestas previas se guardan temporalmente en el dispositivo y se vuelcan a la cuenta |
-| 7 | Consentimiento | Casilla sin premarcar: finalidad (generar y ajustar el plan), cómo retirarlo. Sin consentimiento no se continúa (salida clara) |
+| 6 | Mi gimnasio | Presets (Completo / Básico / Solo peso libre) → desmarcar por zona (la foto de máquina queda para después, D27) |
+| — | **Registro** | Email + contraseña + confirmación de mayoría de edad. Las respuestas previas se guardan temporalmente en el dispositivo y se vuelcan a la cuenta. Se mantiene la confirmación por email (D34); sin dominio propio solo llega a la dirección de Pablo (D7). **[pendiente de verificar]** que las respuestas guardadas sobreviven si el enlace de confirmación se abre en otro navegador |
+| 7 | Consentimiento | Casilla sin premarcar: finalidad (generar y ajustar el plan), cómo retirarlo y que la API de Anthropic actúa como encargado del tratamiento, con transferencia fuera de la UE (D29). Sin consentimiento no se continúa (salida clara) |
 | 8 | Limitaciones | Zonas: hombro, codo, muñeca, cuello/espalda alta, espalda baja, cadera, rodilla, tobillo, o "Ninguna". Sin texto libre |
 | 9 | Cribado | 7 preguntas sí/no (temas del PAR-Q+) + embarazo. Ver sección 13 |
 | 10 | Resumen | Todo editable → "Generar mi plan" (estado de carga) |
@@ -55,8 +55,8 @@ No se piden peso, altura ni sexo: la calibración evita estimar cargas y las kca
 ## 6. Mi gimnasio y catálogo
 - **Catálogo de tipos de equipo, no de marcas/modelos** (p. ej. "prensa de piernas", "jalón al pecho", "polea doble", "cinta"). Ilustraciones genéricas con estilo único. Tamaño inicial **[propuesta]**: 25–35 tipos, sembrado con las máquinas del gimnasio de Pablo.
 - Cada **ejercicio** del catálogo lleva: equipo requerido, patrón de movimiento, región (empuje/tracción × superior/inferior; horizontal/vertical en superior), grupos musculares y articulaciones que carga.
-- "Mi gimnasio" es un perfil editable; cambiarlo permite regenerar el plan.
-- **Foto de máquina no catalogada:**
+- "Mi gimnasio" es un perfil editable. Cambiarlo refiltra el plan actual de forma determinista y gratis (D35); regenerarlo con IA es premium.
+- **Foto de máquina no catalogada: aplazada a después de la entrega (D27).** Se conserva la especificación para retomarla:
   1. La foto se comprime en el móvil, va a una ruta de servidor y se reenvía al modelo con visión. **Nunca se guarda** (ni Storage ni BBDD).
   2. El modelo solo puede responder con un tipo del catálogo o "no reconocida".
   3. Reconocida → se añade a "Mi gimnasio".
@@ -75,6 +75,10 @@ No se piden peso, altura ni sexo: la calibración evita estimar cargas y las kca
 | 4–5 | Torso / pierna alternos |
 
 Cada sesión tiene huecos por región; **la IA elige ejercicios del catálogo** que cumplen: equipo disponible, no excluidos por limitaciones, patrón del hueco. Salida JSON validada contra esquema; si no valida, se reintenta y, en último caso, error claro.
+
+**Ningún dato de salud en el prompt (D29):** la exclusión por limitaciones se hace antes, en código; la IA recibe solo el catálogo ya filtrado, el foco, la disponibilidad y los deportes. Los campos que puede llevar un prompt se fijan en una lista cerrada, con un test que la comprueba.
+
+**Refiltrado (D35):** si cambian las limitaciones o el equipo, el plan actual se refiltra con la misma lógica que "Sustituir" (determinista, sin IA, gratis). Si un hueco no tiene alternativa válida, queda vacío con un aviso.
 
 **Parámetros por foco** **[propuesta]** sobre ACSM 2026 (suelos/techos de volumen, orden, ≥2 series) y ACSM 2009 (rangos de repeticiones):
 
@@ -108,20 +112,36 @@ Interfaz propia, distinta de la sesión normal. Criterio 2–3 RIR según ACSM 2
 - **Contador pasivo** "hace X desde tu última serie": sin alarma ni cuenta atrás; ocultable en ajustes. (ACSM 2026: el descanso entre series no cambia las ganancias de fuerza.)
 - Botón **"Molestia"** siempre visible (sección 10).
 - Acciones: **Hacer después** (pasa al final), **Sustituir** (2–3 alternativas: mismo patrón y grupo, equipo disponible, no excluidas), **Saltar** (registrado, no penaliza). Deterministas, sin IA. Cada ejercicio tiene su propio historial.
-- Conectividad: cada serie se guarda primero en el dispositivo y se envía al reconectar; indicador "pendiente de sincronizar".
+- Conectividad: cada serie se guarda primero en el dispositivo y se envía al reconectar; indicador "pendiente de sincronizar". **Contrato (D28):**
+  - Cada serie y cada sesión llevan un ID generado en el móvil; la BBDD rechaza duplicados (restricción única).
+  - La precarga usa el historial sincronizado más las series pendientes del dispositivo; si no puede garantizarlo, avisa "sin sincronizar". Es provisional: al sincronizar, el servidor recalcula y manda.
+  - Sin service worker (fase 2), la cola solo sobrevive con la página cargada: la sesión del día (ejercicios, alternativas e historial) se carga entera al empezar, y se refresca el token antes de reenviar.
+  - Tests unitarios: serie duplicada y sesión anterior pendiente.
 
 ## 10. Reglas de progresión (deterministas; la IA nunca toca cargas)
 - **Doble progresión:** dentro del rango se suben primero repeticiones. Cuando todas las series llegan al techo del rango en **dos sesiones consecutivas**, la siguiente sesión precarga el **siguiente incremento** de carga y vuelve al suelo del rango. Implementa la regla ACSM 2009 (subir al superar el objetivo en 1–2 repeticiones); ACSM 2026 no fija el incremento.
 - **Incremento** = salto real de la máquina (por defecto según tipo de equipo, editable por el usuario).
 - No llega al suelo del rango → repite carga. Falla dos sesiones seguidas → baja un incremento **[propuesta]**.
 - Series saltadas no cuentan.
-- **Molestia:** se para ese ejercicio hoy, sin subida, ejercicio marcado. Si se repite en la siguiente sesión → recomendación de consultar a un profesional y oferta de añadir la zona a limitaciones.
+- **Molestia:** se para ese ejercicio hoy, sin subida, ejercicio marcado. Si se repite en la siguiente sesión → recomendación de consultar a un profesional y oferta de añadir la zona a limitaciones (que dispara el refiltrado, D35).
 - Sin periodización (ACSM 2026: no superior con progresión adecuada).
 
-## 11. Check-in semanal (premium)
-- Entradas: sensaciones, molestias de la semana, actividades externas registradas.
-- La IA **solo** puede ajustar: volumen dentro de los suelos/techos del foco y elección de ejercicios dentro del catálogo y las exclusiones. **Nunca cargas.**
-- Salida JSON validada contra esquema; el usuario ve el cambio explicado ("esta semana sumaste 3 h de pádel; mantengo el volumen de pierna").
+## 11. Premium con IA (D31, D32)
+Lo gratis es determinista (plan inicial, registro, progresión y sugerencia de carga). Premium es lo que necesita la IA: lo que Hevy y Strong no hacen, que es entender por qué pasa algo y ajustar el plan. Reglas comunes a todas las funciones:
+- La IA **nunca** toca cargas; solo usa IDs del catálogo y las exclusiones; los topes de volumen se validan en código (validador único compartido).
+- Salida JSON validada con zod; reintento y error claro.
+- El prompt no lleva datos de salud identificables (D29): sensaciones como escalas, sin texto libre; molestias como IDs de ejercicio, sin email ni nombre.
+- Cada llamada se registra (tipo, tokens, coste) y tiene tope por usuario y mes.
+
+| # | Función | Qué hace | Disparo | Coste estimado Sonnet 5.5 / usuario / mes | Orden de build |
+|---|---|---|---|---|---|
+| 1 | **Coach que explica** (check-in semanal) | Entradas: sensaciones (escala), molestias de la semana y actividades registradas. Ajusta volumen dentro de topes y ejercicios dentro del catálogo, y explica qué hicieron las reglas y por qué ("esta semana sumaste 3 h de pádel; mantengo el volumen de pierna") | Semanal | ~0,17 $ | Demo completa |
+| 2 | **Detector de estancamiento** | Una regla determinista detecta un ejercicio sin progreso en 3 sesiones **[propuesta]**; la IA propone un cambio por otro del mismo patrón y grupo, y explica la razón | Por regla | ~0,06 $ | Tras la línea de corte |
+| 3 | **Semana adaptada** | El usuario indica cómo será su semana (días disponibles, deporte previsto) y la IA reorganiza las sesiones dentro de los topes | A petición, ~1/semana | ~0,18 $ | Tras la línea de corte |
+| 4 | **Sesión exprés** | "Hoy tengo X min": la IA decide qué ejercicios y series se conservan sin romper el suelo semanal | A petición | ~0,11 $ | Tras la línea de corte |
+| 5 | **Pregúntale a BUDDY** | Chat sobre el plan y la técnica de los ejercicios del catálogo. No responde preguntas médicas (deriva a un profesional); tope de 30 mensajes/mes **[propuesta]** | A petición | ~0,30–0,42 $ | Tras la línea de corte (la última) |
+
+Costes: estimación de tamaño (entrada de 4–6 mil tokens, salida de 2–3 mil) con precios de Sonnet 5.5 de 2 $/10 $ por millón de tokens; con Haiku 5.5 (0,10 $/0,50 $), unas 20 veces menos. Las cinco juntas: < 1 $ por usuario premium y mes. Se mide en el build (sección 18). Regenerar el plan (premium): ~0,05 $ por plan, con tope.
 
 ## 12. Actividades externas
 Registro con un toque desde inicio: tipo (catálogo), duración, esfuerzo percibido 1–10. En el MVP solo informan al check-in; la recalibración automática diaria es fase 2 (ACSM 2026: datos insuficientes sobre el efecto del entreno concurrente).
@@ -133,8 +153,9 @@ Registro con un toque desde inicio: tipo (catálogo), duración, esfuerzo percib
   - Cualquier "sí" **bloquea** la generación y recomienda consultar a un profesional, **excepto** la pregunta articular, que obliga a marcar la zona en limitaciones.
   - **[pendiente]** cotejar la redacción con el documento oficial PAR-Q+ 2023. Copyright del PAR-Q+: riesgo conocido, aceptado para la demo.
 - Limitaciones sin texto libre; exclusión por etiquetas de articulaciones (determinista).
-- Fotos nunca almacenadas (sección 6).
-- **Ninguna respuesta de salud entra en la analítica.**
+- Fotos nunca almacenadas (sección 6; función aplazada, D27).
+- **Ninguna respuesta de salud entra en la analítica.** Las molestias y los bloqueos del cribado solo se cuentan como contador diario en el servidor, sin `user_id`, sin una fila por evento y sin que el cliente pueda escribir en él (D30).
+- Ningún dato de salud en los prompts de IA (D29, sección 7).
 - Solo mayores de 18 años.
 
 ## 14. Freemium y precio
@@ -142,13 +163,13 @@ Registro con un toque desde inicio: tipo (catálogo), duración, esfuerzo percib
 | | Gratis | Premium **[hipótesis: 5 €/mes]** |
 |---|---|---|
 | Onboarding, plan inicial IA, calibración | 1 plan | Regenerar plan |
+| Refiltrado al cambiar limitaciones o equipo (D35) | ✓ | ✓ |
 | Registro de sesiones, historial, hacer después/sustituir/saltar | ✓ | ✓ |
-| **Sugerencia de carga diaria** (doble progresión) | — | ✓ |
-| Check-in semanal → ajuste IA | — | ✓ |
-| Gráficas de progreso | Básica | Completas |
-| Foto de máquina | **[pendiente]** | **[pendiente]** |
+| **Sugerencia de carga diaria** (doble progresión) | ✓ (D31) | ✓ |
+| Funciones con IA de la sección 11 (coach, estancamiento, semana adaptada, sesión exprés, pregúntale) | — | ✓ |
+| Gráficas de progreso | Básica | Completas **[pendiente de diseño: qué lleva cada nivel]** |
 
-- Prueba premium de 14 días desde el registro **[hipótesis]**.
+- Prueba premium de 14 días desde el registro, mantenida en el MVP (D36). "Es premium" sale de una única función con dos entradas: el reloj de la prueba y `subscription_status`.
 - Stripe en modo test: Checkout → webhook → `subscription_status` en Supabase → acceso inmediato; error claro si falla. Solo mensual en el MVP.
 - **Referencias de mercado** (precios EE. UU., App Store, en USD; no son precios en España):
 
@@ -170,30 +191,52 @@ Limitación MVP: sin dominio propio, Resend solo envía a la dirección de Pablo
 
 ## 16. Panel de admin
 Acceso por rol admin (RLS).
-- **Solicitudes de máquinas** no reconocidas (descripción en texto) → alta en catálogo.
+- ~~Solicitudes de máquinas~~: aplazado con la foto (D27).
 - **Catálogo:** alta y edición de tipos de equipo y ejercicios con sus etiquetas.
 - **Usuarios** y estado de suscripción.
 - **Uso de IA:** llamadas por usuario y tipo, coste aproximado.
 - **Métricas de producto:** embudo del wizard por pantalla (dónde se va la gente), planes generados, sesiones/semana, duración media, uso de sustituir/saltar/molestia, conversión prueba → premium, errores de IA, fallos de pago, sincronizaciones pendientes.
 
-Eventos en tabla propia de Supabase (datos en la UE, sin terceros), vinculados a usuario, **sin contenido de salud**.
+Eventos en tabla propia de Supabase (datos en la UE, sin terceros), vinculados a usuario, **sin contenido de salud**. "Uso de molestia" y "cribado bloqueado" salen del contador diario anónimo (D30), no de la tabla de eventos.
 
 ## 17. Métricas de la demo
 Tasa de finalización del wizard y pantalla de mayor abandono; sesiones registradas por usuario y semana; conversión de prueba a premium (en test).
 
 ## 18. IA
 - Claude vía API de Anthropic (Console), solo desde rutas de servidor (D8).
-- Usos: generación del plan inicial, check-in semanal, clasificación de fotos.
-- **[pendiente]** modelo concreto por uso (Sonnet 5.5 o Haiku 5.5): se decide en el build midiendo calidad y coste por llamada.
+- Usos: generación del plan inicial y las 5 funciones premium de la sección 11 (la clasificación de fotos queda aplazada, D27).
+- **[pendiente]** modelo concreto por uso (Sonnet 5.5 o Haiku 5.5): se decide en el build midiendo calidad y coste por llamada con un conjunto fijo de unos 10 perfiles de wizard.
 
 ## 19. Pendientes y riesgos
 - Modelo de IA por uso (sección 18).
-- Foto de máquina: gratis/premium y límite.
-- Prueba de 14 días y precio: hipótesis.
+- Precio de 5 €/mes: hipótesis.
 - Redacción del cribado frente al PAR-Q+ oficial.
-- Política de retención de la API de Anthropic para las fotos.
-- Re-estimación del build tras el plan de Compound Engineering.
-- Riesgo de alcance: si hay que recortar, el orden de construcción deja la foto de máquina al final.
+- Política de retención de la API de Anthropic (D29; bloqueante para producción, ver `TODOS.md`).
+- Límite de generaciones de IA por usuario: cifra por fijar en `plan.md`.
+- **[pendiente de verificar]** límite de duración de las funciones en Vercel Hobby (generación con reintentos) y que el cron de inactividad no se ejecuta en previews (en staging se prueba llamando a la ruta con `CRON_SECRET`).
+- Riesgo de alcance: 30 h para todo el MVP es ajustado; manda la línea de corte de la sección 20.
+
+## 20. Orden de construcción y línea de corte (D33)
+Entrega: **viernes 6/11/2026**, unas 6 sesiones de 5 h. Lo que está bajo la línea entra en orden y solo si hay tiempo; si la fecha aprieta, cae desde abajo sin rehacer nada.
+
+**Demo completa (núcleo):**
+1. Auth + wizard + consentimiento + limitaciones + cribado.
+2. Catálogo semilla (migración) + generación del plan + refiltrado (D35) + registro de llamadas de IA.
+3. Sesión del día + calibración + doble progresión (guardado directo con IDs únicos de D28).
+4. Premium 1: coach que explica (check-in semanal).
+5. Stripe test + prueba de 14 días.
+6. Resend: 3 emails.
+
+**— Línea de corte —** (orden **[propuesta]**)
+
+7. Panel de admin (uso de IA, usuarios y las 3 métricas de la sección 17; después, el resto).
+8. Cola local con envío al reconectar (D28).
+9. Premium 2: detector de estancamiento.
+10. Premium 3: semana adaptada.
+11. Registro de actividades externas.
+12. Gráficas completas.
+13. Premium 4: sesión exprés.
+14. Premium 5: pregúntale a BUDDY.
 
 ## Fuentes
 - Currier et al. (2026), ACSM Position Stand, *Resistance Training Prescription for Muscle Function, Hypertrophy, and Physical Performance in Healthy Adults: An Overview of Reviews*, MSSE 58(4):851–872, doi:10.1249/MSS.0000000000003897 ([PDF](https://www.fisiologiadelejercicio.com/wp-content/uploads/2026/03/Resistance-Training-Prescription-for-Muscl.pdf)).
