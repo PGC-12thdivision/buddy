@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
+// Cache Components desactivado (plan.md, KTD1): casi todo BUDDY es por usuario y dinámico,
+// y nunca se cachean datos de usuario con 'use cache'.
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  typedRoutes: true,
   turbopack: {
     rules: {
       "*.css": {
