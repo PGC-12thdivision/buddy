@@ -89,6 +89,8 @@ Fase 2, diseño (12/11, `docs/diseno/`):
 | D41 | 12/11 | Check-in: el usuario ve el ajuste del coach y elige aplicarlo o mantener su plan; no se aplica solo | Control del usuario; encaja con "el coach explica" |
 | D42 | 12/11 | Dirección visual "Venice 89 × arcade": limón y morado, tema claro L3 (marcador + papel + trama) y oscuro con selector; Archivo Expanded en títulos y números, Atkinson Hyperlegible Next en cuerpo, Press Start 2P en celebraciones; esquinas duras | Identidad propia, legible con la luz del gimnasio y sin aspecto de app genérica |
 | D43 | 12/11 | Usuario gratis: un cambio de foco o de días al mes, que regenera el plan con IA; premium, sin ese límite (dentro del tope general). Completa D35, que solo cubría limitaciones y equipo | Cambiar de días cambia la plantilla y no es un refiltrado; sin esto el gratis quedaba atrapado (revisión de diseño, D26) |
+| D44 | 12/11 | La IA no recibe nada de lo que se pueda deducir la salud: catálogo filtrado solo por equipo y sin molestias; limitaciones y molestias se aplican después con el refiltrado (corrige PRD §7 y §11) | Un catálogo recortado por limitaciones revela la limitación; guardarraíl 8 / D29 (revisión del plan) |
+| D45 | 12/11 | El mínimo de 2 veces por semana por grupo solo se exige a grupos con algún ejercicio posible; si no hay ninguno, hueco con aviso | Si no, una limitación dejaría al usuario sin plan; prima el guardarraíl 6 (revisión del plan) |
 
 ## 4. Abierto
 - Modelo de IA por uso: Sonnet 5.5 o Haiku 5.5 (se mide en el build).

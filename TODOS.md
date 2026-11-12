@@ -17,6 +17,12 @@ Trabajo aplazado con su contexto, para retomarlo tras la entrega del bootcamp (c
 - **Esfuerzo:** humano S / CC S. **Depende de:** decisión de lanzar; quita la exclusión "dominio propio" de `CLAUDE.md`.
 - **Decisión:** D34 (`01`).
 
+### Vercel Pro para cobrar de verdad (P2, requisito de producción)
+- **Qué:** pasar el proyecto de Vercel de Hobby a Pro antes de aceptar pagos reales.
+- **Por qué:** Vercel Hobby es solo para uso personal no comercial; la demo cobra en modo test, que no es uso comercial.
+- **Contexto:** detectado al planificar el build (12/11, `plan.md`, Scope Boundaries). Revisar también la región de funciones (`fra1`) y los límites de cron de Pro.
+- **Esfuerzo:** humano S / CC S. **Depende de:** decisión de lanzar.
+
 ### Bloqueantes legales para producción real (P2)
 - **Qué:** antes de abrir BUDDY a usuarios reales: (1) licencia o sustitución del PAR-Q+ (hoy, riesgo de copyright aceptado solo para la demo, `01` §3); (2) revisión legal del disclaimer y los términos (PRD §13); (3) acuerdo de tratamiento de datos con Anthropic como encargado y verificación de su política de retención (CEO-D10, PRD §19).
 - **Por qué:** no son trabajo de código y bloquean el lanzamiento; Pablo pidió dejar preparado el salto a producción (CEO-D3).

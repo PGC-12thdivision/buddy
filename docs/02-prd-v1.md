@@ -76,7 +76,7 @@ No se piden peso, altura ni sexo: la calibración evita estimar cargas y las kca
 
 Cada sesión tiene huecos por región; **la IA elige ejercicios del catálogo** que cumplen: equipo disponible, no excluidos por limitaciones, patrón del hueco. Salida JSON validada contra esquema; si no valida, se reintenta y, en último caso, error claro.
 
-**Ningún dato de salud en el prompt (D29):** la exclusión por limitaciones se hace antes, en código; la IA recibe solo el catálogo ya filtrado, el foco, la disponibilidad y los deportes. Los campos que puede llevar un prompt se fijan en una lista cerrada, con un test que la comprueba.
+**Ningún dato de salud en el prompt (D29, D44):** la IA recibe solo el catálogo filtrado por equipo (nunca por limitaciones, para que no se puedan deducir), el foco, la disponibilidad y los deportes. La exclusión por limitaciones se aplica después, en código, con la misma lógica que el refiltrado. El mínimo de 2 veces por semana solo se exige a los grupos con algún ejercicio posible; si no hay ninguno, queda un hueco con aviso (D45). Los campos que puede llevar un prompt se fijan en una lista cerrada, con un test que la comprueba.
 
 **Refiltrado (D35):** si cambian las limitaciones o el equipo, el plan actual se refiltra con la misma lógica que "Sustituir" (determinista, sin IA, gratis). Si un hueco no tiene alternativa válida, queda vacío con un aviso.
 
@@ -130,7 +130,7 @@ Interfaz propia, distinta de la sesión normal. Criterio 2–3 RIR según ACSM 2
 Lo gratis es determinista (plan inicial, registro, progresión y sugerencia de carga). Premium es lo que necesita la IA: lo que Hevy y Strong no hacen, que es entender por qué pasa algo y ajustar el plan. Reglas comunes a todas las funciones:
 - La IA **nunca** toca cargas; solo usa IDs del catálogo y las exclusiones; los topes de volumen se validan en código (validador único compartido).
 - Salida JSON validada con zod; reintento y error claro.
-- El prompt no lleva datos de salud identificables (D29): sensaciones como escalas, sin texto libre; molestias como IDs de ejercicio, sin email ni nombre.
+- El prompt no lleva datos de salud ni nada de lo que se puedan deducir (D29, D44): sensaciones como escalas, sin texto libre; las molestias no van al prompt, sino que el ejercicio se sustituye de forma determinista con el refiltrado.
 - Cada llamada se registra (tipo, tokens, coste) y tiene tope por usuario y mes.
 
 | # | Función | Qué hace | Disparo | Coste estimado Sonnet 5.5 / usuario / mes | Orden de build |

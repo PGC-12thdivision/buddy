@@ -17,7 +17,7 @@ Web app (móvil primero) para personas que entrenan por su cuenta en gimnasio: u
 Si el código y el PRD se contradicen, para y pregunta. No resuelvas la contradicción por tu cuenta.
 
 ## Estado actual
-**Fase 0: bases, cerrada** (esqueleto, ramas, Vercel y Supabase ×2). **Fase 1: revisión del PRD con GStack, cerrada** (28/10, PRD v1.1). Pendiente de su fase: claves de Anthropic, Stripe y Resend. **Fase 2: diseño, cerrada** (12/11): `DESIGN.md`, decisiones D3–D31 de la revisión de diseño en `docs/diseno/sistema-de-diseno.md` §11 y prototipo en `docs/diseno/prototipo.html`. Siguiente: plan con Compound Engineering → revisión de ingeniería → build. **Entrega: viernes 20/11/2026** (D38, sustituye a D33).
+**Fase 0: bases, cerrada** (esqueleto, ramas, Vercel y Supabase ×2). **Fase 1: revisión del PRD con GStack, cerrada** (28/10, PRD v1.1). Pendiente de su fase: claves de Anthropic, Stripe y Resend. **Fase 2: diseño, cerrada** (12/11): `DESIGN.md`, decisiones D3–D31 de la revisión de diseño en `docs/diseno/sistema-de-diseno.md` §11 y prototipo en `docs/diseno/prototipo.html`. **Fase 3: plan, cerrada** (12/11): `plan.md` (U1–U12 hasta la línea de corte, decisiones D43–D45). Siguiente: build con `ce-work` en 4 sesiones. **Entrega: viernes 20/11/2026** (D38, sustituye a D33).
 
 ## Comandos
 - `npm run dev`: servidor local (http://localhost:3000).
