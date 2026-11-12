@@ -79,6 +79,16 @@ Revisión CEO del PRD (28/10, `04-revision-ceo-prd-v1.md`; las respuestas de esa
 | D36 | 28/10 | Se mantiene la prueba premium de 14 días; "es premium" sale de una única función (reloj + `subscription_status`) | Palanca de conversión, con una sola fuente de verdad en código |
 | D37 | 28/10 | Bloqueantes legales para producción (PAR-Q+, revisión legal, DPA con Anthropic) en `TODOS.md` | No son código y bloquean el lanzamiento |
 
+Fase 2, diseño (12/11, `docs/diseno/`):
+
+| # | Fecha | Decisión | Motivo |
+|---|---|---|---|
+| D38 | 12/11 | La entrega pasa al viernes 20/11/2026 (sustituye la fecha de D33; la línea de corte se mantiene) | Decisión de Pablo |
+| D39 | 12/11 | Confirmado D32: premium incluye la 4 (sesión exprés) y la 5 (pregúntale a BUDDY), las dos tras la línea de corte | Cierra la interpretación pendiente de "4 / 5 también" |
+| D40 | 12/11 | Gráficas: básica gratis = peso de trabajo por ejercicio (8 semanas); completas premium = historial completo, series por grupo frente al objetivo, constancia y mejores series | Cierra el [pendiente] de PRD §14 |
+| D41 | 12/11 | Check-in: el usuario ve el ajuste del coach y elige aplicarlo o mantener su plan; no se aplica solo | Control del usuario; encaja con "el coach explica" |
+| D42 | 12/11 | Dirección visual "Venice 89 × arcade": limón y morado, tema claro L3 (marcador + papel + trama) y oscuro con selector; Archivo Expanded en títulos y números, Atkinson Hyperlegible Next en cuerpo, Press Start 2P en celebraciones; esquinas duras | Identidad propia, legible con la luz del gimnasio y sin aspecto de app genérica |
+
 ## 4. Abierto
 - Modelo de IA por uso: Sonnet 5.5 o Haiku 5.5 (se mide en el build).
 - Redacción del cribado frente al PAR-Q+ oficial.

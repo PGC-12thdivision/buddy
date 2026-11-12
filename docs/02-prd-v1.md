@@ -30,7 +30,7 @@ Adulto (18+) que entrena de forma independiente en un gimnasio con máquinas, de
 | Panel de admin + analítica de producto | |
 | Stripe test, 3 emails Resend, staging + prod | |
 
-Nota: el alcance supera la estimación inicial de 3–5 jornadas. Entrega el **viernes 6/11/2026** (unas 30 h de trabajo) con una línea de corte "demo completa" (sección 20, D33): lo que está después de la línea solo entra si hay tiempo.
+Nota: el alcance supera la estimación inicial de 3–5 jornadas. Entrega el **viernes 20/11/2026** (D38; antes 6/11) con una línea de corte "demo completa" (sección 20, D33): lo que está después de la línea solo entra si hay tiempo.
 
 ## 5. Onboarding (wizard)
 Una pregunta por pantalla, barra de progreso, respuestas con tarjetas tocables. Cada pantalla emite eventos de analítica (vista, completada, abandonada, tiempo) sin incluir respuestas de salud.
@@ -167,7 +167,7 @@ Registro con un toque desde inicio: tipo (catálogo), duración, esfuerzo percib
 | Registro de sesiones, historial, hacer después/sustituir/saltar | ✓ | ✓ |
 | **Sugerencia de carga diaria** (doble progresión) | ✓ (D31) | ✓ |
 | Funciones con IA de la sección 11 (coach, estancamiento, semana adaptada, sesión exprés, pregúntale) | — | ✓ |
-| Gráficas de progreso | Básica | Completas **[pendiente de diseño: qué lleva cada nivel]** |
+| Gráficas de progreso | Básica: peso de trabajo por ejercicio, últimas 8 semanas | Completas: historial completo, series por grupo frente al objetivo, constancia y mejores series (D40) |
 
 - Prueba premium de 14 días desde el registro, mantenida en el MVP (D36). "Es premium" sale de una única función con dos entradas: el reloj de la prueba y `subscription_status`.
 - Stripe en modo test: Checkout → webhook → `subscription_status` en Supabase → acceso inmediato; error claro si falla. Solo mensual en el MVP.
@@ -217,7 +217,7 @@ Tasa de finalización del wizard y pantalla de mayor abandono; sesiones registra
 - Riesgo de alcance: 30 h para todo el MVP es ajustado; manda la línea de corte de la sección 20.
 
 ## 20. Orden de construcción y línea de corte (D33)
-Entrega: **viernes 6/11/2026**, unas 6 sesiones de 5 h. Lo que está bajo la línea entra en orden y solo si hay tiempo; si la fecha aprieta, cae desde abajo sin rehacer nada.
+Entrega: **viernes 20/11/2026** (D38; la fecha inicial era el 6/11). Lo que está bajo la línea entra en orden y solo si hay tiempo; si la fecha aprieta, cae desde abajo sin rehacer nada.
 
 **Demo completa (núcleo):**
 1. Auth + wizard + consentimiento + limitaciones + cribado.

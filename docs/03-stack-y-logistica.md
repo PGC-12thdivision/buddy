@@ -37,7 +37,7 @@ Ninguna clave en el repo; en local, `.env.local` (dentro de `.gitignore`).
 | 4. Build | Revisa los PR en staging | Orden de construcción en `CLAUDE.md` (propuesta), confirmado en `plan.md` |
 | 5. Cierre | Graba el Loom | Docs técnicas, guía de uso, entrega y documento de 3 mejoras |
 
-Estimación: entrega el **viernes 6/11/2026**, con unas 6 sesiones de 5 h (D33). Como el alcance supera ese tiempo, el PRD v1.1 (sección 20) fija una línea de corte "demo completa"; el plan de Compound Engineering detalla el reparto.
+Estimación: entrega el **viernes 20/11/2026** (D38; la fecha inicial, D33, era el 6/11). Como el alcance supera ese tiempo, el PRD v1.1 (sección 20) fija una línea de corte "demo completa"; el plan de Compound Engineering detalla el reparto.
 
 ## Checklist de la fase 0 (Pablo)
 - [x] Crear el proyecto de Claude y subir estos documentos.
