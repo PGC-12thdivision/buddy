@@ -162,7 +162,7 @@ Registro con un toque desde inicio: tipo (catálogo), duración, esfuerzo percib
 
 | | Gratis | Premium **[hipótesis: 5 €/mes]** |
 |---|---|---|
-| Onboarding, plan inicial IA, calibración | 1 plan | Regenerar plan |
+| Onboarding, plan inicial IA, calibración | 1 plan + 1 cambio de foco o días al mes, que regenera el plan (D43) | Regenerar plan cuando quiera (con el tope general de generaciones) |
 | Refiltrado al cambiar limitaciones o equipo (D35) | ✓ | ✓ |
 | Registro de sesiones, historial, hacer después/sustituir/saltar | ✓ | ✓ |
 | **Sugerencia de carga diaria** (doble progresión) | ✓ (D31) | ✓ |

@@ -88,6 +88,7 @@ Fase 2, diseño (12/11, `docs/diseno/`):
 | D40 | 12/11 | Gráficas: básica gratis = peso de trabajo por ejercicio (8 semanas); completas premium = historial completo, series por grupo frente al objetivo, constancia y mejores series | Cierra el [pendiente] de PRD §14 |
 | D41 | 12/11 | Check-in: el usuario ve el ajuste del coach y elige aplicarlo o mantener su plan; no se aplica solo | Control del usuario; encaja con "el coach explica" |
 | D42 | 12/11 | Dirección visual "Venice 89 × arcade": limón y morado, tema claro L3 (marcador + papel + trama) y oscuro con selector; Archivo Expanded en títulos y números, Atkinson Hyperlegible Next en cuerpo, Press Start 2P en celebraciones; esquinas duras | Identidad propia, legible con la luz del gimnasio y sin aspecto de app genérica |
+| D43 | 12/11 | Usuario gratis: un cambio de foco o de días al mes, que regenera el plan con IA; premium, sin ese límite (dentro del tope general). Completa D35, que solo cubría limitaciones y equipo | Cambiar de días cambia la plantilla y no es un refiltrado; sin esto el gratis quedaba atrapado (revisión de diseño, D26) |
 
 ## 4. Abierto
 - Modelo de IA por uso: Sonnet 5.5 o Haiku 5.5 (se mide en el build).

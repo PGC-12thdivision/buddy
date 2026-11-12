@@ -352,6 +352,18 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 .chartcard{margin-top:14px}
 .chart .axis text{font:600 11px Archivo}
 .rest b{font-family:Archivo;font-weight:800}
+/* Revisión /plan-design-review (D18, D20, D21, D23) */
+.tag{font-size:11px}
+.pop{font-size:11px}
+#pop.go{animation-duration:.6s}
+.actions4{grid-template-columns:repeat(3,minmax(0,1fr))}
+.band .ouch-top{position:relative;margin:8px 0 0 auto;min-height:44px;display:flex;width:max-content;align-items:center;gap:6px;padding:0 10px;background:transparent;border:2px solid #FF5FA2;color:#FF5FA2;border-radius:var(--r-md);font:800 13px var(--body)}
+:focus-visible{outline:3px solid var(--secondary);outline-offset:2px}
+.dark :focus-visible{outline-color:var(--lemon)}
+::selection{background:#FFE03A;color:#1A0F24}
+input,textarea{caret-color:var(--secondary)}
+.scroll{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.cta[disabled]{transform:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.pop.go{transform:translate(-50%,-50%) scale(1)}}
 </style>
@@ -389,7 +401,7 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
   <a href="#coach-vacio">Check-in: semana vacía</a>
   <a href="#coach-error">Check-in: error</a>
   <a href="#coach-fin">Fin de la prueba</a>
-  <h2>Progreso</h2>
+  <h2>Prensa: +15 kg</h2>
   <a href="#progreso">Gráficas: premium</a>
   <a href="#progreso-gratis">Gráficas: gratis</a>
 </nav>
@@ -477,18 +489,18 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
   </div>
   <div class="stripes" aria-hidden="true"></div>
   <div class="scroll"><div class="body"><div class="yn" id="screen-q">
-    <div class="ynrow" data-risk><p>¿Te han diagnosticado un problema cardíaco o tensión alta?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div></div>
-    <div class="ynrow" data-risk><p>¿Sientes dolor en el pecho en reposo, en tu día a día o al hacer ejercicio?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div></div>
-    <div class="ynrow" data-risk><p>¿Has perdido el equilibrio por mareo o el conocimiento en los últimos 12 meses?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div></div>
-    <div class="ynrow" data-risk><p>¿Te han diagnosticado otra enfermedad crónica?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div></div>
-    <div class="ynrow" data-risk><p>¿Tomas medicación prescrita para una enfermedad crónica?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div></div>
-    <div class="ynrow" data-joint><p>¿Tienes un problema de huesos, articulaciones o tejidos blandos que empeore con la actividad?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div>
+    <div class="ynrow" data-risk><p>¿Te han diagnosticado un problema cardíaco o tensión alta?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div></div>
+    <div class="ynrow" data-risk><p>¿Sientes dolor en el pecho en reposo, en tu día a día o al hacer ejercicio?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div></div>
+    <div class="ynrow" data-risk><p>¿Has perdido el equilibrio por mareo o el conocimiento en los últimos 12 meses?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div></div>
+    <div class="ynrow" data-risk><p>¿Te han diagnosticado otra enfermedad crónica?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div></div>
+    <div class="ynrow" data-risk><p>¿Tomas medicación prescrita para una enfermedad crónica?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div></div>
+    <div class="ynrow" data-joint><p>¿Tienes un problema de huesos, articulaciones o tejidos blandos que empeore con la actividad?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div>
       <div class="note info" data-joint-note style="display:none"><span class="i">→</span><span>Marca la zona en <b>Limitaciones</b> y quitaremos los ejercicios que la cargan. <button class="link" style="min-height:0;padding:0" data-go="gimnasio">Ir a limitaciones</button></span></div></div>
-    <div class="ynrow" data-risk><p>¿Te ha indicado un médico que solo hagas actividad física supervisada?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div></div>
-    <div class="ynrow" data-risk><p>¿Estás embarazada?</p><div class="seg"><button>Sí</button><button aria-pressed="true">No</button></div></div>
+    <div class="ynrow" data-risk><p>¿Te ha indicado un médico que solo hagas actividad física supervisada?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div></div>
+    <div class="ynrow" data-risk><p>¿Estás embarazada?</p><div class="seg"><button aria-pressed="false">Sí</button><button aria-pressed="false">No</button></div></div>
     <p class="help">Redacción provisional, pendiente de cotejar con el PAR-Q+ 2023 oficial (PRD §13).</p>
   </div></div></div>
-  <div class="foot"><button class="cta" id="cribado-next">Siguiente</button></div>
+  <div class="foot"><p class="help" id="cribado-left" role="status" style="text-align:center">Te quedan 8 por responder</p><button class="cta" id="cribado-next" disabled>Siguiente</button></div>
 </section>
 
 <!-- ================= BLOQUEO ================= -->
@@ -537,7 +549,7 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 
 <!-- ================= PLAN ================= -->
 <section class="screen" id="s-plan">
-  <div class="band"><div class="row"><span class="tag">PLAN LISTO</span><span>Semana 1</span></div><h2>Tu plan</h2><p>3 días por semana, 45 minutos. Foco equilibrado.</p></div>
+  <div class="band"><div class="row"><span class="tag">PLAN LISTO</span><span>Semana 1</span></div><h2>3 días, cuerpo completo</h2><p>45 minutos por sesión. Foco equilibrado.</p></div>
   <div class="stripes" aria-hidden="true"></div>
   <div class="scroll"><div class="body">
     <div class="sticker"><span class="tag">PRIMERA SESIÓN</span><p><b>Es de calibración.</b> No adivinamos tu peso: lo encontramos serie a serie.</p></div>
@@ -589,7 +601,8 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 
 <!-- ================= SESIÓN DEL DÍA ================= -->
 <section class="screen" id="s-sesion">
-  <div class="band"><div class="row"><span class="tag">TORSO</span><span><span class="syncchip" id="syncchip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0l-4-4m4 4l4-4M4 20h16"/></svg>2 series sin enviar</span> Ejercicio 3 de 6</span></div>
+  <div class="band"><div class="row"><span class="tag">TORSO</span><span class="hdr-right"><span class="syncchip" id="syncchip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0l-4-4m4 4l4-4M4 20h16"/></svg>2 series sin enviar</span> Ejercicio 3 de 6</span></div>
+    <button class="ouch-top" data-sheet="molestia" aria-label="Tengo molestia en jalón al pecho"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>Tengo molestia</button>
     <div class="xp" style="grid-template-columns:repeat(6,1fr)"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
     <h2>Jalón al pecho</h2><p>Serie <span id="setn">2</span> de 3</p></div>
   <div class="stripes" aria-hidden="true"></div>
@@ -609,7 +622,6 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
       <button class="b" data-sheet="sustituir"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15l-4-4M20 16H5l4 4"/></svg>Cambiar ejercicio</button>
       <button class="b" data-toast="Jalón al pecho pasa al final de la sesión."><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 10h9M4 15h6M18 9v11m0 0l-3-3m3 3l3-3"/></svg>Hacer al final</button>
       <button class="b" data-toast="Saltado. No cuenta para tu progreso y no te penaliza."><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l10 7-10 7zM19 5v14"/></svg>Saltar hoy</button>
-      <button class="ouch" data-sheet="molestia"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>Tengo molestia</button>
     </div>
     <button class="cta" id="setdone">Serie hecha</button>
   </div>
@@ -633,7 +645,7 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 
 <!-- ================= COACH ================= -->
 <section class="screen" id="s-coach">
-  <div class="band"><div class="row"><span class="tag premium">PRUEBA: 9 DÍAS</span><span>Semana 3</span></div><h2>Check-in</h2><p>Del lunes 16 al domingo 22 de noviembre</p></div>
+  <div class="band"><div class="row"><span class="tag premium">9 DÍAS</span><span>Semana 3</span></div><h2>Check-in</h2><p>Del lunes 16 al domingo 22 de noviembre</p></div>
   <div class="stripes" aria-hidden="true"></div>
   <div class="scroll"><div class="body">
     <p class="q" style="font-size:17px">¿Cómo te has sentido esta semana?</p>
@@ -650,7 +662,7 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 </section>
 
 <section class="screen" id="s-coach-cargando">
-  <div class="band"><div class="row"><span class="tag premium">PREMIUM</span><span></span></div><h2>Analizando</h2><p>Unos segundos.</p></div>
+  <div class="band"><div class="row"><span class="tag premium">PREMIUM</span><span></span></div><h2>Leyendo tu semana</h2><p>Unos segundos.</p></div>
   <div class="stripes" aria-hidden="true"></div>
   <div class="scroll"><div class="body" style="gap:18px;padding-top:28px">
     <div class="loader" id="loader2" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -660,7 +672,7 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 </section>
 
 <section class="screen" id="s-coach-resultado">
-  <div class="band"><div class="row"><span class="tag premium">PREMIUM</span><span>Semana 4</span></div><h2>Tu ajuste</h2><p>Esto es lo que cambia y por qué.</p></div>
+  <div class="band"><div class="row"><span class="tag premium">PREMIUM</span><span>Semana 4</span></div><h2>Menos pierna esta semana</h2><p>Esto es lo que cambia y por qué.</p></div>
   <div class="stripes" aria-hidden="true"></div>
   <div class="scroll"><div class="body">
     <div class="change"><b>Pierna: <span class="diff">12 → 10</span> series</b>Sumaste 3 h de pádel y marcaste cansancio 4 de 5. Bajo un poco la pierna para que llegues fresco.</div>
@@ -697,7 +709,7 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 
 <!-- ================= PROGRESO ================= -->
 <section class="screen" id="s-progreso">
-  <div class="band"><div class="row"><span class="tag premium">PREMIUM</span><span>Últimas 8 semanas</span></div><h2>Progreso</h2><p>Prensa de piernas ▾</p></div>
+  <div class="band"><div class="row"><span class="tag premium">PREMIUM</span><span>Últimas 8 semanas</span></div><h2>Prensa: +15 kg</h2><p>Prensa de piernas ▾</p></div>
   <div class="stripes" aria-hidden="true"></div>
   <div class="scroll"><div class="body">
     <div class="chartcard" data-line><h4>Peso de trabajo</h4><p class="sub">Prensa de piernas, kg por sesión</p><div class="chart"></div>
@@ -717,7 +729,7 @@ details.zone{background:none;border:0;border-bottom:2px solid var(--ink);border-
 </section>
 
 <section class="screen" id="s-progreso-gratis">
-  <div class="band"><div class="row"><span class="tag">GRATIS</span><span>Últimas 8 semanas</span></div><h2>Progreso</h2><p>Prensa de piernas ▾</p></div>
+  <div class="band"><div class="row"><span class="tag">GRATIS</span><span>Últimas 8 semanas</span></div><h2>Prensa: +15 kg</h2><p>Prensa de piernas ▾</p></div>
   <div class="stripes" aria-hidden="true"></div>
   <div class="scroll"><div class="body">
     <div class="chartcard" data-line><h4>Peso de trabajo</h4><p class="sub">Prensa de piernas, kg por sesión</p><div class="chart"></div>
@@ -767,7 +779,9 @@ $$('.chip').forEach(c=>c.onclick=()=>c.setAttribute('aria-pressed',c.getAttribut
 /* ---------- Cribado ---------- */
 $$('.ynrow').forEach(row=>{const [si,no]=$$('.seg button',row);
   [si,no].forEach(b=>b.onclick=()=>{si.setAttribute('aria-pressed',b===si);no.setAttribute('aria-pressed',b===no);
-    const n=$('[data-joint-note]',row); if(n) n.style.display=b===si?'flex':'none'})});
+    const n=$('[data-joint-note]',row); if(n) n.style.display=b===si?'flex':'none';
+    const left=$('.ynrow').filter(r=>!$('.seg button',r).some(x=>x.getAttribute('aria-pressed')==='true')).length;
+    $('#cribado-left').textContent=left?`Te quedan ${left} por responder`:'Todo respondido';$('#cribado-next').disabled=left>0})});
 $('#cribado-next').onclick=()=>{const risk=$$('[data-risk]').some(r=>$('.seg button',r).getAttribute('aria-pressed')==='true');location.hash=risk?'bloqueo':'generando'};
 
 /* ---------- Carga por segmentos ---------- */
