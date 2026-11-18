@@ -1,4 +1,5 @@
 import "server-only";
+import type { Exercise, Joint, Region } from "@/lib/domain/types";
 import { logError } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -13,6 +14,35 @@ export async function equipmentCatalog(): Promise<EquipmentOption[]> {
   const { data, error } = await createAdminClient().from("equipment_types").select("id, name, zone").order("name");
   if (error) logError("leer_equipo", error);
   return data ?? [];
+}
+
+export type CatalogExercise = Exercise & { name: string };
+
+// Ejercicios del catálogo con la forma del dominio (src/lib/domain/types.ts). Orden fijo por ID
+// para que el prompt y el refiltrado sean deterministas.
+export async function exerciseCatalog(): Promise<CatalogExercise[]> {
+  const { data, error } = await createAdminClient()
+    .from("exercises")
+    .select("id, name, equipment_type_id, pattern, region, muscle_groups, joints, calibration_load_kg")
+    .order("id");
+  if (error) logError("leer_ejercicios", error);
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    equipmentTypeId: row.equipment_type_id,
+    pattern: row.pattern,
+    region: row.region as Region,
+    muscleGroups: row.muscle_groups,
+    joints: row.joints as Joint[],
+    calibrationLoadKg: Number(row.calibration_load_kg),
+  }));
+}
+
+// Equipo del usuario: solo IDs que existen en el catálogo, sin repetidos. El usuario puede escribir
+// gym_profiles directamente por la API, así que nunca se confía en esa lista tal cual (D56).
+export function sanitizeEquipment(ids: readonly string[], catalogIds: readonly string[]): string[] {
+  const known = new Set(catalogIds);
+  return [...new Set(ids)].filter((id) => known.has(id));
 }
 
 export async function activityCatalog(): Promise<ActivityOption[]> {

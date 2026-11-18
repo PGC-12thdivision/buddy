@@ -688,6 +688,27 @@ export type Database = {
     }
     Functions: {
       bump_daily_counter: { Args: { p_metric: string }; Returns: undefined }
+      reserve_ai_call: {
+        Args: {
+          p_kind: string
+          p_max_duration_s: number
+          p_model: string
+          p_period_limit: number
+          p_user: string
+        }
+        Returns: Json
+      }
+      save_plan: {
+        Args: {
+          p_ai_call: string
+          p_cost_usd: number
+          p_input_tokens: number
+          p_output_tokens: number
+          p_plan: Json
+          p_user: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

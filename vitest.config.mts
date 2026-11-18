@@ -13,6 +13,6 @@ export default defineConfig(({ mode }) => ({
     include: ["src/**/*.test.ts"],
     passWithNoTests: true,
     // La suite de RLS contra staging solo se activa con `npm run test:rls` (vitest --mode rls); `npm test` la omite.
-    env: mode === "rls" ? { RUN_RLS_TESTS: "1" } : {},
+    env: mode === "rls" ? { RUN_RLS_TESTS: "1" } : mode === "eval" ? { RUN_PLAN_EVAL: "1" } : {},
   },
 }));

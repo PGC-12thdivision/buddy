@@ -10,9 +10,11 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:rls": "vitest run --mode rls src/lib/supabase/rls.integration.test.ts"
+    "test:rls": "vitest run --mode rls src/lib/supabase/rls.integration.test.ts",
+    "eval:plan": "vitest run --mode eval src/lib/ai/plan.eval.test.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0",
     "@base-ui/react": "^1.9.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",

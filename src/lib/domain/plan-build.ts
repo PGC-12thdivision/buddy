@@ -1,0 +1,223 @@
+import { availableExercises, hasEquipment, isExcludedByLimitations } from "./exclusion";
+import { refilterPlan } from "./refilter";
+import type { SessionKind, Template } from "./template";
+import type { Exercise, Focus, HoleReason, Joint, Plan } from "./types";
+import { MIN_SETS_PER_EXERCISE, validateVolume } from "./volume";
+
+// Montaje del plan a partir de la plantilla y de la elección de la IA (PRD §7; plan.md U5, KTD6,
+// KTD19, KTD20; decisiones D53–D56). La IA solo elige el ejercicio de cada hueco. Todo lo demás
+// lo decide este código, sin red ni hora del sistema:
+// - comprueba que cada ID existe en el catálogo filtrado por equipo y es de la región del hueco
+//   (catálogo cerrado, guardarraíl 2);
+// - fija las series según los minutos y el foco (guardarraíl 3: la IA no toca el volumen);
+// - aplica las limitaciones con el refiltrado (guardarraíl 6; KTD19: la IA nunca las ve);
+// - ajusta y valida los topes con el validador único (guardarraíl 4).
+
+export type BuiltSlot = {
+  position: number;
+  region: string;
+  pattern: string;
+  exerciseId: string | null;
+  holeReason?: HoleReason;
+  sets: number;
+  repMin: number;
+  repMax: number;
+};
+export type BuiltSession = { dayIndex: number; kind: SessionKind; label: string; slots: BuiltSlot[] };
+export type BuiltPlan = { template: "cuerpo_completo" | "torso_pierna"; sessions: BuiltSession[] };
+
+export type AssembleInput = {
+  template: Template;
+  // choices[sesión][hueco] = ID elegido por la IA, o null en un hueco sin ningún ejercicio posible
+  // con el equipo del usuario (no se le pide a la IA; queda vacío con motivo de equipo).
+  choices: (string | null)[][];
+  catalog: readonly Exercise[];
+  equipmentIds: readonly string[];
+  limitations: readonly Joint[];
+  minutes: number;
+  focus: Focus;
+};
+
+export type AssembleResult =
+  | { ok: true; plan: BuiltPlan }
+  | { ok: false; reason: "forma_incorrecta" | "id_fuera_de_catalogo" | "region_incorrecta" | "repetido" | "topes" };
+
+// Unas 2,5 minutos por serie con su descanso.
+const MINUTES_PER_SET = 2.5;
+
+export function setsPerSlot(slotCount: number, minutes: number, focus: Focus): number {
+  const maxPerSession = Math.floor(minutes / MINUTES_PER_SET);
+  const ceiling = focus === "musculo" ? 5 : 4;
+  return Math.min(Math.max(Math.floor(maxPerSession / slotCount), MIN_SETS_PER_EXERCISE), ceiling);
+}
+
+const LABELS: Record<SessionKind, string> = { cuerpo_completo: "Cuerpo completo", torso: "Torso", pierna: "Pierna" };
+
+export function assemblePlan(input: AssembleInput): AssembleResult {
+  const { template, choices, catalog, equipmentIds, limitations, minutes, focus } = input;
+  if (choices.length !== template.sessions.length || choices.some((c, i) => c.length !== template.sessions[i].slots.length)) {
+    return { ok: false, reason: "forma_incorrecta" };
+  }
+
+  // Catálogo que vio la IA: solo filtrado por equipo (KTD19).
+  const offered = new Map(catalog.filter((e) => hasEquipment(e, equipmentIds)).map((e) => [e.id, e]));
+  const sessions: BuiltSession[] = [];
+
+  for (const [index, session] of template.sessions.entries()) {
+    const sets = setsPerSlot(session.slots.length, minutes, focus);
+    const used = new Set<string>();
+    const slots: BuiltSlot[] = [];
+    for (const [position, slot] of session.slots.entries()) {
+      const choice = choices[index][position];
+      const regionPool = [...offered.values()].filter((e) => e.region === slot.region);
+      if (choice === null) {
+        if (regionPool.length > 0) return { ok: false, reason: "forma_incorrecta" };
+        slots.push({ position, region: slot.region, pattern: slot.region, exerciseId: null, holeReason: "sin_alternativa_equipo", sets, repMin: slot.repMin, repMax: slot.repMax });
+        continue;
+      }
+      const exercise = offered.get(choice);
+      if (!exercise) return { ok: false, reason: "id_fuera_de_catalogo" };
+      if (exercise.region !== slot.region) return { ok: false, reason: "region_incorrecta" };
+      // Repetir en la sesión solo cuando no queda ningún otro ejercicio de esa región.
+      if (used.has(exercise.id) && regionPool.some((e) => !used.has(e.id))) return { ok: false, reason: "repetido" };
+      used.add(exercise.id);
+      // En «Más fuerza», el principal lleva 2 o 3 series (PRD §7).
+      const slotSets = slot.principal ? Math.min(sets, 3) : sets;
+      slots.push({
+        position,
+        region: slot.region,
+        pattern: exercise.pattern,
+        exerciseId: exercise.id,
+        sets: slotSets,
+        repMin: slot.repMin,
+        repMax: slot.repMax,
+      });
+    }
+    sessions.push({ dayIndex: index, kind: session.kind, label: LABELS[session.kind], slots });
+  }
+
+  const result = applyConstraints(sessions, catalog, equipmentIds, limitations);
+  if (!result.ok) return { ok: false, reason: "topes" };
+
+  return { ok: true, plan: { template: template.sessions[0].kind === "cuerpo_completo" ? "cuerpo_completo" : "torso_pierna", sessions } };
+}
+
+// Aplica limitaciones y equipo a un plan ya montado y ajusta los topes (lo usan la generación y el
+// refiltrado, D35; misma lógica en los dos): refiltrado (sustituye o deja hueco con motivo), relleno
+// de huecos, reparación del suelo y ajuste del techo. Modifica las sesiones y devuelve el resultado
+// del validador único. Nunca deja un ejercicio que cargue una zona limitada (guardarraíl 6).
+export function applyConstraints(
+  sessions: BuiltSession[],
+  catalog: readonly Exercise[],
+  equipmentIds: readonly string[],
+  limitations: readonly Joint[],
+) {
+  const byId = new Map(catalog.map((e) => [e.id, e]));
+  const refiltered = refilterPlan(toPlan(sessions), { catalog, equipmentIds, limitations });
+  refiltered.sessions.forEach((session, i) =>
+    session.slots.forEach((slot, j) => {
+      const built = sessions[i].slots[j];
+      built.exerciseId = slot.exerciseId;
+      built.holeReason = slot.exerciseId ? undefined : (slot.holeReason ?? built.holeReason);
+      if (slot.exerciseId) built.pattern = byId.get(slot.exerciseId)?.pattern ?? built.pattern;
+    }),
+  );
+  fillHoles(sessions, catalog, equipmentIds, limitations);
+  const available = availableExercises(catalog, equipmentIds, limitations);
+  repairFloor(sessions, catalog, available);
+  fitCeiling(sessions, catalog, available);
+  return validateVolume(toPlan(sessions), catalog, available);
+}
+
+// Un hueco que la limitación dejó vacío se rellena con otro ejercicio de la misma región que el
+// usuario puede hacer (equipo y ninguna zona limitada), aunque sea de otro patrón; así el plan no
+// pierde un grupo que sí tiene ejercicios posibles (KTD20). Nunca carga una zona limitada.
+function fillHoles(sessions: BuiltSession[], catalog: readonly Exercise[], equipmentIds: readonly string[], limitations: readonly Joint[]) {
+  for (const session of sessions) {
+    const used = new Set(session.slots.map((s) => s.exerciseId).filter((id): id is string => id !== null));
+    for (const slot of session.slots) {
+      if (slot.exerciseId !== null) continue;
+      const candidate = catalog.find(
+        (e) => e.region === slot.region && !used.has(e.id) && hasEquipment(e, equipmentIds) && !isExcludedByLimitations(e, limitations),
+      );
+      if (!candidate) continue;
+      used.add(candidate.id);
+      slot.exerciseId = candidate.id;
+      slot.pattern = candidate.pattern;
+      slot.holeReason = undefined;
+    }
+  }
+}
+
+// Suelo de 2 sesiones por grupo (guardarraíl 4): la IA no ve las limitaciones (KTD19), así que
+// puede elegir de forma que, tras aplicarlas, un grupo con ejercicios posibles quede en menos de 2
+// sesiones. Se cambia, en una sesión que no lo trabaja, un ejercicio de la misma región por uno
+// posible que sí lo trabaje; el cambio solo se queda si reduce los problemas del validador.
+function repairFloor(sessions: BuiltSession[], catalog: readonly Exercise[], available: readonly Exercise[]) {
+  const byId = new Map(catalog.map((e) => [e.id, e]));
+  const issues = () => validateVolume(toPlan(sessions), catalog, available).issues;
+  // Déficit: sesiones que faltan hasta el suelo en los grupos posibles, más los demás problemas.
+  const score = () => {
+    let deficit = 0;
+    for (const issue of issues()) {
+      if (issue.code !== "suelo_frecuencia_grupo") {
+        deficit += 10;
+        continue;
+      }
+      const trained = sessions.filter((sess) =>
+        sess.slots.some((slot) => slot.exerciseId && byId.get(slot.exerciseId)?.muscleGroups.includes(issue.group)),
+      ).length;
+      deficit += Math.max(0, 2 - trained);
+    }
+    return deficit;
+  };
+  for (let guard = 0; guard < 50; guard++) {
+    const current = issues();
+    const currentScore = score();
+    const floor = current.find((i) => i.code === "suelo_frecuencia_grupo");
+    if (!floor || floor.code !== "suelo_frecuencia_grupo") return;
+    let improved = false;
+    for (const session of sessions) {
+      const trains = session.slots.some((slot) => slot.exerciseId && byId.get(slot.exerciseId)?.muscleGroups.includes(floor.group));
+      if (trains) continue;
+      const used = new Set(session.slots.map((slot) => slot.exerciseId));
+      for (const slot of session.slots) {
+        const candidate = available.find((e) => e.region === slot.region && e.muscleGroups.includes(floor.group) && !used.has(e.id));
+        if (!candidate) continue;
+        const before = { exerciseId: slot.exerciseId, pattern: slot.pattern, holeReason: slot.holeReason };
+        Object.assign(slot, { exerciseId: candidate.id, pattern: candidate.pattern, holeReason: undefined });
+        if (score() < currentScore) {
+          improved = true;
+          break;
+        }
+        Object.assign(slot, before);
+      }
+      if (improved) break;
+    }
+    if (!improved) return;
+  }
+}
+
+function toPlan(sessions: BuiltSession[]): Plan {
+  return {
+    sessions: sessions.map((s) => ({
+      slots: s.slots.map((slot) => ({ exerciseId: slot.exerciseId, sets: slot.sets, holeReason: slot.holeReason })),
+    })),
+  };
+}
+
+// Baja series de uno en uno (nunca por debajo de 2) donde un grupo pasa del techo de 20 por semana.
+function fitCeiling(sessions: BuiltSession[], catalog: readonly Exercise[], available: readonly Exercise[]) {
+  const byId = new Map(catalog.map((e) => [e.id, e]));
+  for (let guard = 0; guard < 200; guard++) {
+    const over = validateVolume(toPlan(sessions), catalog, available).issues.find((i) => i.code === "techo_series_grupo");
+    if (!over || over.code !== "techo_series_grupo") return;
+    const candidates = sessions
+      .flatMap((s) => s.slots)
+      .filter((slot) => slot.exerciseId !== null && slot.sets > MIN_SETS_PER_EXERCISE)
+      .filter((slot) => byId.get(slot.exerciseId!)?.muscleGroups.includes(over.group));
+    if (candidates.length === 0) return;
+    const biggest = candidates.reduce((a, b) => (b.sets > a.sets ? b : a));
+    biggest.sets -= 1;
+  }
+}
