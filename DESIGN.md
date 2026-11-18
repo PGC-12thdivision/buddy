@@ -48,7 +48,8 @@ Escala: 12, 13, 14, 15, 17, 20, 24, 28 (título; con `clamp()` de 22 a 32), 44�
 - Las listas usan reglas de imprenta (título en Archivo cursiva con filete de 3 px y líneas finas entre filas), no tarjetas. Un único elemento destacado por pantalla (pegatina limón girada o banner "NIVEL ARRIBA").
 - **Cifra de portada** (D59): las pantallas de la app llevan en el marcador una o dos cifras enormes que cuentan su estado (Hoy: ejercicios y minutos; Plan: días; Progreso: kg ganados). Archivo 900 cursiva, `clamp(56px, 18cqi, 96px)`, `line-height: .9`, limón sobre el marcador, con una etiqueta pequeña encima y sin caja. Marcador en dos alturas: "portada" (Hoy, Plan, Progreso y bienvenida) e "interior" (Ajustes y pasos del wizard, compacto).
 - **Filas numeradas** 01, 02, 03 en Archivo cursiva morada; el dato de la derecha en 2 líneas fijas y sin cortes ("3 series" / "8 a 12 reps").
-- **Tira de la semana:** 7 casillas cuadradas con borde de 2 px. Días de entreno en tinta, hechos en `--ok`, hoy en limón con borde de 3 px y sombra morada, descanso con el borde atenuado.
+- **Tira de la semana** (D67): una casilla cuadrada por sesión de la semana, numerada, con borde de 2 px. Hechas en `--ok`, la siguiente en limón con borde de 3 px y sombra morada, y las pendientes en tinta.
+- **Sesión** (D63–D66): sin cifra de portada, porque los números grandes son el peso y las repeticiones. Marcador compacto con "Tengo molestia" arriba a la derecha y título de hasta 2 líneas. Botonera de 3 botones. El aviso con Deshacer va en el pie, encima de los botones, y dura 5 s. En calibración, banda morada con la etiqueta CALIBRACIÓN en turquesa. El fin de sesión es la única portada de logro.
 
 ## 5. Navegación y ancho
 | Ancho | Navegación | Contenido |

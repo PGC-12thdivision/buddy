@@ -198,6 +198,64 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     expect(data!.every((row) => row.reps === 10)).toBe(true);
   });
 
+  it("U7: una sola sesión abierta; A solo cierra la suya, sin cambiar tipo ni inicio, y no la reabre", async () => {
+    await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("user_id", userA).is("ended_at", null);
+    const first = randomUUID();
+    must(await clientA.from("workout_sessions").insert({ id: first, kind: "normal" }), "primera sesión de A");
+    const second = await clientA.from("workout_sessions").insert({ id: randomUUID(), kind: "normal" });
+    expect(second.error?.code).toBe("23505");
+
+    const kind = await clientA.from("workout_sessions").update({ kind: "calibracion" }).eq("id", first);
+    expect(kind.error).not.toBeNull();
+    const started = await clientA.from("workout_sessions").update({ started_at: "2020-01-01T00:00:00Z" }).eq("id", first);
+    expect(started.error).not.toBeNull();
+    must(await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", first), "cerrar");
+    const row = await admin.from("workout_sessions").select("kind, ended_at").eq("id", first).single();
+    expect(row.data?.kind).toBe("normal");
+    expect(row.data?.ended_at).not.toBeNull();
+
+    const reopen = await clientA.from("workout_sessions").update({ ended_at: null }).eq("id", first);
+    expect(reopen.error).not.toBeNull();
+  });
+
+  it("U7: A no puede escribir su carga de trabajo ni cambiar el estado de una serie", async () => {
+    const write = await clientA.from("exercise_state").insert({ exercise_id: exerciseId, working_weight_kg: 500 });
+    expect(write.error).not.toBeNull();
+    const session = randomUUID();
+    must(await clientA.from("workout_sessions").insert({ id: session, kind: "normal" }), "sesión de A");
+    const id = randomUUID();
+    must(
+      await clientA.from("set_logs").insert({ id, session_id: session, exercise_id: exerciseId, set_index: 100, weight_kg: 0, reps: 0, status: "detenida" }),
+      "detenida",
+    );
+    const flip = await clientA.from("set_logs").update({ status: "hecha" }).eq("id", id);
+    expect(flip.error).not.toBeNull();
+    await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", session);
+  });
+
+  it("U7: dos series con distinto ID y el mismo número en la misma sesión no duplican", async () => {
+    const set = { session_id: sessionB, exercise_id: exerciseId, set_index: 7, weight_kg: 40, reps: 10, status: "hecha" };
+    must(await clientB.from("set_logs").insert({ id: randomUUID(), ...set }), "primera");
+    const again = await clientB.from("set_logs").insert({ id: randomUUID(), ...set });
+    expect(again.error?.code).toBe("23505");
+  });
+
+  it("U7: A puede guardar una fila neutra 'detenida' y corregir el RIR de su serie", async () => {
+    const session = randomUUID();
+    must(await clientA.from("workout_sessions").insert({ id: session, kind: "calibracion" }), "sesión de A");
+    const id = randomUUID();
+    must(
+      await clientA.from("set_logs").insert({ id, session_id: session, exercise_id: exerciseId, set_index: 1, weight_kg: 20, reps: 10, rir: 4, status: "hecha" }),
+      "serie de calibración",
+    );
+    must(await clientA.from("set_logs").update({ rir: 2 }).eq("id", id), "corregir RIR");
+    must(
+      await clientA.from("set_logs").insert({ id: randomUUID(), session_id: session, exercise_id: exerciseId, set_index: 2, weight_kg: 0, reps: 0, status: "detenida" }),
+      "detenida",
+    );
+    await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", session);
+  });
+
   it("un usuario con sesión lee el catálogo y un anónimo no", async () => {
     const withSession = await clientA.from("exercises").select("id").limit(1);
     expect(withSession.error).toBeNull();
