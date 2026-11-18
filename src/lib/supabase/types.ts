@@ -687,6 +687,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_stripe_event: {
+        Args: {
+          p_customer_id: string
+          p_event_id: string
+          p_status: string
+          p_subscription_id: string | null
+        }
+        Returns: string
+      }
       bump_daily_counter: { Args: { p_metric: string }; Returns: undefined }
       reserve_ai_call: {
         Args: {
