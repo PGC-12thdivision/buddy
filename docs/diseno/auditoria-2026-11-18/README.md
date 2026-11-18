@@ -32,7 +32,11 @@ Defectos y victorias rápidas que no cambian ninguna decisión, salvo la tipogra
 - **404 en español** con la marca.
 - **Fuera del diseño:** entrar con un plan activo lleva a Hoy, no al resumen.
 
-## Para que decida Pablo
+## Decidido (18/11, con `maquetas-decisiones.html` delante)
+
+Pablo aceptó las recomendaciones: dirección B "Revista de Venice" (D59), pestaña activa en celda limón (D60, ya aplicada), tema oscuro como interruptor en Ajustes en U11 (D61; le gustó la C, se tendrá en cuenta), Hoy en 2 columnas en escritorio (D62) y Silkscreen (D58 confirmada).
+
+## Lo que se planteó a Pablo
 
 1. **Dirección de elevación 2026** (informe A, sección "Direcciones de elevación"):
    - A, "HUD de recreativa";
