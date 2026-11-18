@@ -7,6 +7,13 @@ export function isExcludedByLimitations(exercise: Exercise, limitations: readonl
   return exercise.joints.some((joint) => limitations.includes(joint));
 }
 
+// Contribución leve: zonas limitadas que el ejercicio solo implica de forma leve (jointsLight). Nunca
+// excluye; la sesión lo usa para avisar. Vacío si el ejercicio ya está excluido (eso manda).
+export function lightMatches(exercise: Exercise, limitations: readonly Joint[]): Joint[] {
+  if (isExcludedByLimitations(exercise, limitations)) return [];
+  return (exercise.jointsLight ?? []).filter((joint) => limitations.includes(joint));
+}
+
 export function hasEquipment(exercise: Exercise, equipmentIds: readonly string[]): boolean {
   return equipmentIds.includes(exercise.equipmentTypeId);
 }

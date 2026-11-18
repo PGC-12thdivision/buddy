@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { anadirLimitacion, borrarSerie, guardarSerie, marcarMolestia, terminarSesion } from "@/app/actions/session";
-import { Chip, Icon, SecondaryButton, TextButton } from "@/components/wizard/ui";
+import { Chip, Icon, Note, SecondaryButton, TextButton } from "@/components/wizard/ui";
 import type { ExerciseView, SavedSet, SessionData, SessionSlotView } from "@/lib/app/session-data";
 import { calibrationState, formatKg, MAX_CALIBRATION_SETS } from "@/lib/domain/session";
 import type { Joint } from "@/lib/domain/types";
@@ -32,6 +32,23 @@ const isCalibrationDone = (view: ExerciseView, saved: SavedSet[]) => {
   const machine = { id: view.exerciseId, incrementKg: view.incrementKg, minKg: view.minKg };
   return calibrationState(own, view.calibration.startLoadKg, view.calibration.targetReps, machine).done;
 };
+
+// Técnica plegada por defecto (regla de 360×640) y aviso de contribución leve, sobrio y sin animación.
+// El aviso solo llega si las limitaciones del usuario coinciden con las zonas de implicación leve.
+function Technique({ view }: { view: ExerciseView }) {
+  if (!view.technique && !view.lightWarning) return null;
+  return (
+    <>
+      {view.lightWarning ? <Note tone="warn">{view.lightWarning}</Note> : null}
+      {view.technique ? (
+        <details className="text-[15px]">
+          <summary className="flex min-h-12 cursor-pointer items-center font-bold">Técnica</summary>
+          <p className="m-0 pb-1 text-muted-foreground">{view.technique}</p>
+        </details>
+      ) : null}
+    </>
+  );
+}
 
 function isExerciseDone(view: ExerciseView, saved: SavedSet[]): boolean {
   const own = saved.filter((s) => s.exerciseId === view.exerciseId);
@@ -524,6 +541,7 @@ export function SessionRunner({ data }: { data: SessionData }) {
               ? `Calibración: hasta ${MAX_CALIBRATION_SETS} series de prueba de ${current.calibration.targetReps} repeticiones.`
               : `${current.sets} series de ${current.repMin} a ${current.repMax} repeticiones.`}
           </p>
+          <Technique view={current} />
           {rest}
           {errorNote}
         </main>
@@ -599,6 +617,7 @@ export function SessionRunner({ data }: { data: SessionData }) {
           <TextButton onClick={() => calibrate(0, false)} disabled={busy}>
             {`No llegué a las ${target}`}
           </TextButton>
+          <Technique view={current} />
           {rest}
           {errorNote}
         </main>
@@ -684,6 +703,7 @@ export function SessionRunner({ data }: { data: SessionData }) {
             +
           </button>
         </div>
+        <Technique view={current} />
         {rest}
         {errorNote}
       </main>
