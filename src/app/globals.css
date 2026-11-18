@@ -153,6 +153,19 @@
     background: var(--background);
     color: var(--foreground);
   }
+  /* En pantallas grandes, la columna se enmarca como un mueble de recreativa (auditoría 18/11, P2.2). */
+  @media (min-width: 1024px) and (min-height: 800px) {
+    .wz-frame {
+      padding-block: 32px;
+    }
+    .wz-column {
+      min-height: calc(100dvh - 64px);
+      overflow: clip;
+      border: 3px solid var(--foreground);
+      border-radius: 6px;
+      box-shadow: 8px 8px 0 var(--secondary);
+    }
+  }
   .wz-pad {
     padding-inline: clamp(14px, 5cqi, 22px);
   }
@@ -600,7 +613,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: 6px clamp(18px, 6cqi, 32px);
+    gap: 6px clamp(32px, 10cqi, 56px);
     margin-top: 12px;
   }
   .wz-hero-label {

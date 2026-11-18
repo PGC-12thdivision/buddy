@@ -1,12 +1,13 @@
-import type { Route } from "next";
 import Link from "next/link";
 import { AppScreen, Disclaimer, Tag } from "@/components/app/screen";
-import { CtaLink, Note } from "@/components/wizard/ui";
+import { StartButton } from "@/components/session/start-button";
+import { Note } from "@/components/wizard/ui";
 import { FOCUS_TEXT, planTitle, requireAppContext } from "@/lib/app/context";
 import type { ActiveSlot } from "@/lib/app/active-plan";
 
-// Pestaña Plan (diseño D4, D17, D28, D30; plan.md U6). Consulta del plan activo; la variante
-// "recién generado" (antes de la primera sesión) es la única con CTA: empezar la calibración.
+// Pestaña Plan (diseño D4, D17, D28, D30; plan.md U6; dirección B, D59). Portada con los días y los
+// minutos; un día por sección de revista ("DÍA 1") con filas numeradas; en escritorio, un día por
+// columna. La variante "recién generado" (antes de la primera sesión) es la única con CTA.
 
 const REGION_TEXT: Record<string, string> = {
   empuje_inferior: "pierna (empuje)",
@@ -17,7 +18,7 @@ const REGION_TEXT: Record<string, string> = {
   traccion_superior_vertical: "espalda (jalón)",
 };
 
-function SlotRow({ slot }: { slot: ActiveSlot }) {
+function SlotRow({ slot, index }: { slot: ActiveSlot; index: number }) {
   if (!slot.exerciseId) {
     const why =
       slot.gapReason === "sin_alternativa_limitacion"
@@ -36,10 +37,13 @@ function SlotRow({ slot }: { slot: ActiveSlot }) {
     );
   }
   return (
-    <li className="wz-rule-row">
-      <span className="font-bold">{slot.exerciseName}</span>
-      <span className="wz-rule-value flex flex-col text-[14px] leading-tight text-muted-foreground">
-        <span className="font-bold text-foreground">{`${slot.sets} series`}</span>
+    <li className="wz-num-row">
+      <span className="wz-num" aria-hidden="true">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      <span className="min-w-0 font-bold">{slot.exerciseName}</span>
+      <span className="wz-num-val">
+        <b>{`${slot.sets} series`}</b>
         <span>{`${slot.repMin} a ${slot.repMax} reps`}</span>
       </span>
     </li>
@@ -53,10 +57,14 @@ export default async function PlanPage() {
 
   return (
     <AppScreen
+      kicker={FOCUS_TEXT[plan.focus]}
       title={planTitle(plan.daysPerWeek, plan.template)}
-      subtitle={`${minutes ? `${minutes} minutos por sesión. ` : ""}${FOCUS_TEXT[plan.focus] ?? ""}.`}
+      heroes={[
+        { label: "Días", value: String(plan.daysPerWeek) },
+        ...(minutes ? [{ label: "Minutos", value: String(minutes) }] : []),
+      ]}
       tags={fresh ? <Tag>Plan listo</Tag> : plan.source === "refiltrado" ? <Tag>Plan actualizado</Tag> : null}
-      footer={fresh ? <CtaLink href={"/sesion" as Route}>Empezar calibración</CtaLink> : undefined}
+      footer={fresh ? <StartButton>Empezar calibración</StartButton> : undefined}
     >
       <Disclaimer />
       {fresh ? (
@@ -79,14 +87,17 @@ export default async function PlanPage() {
       <div className={`grid gap-6 ${plan.sessions.length > 3 ? "lg:grid-cols-3" : "lg:grid-cols-[repeat(auto-fit,minmax(0,1fr))]"}`}>
         {plan.sessions.map((session) => (
           <section key={session.dayIndex} aria-labelledby={`dia-${session.dayIndex}`}>
-            <h2 id={`dia-${session.dayIndex}`} className="wz-rule-title">
-              {`Día ${session.dayIndex + 1}`} <small className="font-sans text-[13px] font-normal not-italic normal-case text-muted-foreground">{session.label}</small>
+            <p className="wz-kicker m-0 mb-1" style={{ color: "var(--secondary)" }}>
+              {session.label}
+            </p>
+            <h2 id={`dia-${session.dayIndex}`} className="wz-rule-title text-[26px]">
+              {`Día ${session.dayIndex + 1}`}
             </h2>
-            <ul className="m-0 list-none p-0">
-              {session.slots.map((slot) => (
-                <SlotRow key={slot.position} slot={slot} />
+            <ol className="m-0 list-none p-0">
+              {session.slots.map((slot, i) => (
+                <SlotRow key={slot.position} slot={slot} index={i} />
               ))}
-            </ul>
+            </ol>
           </section>
         ))}
       </div>
