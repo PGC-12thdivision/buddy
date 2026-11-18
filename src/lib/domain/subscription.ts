@@ -37,7 +37,7 @@ export function currentSubscription(subscriptions: StripeSubscriptionLike[]): {
 
 // Pantallas a las que se puede volver tras el pago (diseño D11). Lista cerrada: el valor llega del
 // navegador y solo decide a dónde se navega, nunca si se activa premium.
-const RETURN_PATHS = ["/hoy", "/plan", "/progreso", "/ajustes", "/premium"] as const;
+const RETURN_PATHS = ["/hoy", "/plan", "/progreso", "/ajustes", "/premium", "/checkin"] as const;
 export type ReturnPath = (typeof RETURN_PATHS)[number];
 
 export const safeReturnPath = (value: unknown): ReturnPath =>

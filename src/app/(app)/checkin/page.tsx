@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { AppScreen, Disclaimer, Tag, WeekStrip } from "@/components/app/screen";
 import { StartButton } from "@/components/session/start-button";
 import { CtaLink, Note } from "@/components/wizard/ui";
@@ -68,7 +69,7 @@ export default async function CheckinPage() {
     // Sin premium no se llama a la IA (D10). El destino "¿CONTINUAR?" llega con Stripe (U9); hasta
     // entonces, la suscripción de Ajustes.
     return (
-      <AppScreen kicker="Check-in" title="Tu coach es premium" tags={<Tag premium>Premium</Tag>} footer={<CtaLink href="/ajustes">Ver mi suscripción</CtaLink>}>
+      <AppScreen kicker="Check-in" title="Tu coach es premium" tags={<Tag premium>Premium</Tag>} footer={<CtaLink href={"/premium?desde=/checkin" as Route}>Ver qué incluye premium</CtaLink>}>
         <p className="m-0 text-[17px]">
           Cada semana, el coach lee cómo te has sentido y ajusta series y ejercicios de tu plan, dentro de los topes de seguridad, explicándote el porqué.
         </p>
