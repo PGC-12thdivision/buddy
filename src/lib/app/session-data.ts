@@ -2,9 +2,10 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CatalogExercise } from "@/lib/catalog";
 import { calibrationStartLoad } from "@/lib/domain/calibration";
+import { lightMatches } from "@/lib/domain/exclusion";
 import { nextPrescription } from "@/lib/domain/progression";
 import { calibrationState, exerciseHistory, type LoggedSet } from "@/lib/domain/session";
-import type { EquipmentType, Experience } from "@/lib/domain/types";
+import type { EquipmentType, Experience, Joint } from "@/lib/domain/types";
 import type { Database } from "@/lib/supabase/types";
 import { loadSessionScope, type SlotRule } from "./session-guard";
 
@@ -30,7 +31,19 @@ export type ExerciseView = {
   reps: number;
   // Subida de carga por doble progresión ("NIVEL ARRIBA"), con la carga anterior.
   levelUpFromKg: number | null;
+  // Técnica del catálogo (1–2 frases). Se muestra plegada para no romper la regla de 360×640.
+  technique: string | null;
+  // Aviso de contribución leve: solo si las limitaciones del usuario coinciden con joints_light.
+  lightWarning: string | null;
 };
+
+const LIGHT_WARNING_FALLBACK = "Este ejercicio implica un poco una zona que marcaste. Carga ligera y recorrido cómodo. Si notas dolor, para y márcalo como molestia.";
+
+// Aviso de contribución leve (regla de Pablo, 18/11): nunca excluye, solo avisa. Sin la zona en el texto
+// genérico; la nota del catálogo dice qué vigilar.
+export function lightWarningFor(exercise: CatalogExercise, limitations: readonly Joint[]): string | null {
+  return lightMatches(exercise, limitations).length > 0 ? (exercise.lightNote ?? LIGHT_WARNING_FALLBACK) : null;
+}
 
 export type SessionSlotView = ExerciseView & { position: number; alternatives: ExerciseView[] };
 
@@ -125,6 +138,8 @@ export async function loadSessionData(supabase: Client, userId: string, sessionI
       repMax: rule.repMax,
       incrementKg: increment,
       minKg: eq.minKg,
+      technique: exercise.technique,
+      lightWarning: lightWarningFor(exercise, scope.limitations),
     };
 
     // Sin carga fijada, o fijada en esta misma sesión: es su calibración (D63).

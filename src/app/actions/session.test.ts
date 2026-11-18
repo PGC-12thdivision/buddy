@@ -78,7 +78,7 @@ beforeEach(() => {
   results = { "set_logs:select": { data: { session_id: SESSION, exercise_id: allowedId, set_index: 1 }, error: null } };
   scope = {
     session: { id: SESSION, kind: "normal", planSessionId: "ps1", startedAt: "2026-11-18T10:00:00Z", open: true },
-    catalog: CATALOG.map((e) => ({ ...e, name: e.id })),
+    catalog: CATALOG.map((e) => ({ ...e, name: e.id, jointsLight: [], technique: null, lightNote: null })),
     limitations: [],
     allowed: new Map([[allowedId, { position: 0, sets: 3, repMin: 8, repMax: 12 }]]),
     day: [],

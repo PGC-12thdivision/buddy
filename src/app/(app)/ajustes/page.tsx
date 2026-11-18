@@ -1,6 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { AppScreen, Disclaimer } from "@/components/app/screen";
+import { TextButton, TextLink } from "@/components/wizard/ui";
 import { requireAppContext } from "@/lib/app/context";
 import { parseTheme } from "@/lib/theme";
 import { FOCUS_LABELS, type WizardAnswers } from "@/lib/wizard/answers";
@@ -27,7 +28,7 @@ function RowLink({ href, label, value }: { href: Route; label: string; value: st
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export default async function AjustesPage() {
-  const { supabase, userId, premium, trialDaysLeft } = await requireAppContext();
+  const { supabase, userId, premium, paying, hasStripeCustomer, trialDaysLeft } = await requireAppContext();
   const [claims, health, gym, answers, settings] = await Promise.all([
     supabase.auth.getClaims(),
     supabase.from("health_profile").select("limitations").eq("user_id", userId).maybeSingle(),
@@ -71,6 +72,18 @@ export default async function AjustesPage() {
               {premium && trialDaysLeft !== null ? `Prueba premium, ${trialDaysLeft} días` : premium ? "Premium" : "Gratis"}
             </span>
           </div>
+          {/* Formularios POST a las rutas de Stripe (plan.md U9): precio y cliente los pone el servidor. */}
+          {paying && hasStripeCustomer ? (
+            <form action="/api/stripe/portal" method="post" className="wz-rule-row">
+              <TextButton type="submit">Gestionar</TextButton>
+            </form>
+          ) : (
+            <form action="/api/stripe/checkout" method="post" className="wz-rule-row">
+              <input type="hidden" name="volver" value="/ajustes" />
+              <TextButton type="submit">Hazte premium</TextButton>
+              <TextLink href="/premium">Ver qué incluye</TextLink>
+            </form>
+          )}
         </section>
         <section aria-labelledby="ajustes-cuenta">
           <h2 id="ajustes-cuenta" className="wz-rule-title">

@@ -1,6 +1,6 @@
 import { availableExercises, hasEquipment, isExcludedByLimitations } from "./exclusion";
 import { refilterPlan } from "./refilter";
-import type { SessionKind, Template } from "./template";
+import { isExtraRegion, setsPerSlot, type SessionKind, type Template } from "./template";
 import { MAIN_MUSCLE_GROUPS, type Exercise, type Focus, type HoleReason, type Joint, type Plan } from "./types";
 import { MAX_WEEKLY_SETS_PER_GROUP, MIN_SETS_PER_EXERCISE, validateVolume } from "./volume";
 
@@ -42,14 +42,7 @@ export type AssembleResult =
   | { ok: true; plan: BuiltPlan }
   | { ok: false; reason: "forma_incorrecta" | "id_fuera_de_catalogo" | "region_incorrecta" | "repetido" | "topes" };
 
-// Unas 2,5 minutos por serie con su descanso.
-const MINUTES_PER_SET = 2.5;
-
-export function setsPerSlot(slotCount: number, minutes: number, focus: Focus): number {
-  const maxPerSession = Math.floor(minutes / MINUTES_PER_SET);
-  const ceiling = focus === "musculo" ? 5 : 4;
-  return Math.min(Math.max(Math.floor(maxPerSession / slotCount), MIN_SETS_PER_EXERCISE), ceiling);
-}
+export { setsPerSlot };
 
 const LABELS: Record<SessionKind, string> = { cuerpo_completo: "Cuerpo completo", torso: "Torso", pierna: "Pierna" };
 
@@ -64,15 +57,21 @@ export function assemblePlan(input: AssembleInput): AssembleResult {
   const sessions: BuiltSession[] = [];
 
   for (const [index, session] of template.sessions.entries()) {
-    const sets = setsPerSlot(session.slots.length, minutes, focus);
+    // Las series de los huecos principales no cambian por los huecos extra de brazo o core, que
+    // llevan las suyas desde la plantilla (solo con los minutos que sobran).
+    const mainCount = session.slots.filter((s) => !isExtraRegion(s.region)).length;
+    const sets = setsPerSlot(Math.max(mainCount, 1), minutes, focus);
     const used = new Set<string>();
     const slots: BuiltSlot[] = [];
-    for (const [position, slot] of session.slots.entries()) {
-      const choice = choices[index][position];
+    for (const [slotIndex, slot] of session.slots.entries()) {
+      const choice = choices[index][slotIndex];
       const regionPool = [...offered.values()].filter((e) => e.region === slot.region);
+      const extra = isExtraRegion(slot.region);
       if (choice === null) {
         if (regionPool.length > 0) return { ok: false, reason: "forma_incorrecta" };
-        slots.push({ position, region: slot.region, pattern: slot.region, exerciseId: null, holeReason: "sin_alternativa_equipo", sets, repMin: slot.repMin, repMax: slot.repMax });
+        // Un hueco extra sin ejercicio posible con el equipo no se muestra: es un complemento.
+        if (extra) continue;
+        slots.push({ position: slots.length, region: slot.region, pattern: slot.region, exerciseId: null, holeReason: "sin_alternativa_equipo", sets, repMin: slot.repMin, repMax: slot.repMax });
         continue;
       }
       const exercise = offered.get(choice);
@@ -82,9 +81,9 @@ export function assemblePlan(input: AssembleInput): AssembleResult {
       if (used.has(exercise.id) && regionPool.some((e) => !used.has(e.id))) return { ok: false, reason: "repetido" };
       used.add(exercise.id);
       // En «Más fuerza», el principal lleva 2 o 3 series (PRD §7).
-      const slotSets = slot.principal ? Math.min(sets, 3) : sets;
+      const slotSets = extra ? slot.sets : slot.principal ? Math.min(sets, 3) : sets;
       slots.push({
-        position,
+        position: slots.length,
         region: slot.region,
         pattern: exercise.pattern,
         exerciseId: exercise.id,
@@ -227,10 +226,17 @@ export function rebuildThinSessions(sessions: BuiltSession[], catalog: readonly 
 function repairFloor(sessions: BuiltSession[], catalog: readonly Exercise[], available: readonly Exercise[]) {
   const byId = new Map(catalog.map((e) => [e.id, e]));
   const issues = () => validateVolume(toPlan(sessions), catalog, available).issues;
+  // Un techo que fitCeiling arreglará después (bajando series hasta 2) no cuenta como problema: con
+  // el catálogo ampliado, un cambio que arregla el suelo a menudo pasa el techo de forma temporal.
+  const ceilingFixable = (group: string) =>
+    sessions.flatMap((s) => s.slots).filter((slot) => slot.exerciseId && byId.get(slot.exerciseId)?.muscleGroups.includes(group)).length *
+      MIN_SETS_PER_EXERCISE <=
+    MAX_WEEKLY_SETS_PER_GROUP;
   // Déficit: sesiones que faltan hasta el suelo en los grupos posibles, más los demás problemas.
   const score = () => {
     let deficit = 0;
     for (const issue of issues()) {
+      if (issue.code === "techo_series_grupo" && ceilingFixable(issue.group)) continue;
       if (issue.code !== "suelo_frecuencia_grupo") {
         deficit += 10;
         continue;
@@ -253,15 +259,19 @@ function repairFloor(sessions: BuiltSession[], catalog: readonly Exercise[], ava
       if (trains) continue;
       const used = new Set(session.slots.map((slot) => slot.exerciseId));
       for (const slot of session.slots) {
-        const candidate = available.find((e) => e.region === slot.region && e.muscleGroups.includes(floor.group) && !used.has(e.id));
-        if (!candidate) continue;
+        // Con el catálogo ampliado hay varios candidatos por región: se prueban en orden hasta dar con
+        // uno que mejore (por ejemplo, uno que trabaje también el grupo del ejercicio que sustituye).
+        const candidates = available.filter((e) => e.region === slot.region && e.muscleGroups.includes(floor.group) && !used.has(e.id));
         const before = { exerciseId: slot.exerciseId, pattern: slot.pattern, holeReason: slot.holeReason };
-        Object.assign(slot, { exerciseId: candidate.id, pattern: candidate.pattern, holeReason: undefined });
-        if (score() < currentScore) {
-          improved = true;
-          break;
+        for (const candidate of candidates) {
+          Object.assign(slot, { exerciseId: candidate.id, pattern: candidate.pattern, holeReason: undefined });
+          if (score() < currentScore) {
+            improved = true;
+            break;
+          }
+          Object.assign(slot, before);
         }
-        Object.assign(slot, before);
+        if (improved) break;
       }
       if (improved) break;
     }

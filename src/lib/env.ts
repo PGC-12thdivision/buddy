@@ -19,6 +19,7 @@ export type OptionalServerVar =
   | "ANTHROPIC_API_KEY"
   | "STRIPE_SECRET_KEY"
   | "STRIPE_WEBHOOK_SECRET"
+  | "STRIPE_PRICE_ID"
   | "RESEND_API_KEY"
   | "CRON_SECRET";
 

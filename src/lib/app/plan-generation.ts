@@ -51,7 +51,7 @@ export async function generateAndSavePlan(input: GenerationInput): Promise<Gener
   const result = await generatePlan({
     model: PLAN_MODEL,
     callModel: callPlanModel,
-    template: buildTemplate(days, focus),
+    template: buildTemplate(days, focus, input.minutesPerSession),
     profile: { focus, daysPerWeek: days, minutesPerSession: input.minutesPerSession, sports: input.sports },
     catalog: input.catalog,
     equipmentIds: input.equipmentIds,
