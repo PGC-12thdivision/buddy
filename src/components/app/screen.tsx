@@ -13,6 +13,7 @@ export function AppScreen({
   tags,
   heroes,
   heroesHiddenOnDesktop,
+  sober,
   children,
   footer,
 }: {
@@ -23,13 +24,15 @@ export function AppScreen({
   heroes?: Hero[];
   // En escritorio las cifras pueden ir en la columna lateral en vez de en el marcador (D62).
   heroesHiddenOnDesktop?: boolean;
+  // Cabecera sobria (DESIGN.md §1): errores y bloqueos, sin trama ni franja.
+  sober?: boolean;
   children: ReactNode;
   footer?: ReactNode;
 }) {
   const cover = heroes !== undefined && heroes.length > 0;
   return (
     <>
-      <header className="wz-band wz-pad" data-cover={cover ? "" : undefined} aria-label="Marcador">
+      <header className="wz-band wz-pad" data-cover={cover ? "" : undefined} data-sober={sober ? "" : undefined} aria-label="Marcador">
         {kicker || tags ? (
           <div className="flex min-h-11 flex-wrap items-center justify-between gap-2">
             {kicker ? <span className="wz-kicker">{kicker}</span> : <span />}
@@ -42,7 +45,7 @@ export function AppScreen({
           <Heroes heroes={heroes} className={heroesHiddenOnDesktop ? "lg:hidden" : undefined} />
         ) : null}
       </header>
-      <div className="wz-stripes" aria-hidden="true" />
+      {sober ? null : <div className="wz-stripes" aria-hidden="true" />}
       {/* En escritorio el pie va en el flujo, justo bajo el contenido, y no pegado al fondo (D62). */}
       <main className="wz-pad flex flex-1 flex-col gap-4 py-4 lg:flex-none" aria-label={title}>
         {children}
