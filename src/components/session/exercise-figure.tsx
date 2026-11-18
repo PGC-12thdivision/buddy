@@ -1,36 +1,66 @@
-import { arrowPaths, ILLUSTRATIONS, illustrationKey, VIEWBOX, type Illustration } from "@/lib/app/illustrations";
+import type { CSSProperties } from "react";
+import { DRAWINGS } from "@/lib/app/exercise-drawings";
 
-// Dibujo de técnica de un ejercicio (por su patrón de movimiento). Trazos de 2,5 px que no escalan,
-// tinta para el cuerpo, discontinuo para la posición inicial, flecha morada y carga en limón con borde
-// de tinta (el limón nunca va como trazo sobre fondo claro; DESIGN.md §2).
-export function ExerciseFigure({ pattern, region, className }: { pattern: string; region: string; className?: string }) {
-  const figure: Illustration = ILLUSTRATIONS[illustrationKey(pattern, region)];
+// Dibujos de técnica (feedback de Pablo, 18/11: "que parezca una persona en la máquina de verdad").
+// Ilustraciones de Everkinetic (CC BY-SA 4.0) adaptadas: solo el trazo, como máscara, para pintarlo con
+// la tinta del tema (claro y oscuro). Dos fotogramas: cómo empiezas (papel) y adónde llegas (celda
+// limón, como la pestaña activa), unidos por la flecha morada (DESIGN.md §2).
+
+const CREDIT_URL = "https://github.com/everkinetic/data";
+const LICENSE_URL = "https://creativecommons.org/licenses/by-sa/4.0/deed.es";
+
+const art = (file: string): CSSProperties => {
+  const url = `url("/ejercicios/${file}")`;
+  return { maskImage: url, WebkitMaskImage: url };
+};
+
+export function ExerciseFigure({ exerciseId, name }: { exerciseId: string; name: string }) {
+  const drawing = DRAWINGS[exerciseId];
+  if (!drawing) return null;
   return (
-    <svg
-      className={`ss-figure${className ? ` ${className}` : ""}`}
-      viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
-      role="img"
-      aria-label={figure.label}
-    >
-      <g className="ss-figure-props">
-        {figure.props?.map((d) => <path key={d} d={d} />)}
-      </g>
-      <g className="ss-figure-ghost">
-        {figure.ghost?.map((d) => <path key={d} d={d} />)}
-      </g>
-      <g className="ss-figure-body">
-        {figure.body.map((d) => <path key={d} d={d} />)}
-        <circle cx={figure.head[0]} cy={figure.head[1]} r={6} />
-      </g>
-      <g className="ss-figure-load">
-        {figure.loads?.map(([x, y]) => <rect key={`${x}-${y}`} x={x - 4} y={y - 4} width={8} height={8} rx={1} />)}
-      </g>
-      <g className="ss-figure-arrow">
-        {figure.arrows.map((arrow, i) => {
-          const { line, heads } = arrowPaths(arrow);
-          return <path key={i} d={line + heads.join("")} />;
-        })}
-      </g>
-    </svg>
+    <figure className="ss-drawing">
+      <div className="ss-drawing-frames" role="img" aria-label={`${name}: posición con la que empiezas y posición a la que llegas.`}>
+        <div className="ss-frame">
+          <span className="ss-frame-tag" aria-hidden="true">
+            1 · Empiezas
+          </span>
+          <span className="ss-frame-art" style={art(drawing.start)} />
+        </div>
+        <span className="ss-drawing-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 12H19M13 6L19 12L13 18" />
+          </svg>
+        </span>
+        <div className="ss-frame" data-end="">
+          <span className="ss-frame-tag" aria-hidden="true">
+            2 · Llegas y vuelves
+          </span>
+          <span className="ss-frame-art" style={art(drawing.end)} />
+        </div>
+      </div>
+      <figcaption>
+        {drawing.similar ? "Variante parecida. " : null}
+        Dibujo:{" "}
+        <a href={CREDIT_URL} target="_blank" rel="noreferrer">
+          Everkinetic
+        </a>
+        ,{" "}
+        <a href={LICENSE_URL} target="_blank" rel="noreferrer">
+          CC BY-SA 4.0
+        </a>
+        , adaptado.
+      </figcaption>
+    </figure>
+  );
+}
+
+// Miniatura para la fila "Cómo se hace": la posición a la que llegas.
+export function ExerciseThumb({ exerciseId }: { exerciseId: string }) {
+  const drawing = DRAWINGS[exerciseId];
+  if (!drawing) return null;
+  return (
+    <span className="ss-thumb" aria-hidden="true">
+      <span className="ss-frame-art" style={art(drawing.end)} />
+    </span>
   );
 }
