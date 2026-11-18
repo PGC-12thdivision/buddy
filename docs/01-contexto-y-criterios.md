@@ -61,12 +61,47 @@ Fuentes: enunciados "[RETO 6] El salto profesional" y "[RETO 9] La documentació
 | D24 | 19/10 | Nombre: BUDDY. IA: Claude (API de Anthropic) | Decisión de Pablo |
 | D25 | 19/10 | Precio premium: 5 €/mes [hipótesis] | Franja baja frente a referencias (Hevy, Strong, SensAI, Fitbod; ver PRD sección 14) |
 | D26 | 28/10 | Supabase con claves publishable/secret, no `anon`/`service_role` | Las legacy dejan de funcionar a finales de 2026; las nuevas se rotan sin caída y la secreta se rechaza desde navegador ([Supabase — migrating to new API keys](https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys)) |
-| — | 19/10 | Copyright del PAR-Q+: riesgo conocido, aceptado para la demo | Se revisa si el producto evoluciona |
+| — | 19/10 | Copyright del PAR-Q+: riesgo conocido, aceptado para la demo | Se revisa si el producto evoluciona (`TODOS.md`) |
+
+Revisión CEO del PRD (28/10, `04-revision-ceo-prd-v1.md`; las respuestas de esa revisión se citan allí como CEO-D1…D17):
+
+| # | Fecha | Decisión | Motivo |
+|---|---|---|---|
+| D27 | 28/10 | Foto de máquina y solicitudes de máquinas al admin, aplazadas a después de la entrega (sustituye a D14 en el MVP) | La integración más cara, con pendientes abiertos; los presets cubren la demo |
+| D28 | 28/10 | Cola local (D16) con contrato: IDs de serie y sesión generados en el móvil, restricción única, precarga con pendientes y el servidor manda al sincronizar | Evita que duplicados o sesiones sin enviar falseen la progresión |
+| D29 | 28/10 | Ningún dato de salud en los prompts de IA (lista cerrada de campos con test); el consentimiento nombra a Anthropic como encargado | Mínimo dato (RGPD): la exclusión ya es determinista |
+| D30 | 28/10 | Molestias y bloqueos del cribado solo como contador diario en el servidor, sin `user_id` (complementa D15) | El PRD contradecía el guardarraíl "ningún dato de salud en analítica" |
+| D31 | 28/10 | La sugerencia de carga diaria pasa a ser gratis; premium = funciones con IA (sustituye a D4) | La promesa central (§3) para todos; las reglas no cuestan nada, la IA sí |
+| D32 | 28/10 | Premium con 5 funciones de IA: coach que explica, detector de estancamiento, semana adaptada, sesión exprés y pregúntale a BUDDY (PRD §11) | Diferencial frente a Hevy/Strong dentro de los guardarraíles; < 1 $/usuario/mes estimado |
+| D33 | 28/10 | Entrega el viernes 6/11/2026; orden de build con línea de corte "demo completa" (PRD §20) | ~30 h para todo el MVP: el núcleo llega siempre |
+| D34 | 28/10 | Se mantiene la confirmación por email; sin dominio solo llega a Pablo (D7). Dominio propio: requisito para producción (`TODOS.md`) | Producto que parezca profesional y multiusuario |
+| D35 | 28/10 | Refiltrado determinista y gratis del plan al cambiar limitaciones o equipo | Garantiza el guardarraíl 6 también en el plan gratis |
+| D36 | 28/10 | Se mantiene la prueba premium de 14 días; "es premium" sale de una única función (reloj + `subscription_status`) | Palanca de conversión, con una sola fuente de verdad en código |
+| D37 | 28/10 | Bloqueantes legales para producción (PAR-Q+, revisión legal, DPA con Anthropic) en `TODOS.md` | No son código y bloquean el lanzamiento |
+
+Fase 2, diseño (12/11, `docs/diseno/`):
+
+| # | Fecha | Decisión | Motivo |
+|---|---|---|---|
+| D38 | 12/11 | La entrega pasa al viernes 20/11/2026 (sustituye la fecha de D33; la línea de corte se mantiene) | Decisión de Pablo |
+| D39 | 12/11 | Confirmado D32: premium incluye la 4 (sesión exprés) y la 5 (pregúntale a BUDDY), las dos tras la línea de corte | Cierra la interpretación pendiente de "4 / 5 también" |
+| D40 | 12/11 | Gráficas: básica gratis = peso de trabajo por ejercicio (8 semanas); completas premium = historial completo, series por grupo frente al objetivo, constancia y mejores series | Cierra el [pendiente] de PRD §14 |
+| D41 | 12/11 | Check-in: el usuario ve el ajuste del coach y elige aplicarlo o mantener su plan; no se aplica solo | Control del usuario; encaja con "el coach explica" |
+| D42 | 12/11 | Dirección visual "Venice 89 × arcade": limón y morado, tema claro L3 (marcador + papel + trama) y oscuro con selector; Archivo Expanded en títulos y números, Atkinson Hyperlegible Next en cuerpo, Press Start 2P en celebraciones; esquinas duras | Identidad propia, legible con la luz del gimnasio y sin aspecto de app genérica |
+| D43 | 12/11 | Usuario gratis: un cambio de foco o de días al mes, que regenera el plan con IA; premium, sin ese límite (dentro del tope general). Completa D35, que solo cubría limitaciones y equipo | Cambiar de días cambia la plantilla y no es un refiltrado; sin esto el gratis quedaba atrapado (revisión de diseño, D26) |
+| D44 | 12/11 | La IA no recibe nada de lo que se pueda deducir la salud: catálogo filtrado solo por equipo y sin molestias; limitaciones y molestias se aplican después con el refiltrado (corrige PRD §7 y §11) | Un catálogo recortado por limitaciones revela la limitación; guardarraíl 8 / D29 (revisión del plan) |
+| D45 | 12/11 | El mínimo de 2 veces por semana por grupo solo se exige a grupos con algún ejercicio posible; si no hay ninguno, hueco con aviso | Si no, una limitación dejaría al usuario sin plan; prima el guardarraíl 6 (revisión del plan) |
+| D46 | 18/11 | Confirmación de email con la plantilla por defecto de Supabase: el enlace vuelve a `/auth/confirm` con `code`; si se abre en otro navegador, el email ya está confirmado y se pide entrar. Se conserva el camino `token_hash` para cuando haya SMTP propio | Sin SMTP propio Supabase no deja editar la plantilla, y usar Resend como SMTP sin dominio solo enviaría a Pablo y bloquearía a los testers (D7, D34). Aceptado por Pablo (opción A) |
+| D47 | 18/11 | Registro con un email que ya existe: misma respuesta que un registro nuevo ("revisa tu correo"), no el "Ese email ya tiene cuenta" del diseño D13 | Evita que se pueda averiguar quién tiene cuenta (KTD15); con la confirmación activa, Supabase tampoco lo revela |
+| D48 | 18/11 | Eventos del embudo antes del registro: se guardan en el borrador del dispositivo y se vuelcan a `events` al registrarse; el abandono anónimo no se registra. Del cribado solo se registra la vista del paso "seguridad" | `events` exige `user_id`; ninguna fila puede revelar el resultado del cribado (KTD14, D30) |
+| D49 | 18/11 | Foco con "Equilibrado" preseleccionado; el resto del wizard sin respuestas por defecto | Lo dice el PRD §5, que manda sobre el plan; D6 y D13 solo cubren cribado y experiencia |
+| D50 | 18/11 | Salida sin consentimiento (diseño D14): al volver a entrar se abre el consentimiento, con el enlace a la salida a un toque, en vez de recordar que el usuario estaba en la salida | No hay dónde guardarlo sin añadir estado nuevo; el resultado para el usuario es el mismo |
+| D51 | 18/11 | Bloqueo del cribado: se muestra en la misma pantalla, sin cambiar de URL; si había un cribado superado, se borra | El resultado no queda en rutas, historial ni logs (KTD17); un «Sí» de riesgo debe bloquear la generación (guardarraíl 5) |
+| D52 | 18/11 | Sesión autónoma de 3 h: Pablo delega las decisiones a Claude, incluido el paso a `main` y las migraciones en prod tras probarlas en staging; Claude las contrasta con dos agentes (guardarraíles/RGPD y producto/diseño) y las registra aquí | Autorizado por Pablo en la sesión del 18/11 |
 
 ## 4. Abierto
 - Modelo de IA por uso: Sonnet 5.5 o Haiku 5.5 (se mide en el build).
-- Foto de máquina: ¿gratis o premium? ¿Límite por usuario?
-- Prueba premium de 14 días [hipótesis].
 - Redacción del cribado frente al PAR-Q+ oficial.
-- Política de retención de la API de Anthropic para las fotos.
-- Re-estimación del build.
+- Límite de generaciones de IA por usuario (cifra, en `plan.md`).
+- Contenido de las gráficas básica y completas (diseño).
+- Verificar: límite de duración de funciones en Vercel Hobby y crons en previews.
