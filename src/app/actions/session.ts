@@ -33,7 +33,7 @@ async function claims() {
 // --- Empezar ---------------------------------------------------------------------------------
 
 // Abre la sesión que toca hoy o retoma la abierta. Una sola abierta por usuario (índice único).
-export async function empezarSesion(): Promise<Fail<"sin_plan" | "fallo">> {
+export async function empezarSesion(): Promise<Fail<"sin_plan" | "sin_ejercicios" | "fallo">> {
   const { supabase, userId } = await claims();
   if (!userId) return { ok: false, error: "sin_sesion" };
 
@@ -71,6 +71,8 @@ export async function empezarSesion(): Promise<Fail<"sin_plan" | "fallo">> {
   if (!planSession) return { ok: false, error: "fallo" };
 
   const ids = next.slots.map((s) => s.exerciseId).filter((id): id is string => id !== null);
+  // Nunca se abre una sesión sin ejercicios (D68): se explica en Hoy en vez de mostrar "0 de 0".
+  if (ids.length === 0) return { ok: false, error: "sin_ejercicios" };
   const { data: states } = await supabase.from("exercise_state").select("exercise_id, calibrated_at").eq("user_id", userId).in("exercise_id", ids);
   const calibrated = new Set((states ?? []).filter((s) => s.calibrated_at).map((s) => s.exercise_id));
   const kind = ids.some((id) => !calibrated.has(id)) ? "calibracion" : "normal";

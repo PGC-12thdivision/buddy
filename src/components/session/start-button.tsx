@@ -18,6 +18,7 @@ export function StartButton({ children }: { children: string }) {
       if (!res || res.ok) return;
       if (res.error === "sin_sesion") router.push("/entrar");
       else if (res.error === "sin_plan") setFailed("Tu plan no tiene sesiones. Revisa tu plan antes de empezar.");
+      else if (res.error === "sin_ejercicios") setFailed("Hoy no hay ningún ejercicio posible con tu equipo y tus limitaciones. Revisa Mi gimnasio en Ajustes.");
       else setFailed("Sin conexión. Necesitamos conexión para cargar y guardar tu sesión.");
     });
 
