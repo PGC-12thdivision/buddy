@@ -65,7 +65,7 @@ export default async function PlanPage() {
         { label: "Días", value: String(plan.daysPerWeek) },
         ...(minutes ? [{ label: "Minutos", value: String(minutes) }] : []),
       ]}
-      tags={fresh ? <Tag>Plan listo</Tag> : plan.source === "refiltrado" ? <Tag>Plan actualizado</Tag> : null}
+      tags={fresh ? <Tag>Plan listo</Tag> : plan.source === "refiltrado" ? <Tag>Plan actualizado</Tag> : plan.source === "checkin" ? <Tag>Ajustado por tu coach</Tag> : null}
       footer={fresh ? <StartButton>Empezar calibración</StartButton> : undefined}
     >
       <Disclaimer />

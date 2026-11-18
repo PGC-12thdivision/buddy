@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { serverVar } from "@/lib/env.server";
 import { logError } from "@/lib/log";
+import type { CheckinCallModel, CheckinReply } from "./checkin";
 import type { CallModel, ModelReply } from "./plan";
 
 // Llamada real a la API de Anthropic, solo en servidor (guardarraíl: la clave nunca llega al
@@ -48,6 +49,28 @@ export const callPlanModel: CallModel = async ({ model, system, user, schema }):
   } catch (error) {
     logError("ia_plan", { code: aiErrorCode(error) });
     // Red, tiempo agotado, límite de la API o error del servidor: el intento no cuenta (D9).
+    return { kind: "connection" };
+  }
+};
+
+// Check-in del coach (U8): misma llamada con su esquema. Proponer un ajuste pequeño y explicarlo
+// tampoco necesita razonamiento profundo; la salida es corta.
+export const callCheckinModel: CheckinCallModel = async ({ model, system, user, schema }): Promise<CheckinReply> => {
+  try {
+    const response = await anthropic().messages.parse({
+      model,
+      max_tokens: 8000,
+      system,
+      messages: [{ role: "user", content: user }],
+      output_config: { format: zodOutputFormat(schema), effort: "medium" },
+    });
+    const inputTokens = response.usage.input_tokens;
+    const outputTokens = response.usage.output_tokens;
+    if (response.stop_reason === "refusal") return { kind: "refused", inputTokens, outputTokens };
+    if (!response.parsed_output) return { kind: "empty", inputTokens, outputTokens };
+    return { kind: "parsed", output: response.parsed_output, inputTokens, outputTokens };
+  } catch (error) {
+    logError("ia_checkin", { code: aiErrorCode(error) });
     return { kind: "connection" };
   }
 };
