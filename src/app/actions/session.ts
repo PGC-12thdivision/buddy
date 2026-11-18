@@ -330,7 +330,8 @@ export async function marcarMolestia(input: unknown): Promise<MolestiaResult> {
   ]);
   const repeated = isRepeatedDiscomfort(previous?.[0]?.session_id ?? null, new Set((marks ?? []).map((m) => m.session_id)));
   const exercise = scope.catalog.find((e) => e.id === v.exerciseId);
-  const zones = repeated && exercise ? exercise.joints.filter((j) => !scope.limitations.includes(j)) : [];
+  // Se ofrecen también las zonas de implicación leve: son las que el usuario puede notar en este ejercicio.
+  const zones = repeated && exercise ? [...exercise.joints, ...exercise.jointsLight].filter((j) => !scope.limitations.includes(j)) : [];
   return { ok: true, repeated, zones };
 }
 
@@ -343,7 +344,7 @@ const limitacionSchema = z.object({
 export type LimitacionResult = { ok: true; changed: number; holes: number } | Fail<"no_valido" | "sin_consentimiento" | "fallo">;
 
 // "Añadir y ajustar mi plan" (diseño D16): une las zonas a las limitaciones y refiltra gratis (D35).
-// No toca el cribado. Solo zonas que carga ese ejercicio según el catálogo.
+// No toca el cribado. Solo zonas que carga o implica de forma leve ese ejercicio según el catálogo.
 export async function anadirLimitacion(input: unknown): Promise<LimitacionResult> {
   const parsed = limitacionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "no_valido" };
@@ -354,7 +355,7 @@ export async function anadirLimitacion(input: unknown): Promise<LimitacionResult
 
   const scope = await loadSessionScope(supabase, userId, v.sessionId);
   const exercise = scope?.catalog.find((e) => e.id === v.exerciseId);
-  if (!scope || !exercise || !scope.allowed.has(v.exerciseId) || !v.zones.every((z) => exercise.joints.includes(z))) {
+  if (!scope || !exercise || !scope.allowed.has(v.exerciseId) || !v.zones.every((z) => exercise.joints.includes(z) || exercise.jointsLight.includes(z))) {
     return { ok: false, error: "no_valido" };
   }
   const limitations = [...new Set([...scope.limitations, ...v.zones])];

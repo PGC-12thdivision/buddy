@@ -7,6 +7,7 @@ export const ZONE_LABELS: Record<string, string> = {
   espalda: "Espalda",
   pecho_hombro: "Pecho y hombro",
   brazo: "Brazo",
+  core: "Core",
   peso_libre: "Peso libre",
   cardio: "Cardio",
 };
