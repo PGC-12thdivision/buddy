@@ -1,0 +1,16 @@
+<!-- Plantilla "Confirm signup" de Supabase Auth (plan.md U4, KTD4). Se pega a mano en el panel de
+     cada proyecto (Authentication → Emails → Confirm signup). Asunto: "Confirma tu email para empezar con BUDDY".
+     El enlace usa token_hash + /auth/confirm: funciona aunque se abra en otro navegador. -->
+<div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#1A0F24;background:#FFF8E1">
+  <div style="background:#3D1A5E;padding:20px 24px">
+    <span style="font:900 italic 32px Arial,sans-serif;color:#FFE03A;letter-spacing:-1px">BUDDY</span>
+  </div>
+  <div style="height:8px;background:#FFE03A"></div>
+  <div style="padding:24px">
+    <h1 style="font-size:22px;margin:0 0 12px">Confirma tu email</h1>
+    <p style="font-size:16px;line-height:1.5;margin:0 0 20px">Toca el botón para confirmar tu cuenta y seguir con tu plan. Tus respuestas ya están guardadas.</p>
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/consentimiento"
+       style="display:inline-block;background:#FFE03A;color:#1A0F24;border:3px solid #1A0F24;border-radius:6px;padding:14px 22px;font-weight:900;font-size:16px;text-decoration:none">CONFIRMAR MI EMAIL</a>
+    <p style="font-size:13px;color:#6B5E7B;margin:24px 0 0">Si no has creado una cuenta en BUDDY, ignora este email.</p>
+  </div>
+</div>

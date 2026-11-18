@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BUDDY · Maquetas para decidir (auditoría 18/11)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Atkinson+Hyperlegible+Next:wght@400;700&family=Silkscreen&family=Tiny5&family=Pixelify+Sans:wght@400..700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff8e1;--fg:#1a0f24;--card:#f3ecda;--lemon:#ffe03a;--purple:#5b2a86;--band:#3d1a5e;
+  --muted:#6b5e7b;--band-muted:#e4d6f5;--ok:#0e7c72;--warn:#b54708;--pink:#ff5fa2;--teal:#2ed3c1;
+  --display:"Archivo",sans-serif;--body:"Atkinson Hyperlegible Next",system-ui,sans-serif;--pixel:"Silkscreen",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);background:#2a1a45;color:#f7f2ff;
+  background-image:radial-gradient(circle,rgb(255 224 58/.12) 1.2px,transparent 1.6px);background-size:9px 9px}
+.page{max-width:1500px;margin:0 auto;padding:32px 24px 80px}
+h1{font-family:var(--display);font-stretch:125%;font-style:italic;font-weight:900;text-transform:uppercase;color:var(--lemon);font-size:40px;margin:0 0 6px;line-height:1}
+.lead{color:#d9cbea;max-width:760px;font-size:16px;line-height:1.5;margin:0 0 8px}
+.decision{margin-top:56px;border-top:3px solid var(--lemon);padding-top:18px}
+.decision h2{font-family:var(--display);font-stretch:125%;font-style:italic;font-weight:900;font-size:26px;margin:0 0 6px;text-transform:uppercase}
+.decision h2 .n{display:inline-block;background:var(--lemon);color:var(--fg);padding:2px 10px;margin-right:10px;font-style:normal}
+.decision p.q{color:#d9cbea;max-width:820px;margin:0 0 22px;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.opt{display:flex;flex-direction:column;gap:10px;width:360px}
+.opt-h{font-family:var(--display);font-weight:800;font-stretch:110%;font-size:17px;color:#fff;display:flex;gap:8px;align-items:center}
+.opt-h .rec{font-family:var(--pixel);font-size:10px;background:var(--lemon);color:var(--fg);padding:4px 6px;border-radius:3px}
+.opt-h .now{font-family:var(--pixel);font-size:10px;background:#a99bbb;color:var(--fg);padding:4px 6px;border-radius:3px}
+.opt ul.notes{margin:0;padding-left:18px;color:#d9cbea;font-size:14px;line-height:1.45}
+.opt ul.notes li.risk{color:#ffb3d1}
+.letter{font-family:var(--pixel);color:var(--lemon);font-size:12px}
+
+/* ---------- Teléfono ---------- */
+.phone{width:360px;height:740px;overflow:hidden;position:relative;border:3px solid #0d0714;border-radius:14px;
+  box-shadow:8px 8px 0 var(--purple);background:var(--bg);color:var(--fg);display:flex;flex-direction:column;font-family:var(--body)}
+.scroll{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pad{padding-inline:18px}
+.band{background:var(--band);color:#fff;position:relative;overflow:hidden;padding:8px 0 14px;flex:none}
+.band::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle,rgb(255 224 58/.22) 1.2px,transparent 1.6px) 0 0/9px 9px;mask:linear-gradient(115deg,transparent 35%,#000 100%)}
+.band>*{position:relative}
+.band-row{display:flex;min-height:36px;align-items:center;justify-content:space-between;font-size:13px;color:var(--band-muted)}
+.title{font-family:var(--display);font-weight:900;font-style:italic;font-stretch:125%;text-transform:uppercase;color:var(--lemon);font-size:28px;line-height:1;margin:6px 0 4px}
+.sub{font-size:14px;color:var(--band-muted);margin:0}
+.tag{display:inline-block;padding:5px 7px;border-radius:4px;background:var(--lemon);color:var(--fg);font-family:var(--pixel);font-size:11px;line-height:1;text-transform:uppercase;white-space:nowrap}
+.tag.prem{background:#b38cff;color:#120a1c}
+.tags{display:flex;gap:6px}
+.stripes{height:8px;flex:none;background:repeating-linear-gradient(90deg,#ffe03a 0 40px,#ff5fa2 40px 80px,#2ed3c1 80px 120px)}
+.note{border-block:2px solid var(--purple);padding:10px 0;font-size:14px;line-height:1.4;margin:14px 0 4px;display:flex;gap:10px}
+.note svg{flex:none;margin-top:1px}
+.rule-title{font-family:var(--display);font-weight:900;font-style:italic;font-stretch:125%;text-transform:uppercase;font-size:15px;margin:16px 0 0;padding-bottom:6px;border-bottom:3px solid var(--fg)}
+.rrow{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:46px;border-bottom:1px solid rgb(26 15 36/.25);font-size:15px}
+.rrow b{font-weight:700}
+.rrow .v{color:var(--muted);font-size:14px;white-space:nowrap}
+.foot{margin-top:auto;padding:18px 18px 14px;background:linear-gradient(to bottom,transparent,var(--bg) 16px)}
+.cta{display:flex;min-height:56px;width:100%;align-items:center;justify-content:center;border:3px solid var(--fg);border-radius:6px;
+  background:var(--lemon);color:var(--fg);box-shadow:5px 5px 0 var(--purple);font-family:var(--display);font-size:19px;font-weight:900;font-style:italic;font-stretch:125%;text-transform:uppercase}
+.disc{font-size:12px;color:var(--muted);margin:10px 0 0}
+
+/* Barra de pestañas */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);height:58px;border-top:2px solid var(--fg);background:var(--bg);flex:none}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;color:var(--muted);position:relative}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--fg);font-weight:700}
+/* actual: barra limón de 4 px */
+.tabs.v-now .tab.on::before{content:"";position:absolute;top:0;left:14%;right:14%;height:4px;background:var(--lemon)}
+/* opción 1: celda limón con filete de tinta */
+.tabs.v-cell .tab.on{background:var(--lemon);color:var(--fg);box-shadow:inset 0 3px 0 var(--fg)}
+/* opción 2: barra morada */
+.tabs.v-purple .tab.on{color:var(--purple)}
+.tabs.v-purple .tab.on::before{content:"";position:absolute;top:0;left:14%;right:14%;height:4px;background:var(--purple)}
+
+/* ---------- B: Revista ---------- */
+.cover{padding:6px 0 16px}
+.cover .kicker{font-family:var(--pixel);font-size:11px;color:var(--lemon);letter-spacing:.02em}
+.cover .title{font-size:24px}
+.heroes{display:flex;gap:22px;margin-top:12px;align-items:flex-end}
+.hero .lab{font-size:12px;color:var(--band-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.hero .num{font-family:var(--display);font-weight:900;font-style:italic;font-stretch:125%;font-size:72px;line-height:.85;color:var(--lemon);font-variant-numeric:tabular-nums}
+.hero .num small{font-size:20px;color:#fff;margin-left:2px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.week .d{aspect-ratio:1;border:2px solid var(--fg);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:13px;position:relative;border-radius:2px}
+.week .d.train{background:var(--fg);color:var(--bg)}
+.week .d.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.week .d.today{background:var(--lemon);color:var(--fg);border-width:3px;box-shadow:3px 3px 0 var(--purple)}
+.week .d.rest{color:var(--muted);border-color:rgb(26 15 36/.35)}
+.week-lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:14px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.nrow{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:8px;min-height:46px;border-bottom:1px solid rgb(26 15 36/.25);font-size:15px}
+.nrow .i{font-family:var(--display);font-weight:900;font-style:italic;font-stretch:125%;color:var(--purple);font-size:17px}
+.nrow .v{text-align:right;line-height:1.15;white-space:nowrap}
+.nrow .v b{display:block;font-family:var(--display);font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.nrow .v span{font-size:12px;color:var(--muted)}
+
+/* ---------- A: HUD ---------- */
+.hud-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--pixel);font-size:11px;color:var(--lemon);min-height:30px}
+.hud-top .streak{color:var(--pink)}
+.levels{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:14px 0 4px}
+.lv{aspect-ratio:1;border:3px solid var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--pixel);font-size:10px;gap:2px;border-radius:2px}
+.lv.done{background:var(--ok);border-color:var(--fg);color:#fff}
+.lv.today{background:var(--lemon);box-shadow:3px 3px 0 var(--purple);animation:blink 1s steps(2) 2}
+.lv.train{background:#fff}
+.lv.rest{border-style:dashed;border-color:rgb(26 15 36/.4);color:var(--muted)}
+@keyframes blink{50%{background:var(--pink)}}
+.seg{display:grid;gap:3px;height:14px;padding:2px;border:2px solid var(--fg);border-radius:3px}
+.seg i{background:rgb(26 15 36/.12)}
+.seg i.on{background:var(--purple)}
+.seglab{display:flex;justify-content:space-between;font-family:var(--pixel);font-size:10px;margin:12px 0 4px}
+.lvrow{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:8px;min-height:44px;border-bottom:2px dashed rgb(26 15 36/.25);font-size:15px}
+.lvrow .i{font-family:var(--pixel);font-size:10px;color:var(--purple)}
+.lvrow .v{font-family:var(--pixel);font-size:10px;color:var(--muted)}
+.bevel{box-shadow:inset 0 0 0 1px rgb(228 214 245/.3)}
+
+/* ---------- C: Noche ---------- */
+.phone.night{background:#120a1c;color:#f7f2ff;border-color:#0d0714}
+.night .band{background:#1e1330;position:relative}
+.night .band::after{content:"";position:absolute;top:-20px;right:-40px;width:180px;height:200px;
+  background:repeating-linear-gradient(90deg,#ffe03a 0 10px,#ff5fa2 10px 20px,#2ed3c1 20px 30px);transform:skewX(-28deg);opacity:.9;
+  mask:linear-gradient(200deg,#000 10%,transparent 70%)}
+.night .band::before{display:none}
+.night .title{color:#fff}
+.night .sub{color:#a99bbb}
+.n-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgb(247 242 255/.18);margin:14px 0 0;border-radius:6px;overflow:hidden}
+.n-stats>div{background:#1e1330;padding:12px 14px}
+.n-stats .lab{font-size:12px;color:#a99bbb;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.n-stats .num{font-family:var(--display);font-weight:900;font-style:italic;font-stretch:125%;font-size:44px;line-height:1;color:var(--lemon)}
+.n-list{margin-top:14px;background:#1e1330;border-radius:6px;padding:2px 14px}
+.n-row{display:flex;justify-content:space-between;align-items:center;min-height:46px;border-bottom:1px solid rgb(247 242 255/.18);font-size:15px}
+.n-row:last-child{border-bottom:0}
+.n-row .v{color:var(--lemon);font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums}
+.night .rule-title{border-color:transparent;padding-bottom:0;color:#a99bbb;font-size:13px}
+.night .foot{background:linear-gradient(to bottom,transparent,#120a1c 16px)}
+.night .cta{border-color:var(--lemon);box-shadow:5px 5px 0 var(--pink)}
+.night .disc{color:#a99bbb}
+.night .tabs{background:#2a1a45;border-top:1px solid rgb(247 242 255/.18)}
+.night .tab{color:#a99bbb}
+.night .tab.on{color:var(--lemon)}
+.night .tab.on::before{content:"";position:absolute;top:0;left:14%;right:14%;height:3px;background:var(--lemon)}
+
+/* ---------- B en oscuro (decisión 4) ---------- */
+.phone.dark-b{background:#120a1c;color:#f7f2ff}
+.dark-b .week .d{border-color:#a99bbb}
+.dark-b .week .d.train{background:#f7f2ff;color:#120a1c;border-color:#f7f2ff}
+.dark-b .week .d.done{background:#2ed3c1;border-color:#2ed3c1;color:#120a1c}
+.dark-b .week .d.today{border-color:var(--lemon);box-shadow:3px 3px 0 #b38cff}
+.dark-b .week .d.rest{color:#a99bbb;border-color:rgb(169 155 187/.4)}
+.dark-b .week-lab,.dark-b .nrow .v span,.dark-b .disc{color:#a99bbb}
+.dark-b .rule-title{border-color:#f7f2ff}
+.dark-b .nrow{border-color:rgb(247 242 255/.2)}
+.dark-b .nrow .i{color:#b38cff}
+.dark-b .foot{background:linear-gradient(to bottom,transparent,#120a1c 16px)}
+.dark-b .cta{border-color:var(--lemon);box-shadow:5px 5px 0 #b38cff}
+.dark-b .tabs{background:#120a1c;border-color:#a99bbb}
+.dark-b .tab{color:#a99bbb}
+.dark-b .tab.on{background:var(--lemon);color:#1a0f24;box-shadow:inset 0 3px 0 #f7f2ff}
+
+/* ---------- Escritorio ---------- */
+.desk-wrap{overflow-x:auto;padding-bottom:10px}
+.desk{width:1280px;height:760px;display:grid;grid-template-columns:240px 1fr;border:3px solid #0d0714;border-radius:10px;overflow:hidden;box-shadow:8px 8px 0 var(--purple);background:var(--bg);color:var(--fg)}
+.side{background:var(--band);color:#fff;padding:20px 0;display:flex;flex-direction:column;gap:4px;position:relative}
+.side .logo{font-family:var(--display);font-weight:900;font-style:italic;font-stretch:125%;font-size:30px;color:var(--lemon);text-shadow:3px 3px 0 var(--pink);padding:0 20px 18px}
+.side a{display:flex;align-items:center;gap:10px;padding:12px 20px;font-weight:700;color:var(--band-muted);text-decoration:none}
+.side a.on{background:var(--lemon);color:var(--fg);box-shadow:inset 4px 0 0 var(--fg)}
+.side .sub-st{margin-top:auto;padding:0 20px;font-size:13px;color:var(--band-muted)}
+.dmain{overflow:hidden;display:flex;flex-direction:column}
+.dband{background:var(--band);color:#fff;padding:22px 0 20px;position:relative;overflow:hidden}
+.dband::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgb(255 224 58/.22) 1.2px,transparent 1.6px) 0 0/9px 9px;mask:linear-gradient(100deg,transparent 55%,#000)}
+.dband>*{position:relative}
+.dinner{max-width:1100px;padding:0 40px}
+.dband .title{font-size:40px}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:48px;padding-top:26px}
+.dgrid .cta{max-width:420px;margin-top:22px}
+.aside-h .lab{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.aside-h .num{font-family:var(--display);font-weight:900;font-style:italic;font-stretch:125%;font-size:96px;line-height:.85;color:var(--purple)}
+.aside-h .num small{font-size:22px;color:var(--fg)}
+.aside-h .pair{display:flex;gap:36px;border-bottom:3px solid var(--fg);padding-bottom:16px}
+
+/* ---------- Fuentes ---------- */
+.fonts{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px}
+.fcard{background:var(--bg);color:var(--fg);border:3px solid #0d0714;border-radius:8px;padding:18px;box-shadow:6px 6px 0 var(--purple)}
+.fcard h3{margin:0 0 12px;font-family:var(--display);font-stretch:110%;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+.fcard .s{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.fcard .big{font-size:28px;line-height:1.2;margin:6px 0 10px}
+.fcard .pop{display:inline-block;background:var(--band);color:var(--lemon);padding:12px 14px;font-size:20px;border-radius:4px;box-shadow:4px 4px 0 var(--pink)}
+.fcard p{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.4}
+footer.sum{margin-top:64px;border-top:3px solid var(--lemon);padding-top:18px;color:#d9cbea;line-height:1.6}
+footer.sum b{color:#fff}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Maquetas para decidir</h1>
+  <p class="lead">Auditoría de diseño del 18/11. Una sección por decisión pendiente, con el estado actual a la izquierda cuando aplica. Todo usa los tokens reales de <code>globals.css</code>; los datos son de ejemplo (plan de 3 días con limitación de rodilla).</p>
+  <p class="lead" style="font-size:14px;color:#a99bbb">Son maquetas estáticas: nada de esto está en el código todavía. Las fuentes se cargan de Google Fonts, así que hace falta conexión.</p>
+
+  <!-- ===================== DECISIÓN 1 ===================== -->
+  <section class="decision">
+    <h2><span class="n">1</span>Dirección de elevación 2026</h2>
+    <p class="q">La misma pantalla (Hoy, móvil 360 px) en las tres direcciones del informe A. Las tres mantienen marcador morado, franja de 3 colores, Archivo cursiva y CTA de recreativa. ¿Cuál marca el tono del resto de pantallas?</p>
+    <div class="row">
+
+      <!-- ACTUAL -->
+      <div class="opt">
+        <div class="opt-h">Hoy, tal como está <span class="now">ACTUAL</span></div>
+        <div class="phone">
+          <div class="scroll">
+            <div class="band"><div class="pad">
+              <div class="band-row"><span></span><span class="tags"><span class="tag prem">Premium</span><span class="tag">14 días</span></span></div>
+              <div class="title">Hoy toca torso</div>
+              <p class="sub">Tu primera sesión es de calibración.</p>
+            </div></div>
+            <div class="stripes"></div>
+            <div class="pad">
+              <div class="note"><svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.5" fill="none" stroke="#5b2a86" stroke-width="2.5"/><path d="M9 8v5M9 5v.5" stroke="#5b2a86" stroke-width="2.5" stroke-linecap="square"/></svg>No adivinamos tu peso: en cada ejercicio empiezas suave y lo ajustamos serie a serie.</div>
+              <div class="rule-title">6 ejercicios</div>
+              <div class="rrow"><b>Press banca mancuernas</b><span class="v">3 series</span></div>
+              <div class="rrow"><b>Remo en polea baja</b><span class="v">3 series</span></div>
+              <div class="rrow"><b>Press militar sentado</b><span class="v">3 series</span></div>
+              <div class="rrow"><b>Jalón al pecho</b><span class="v">3 series</span></div>
+              <div class="rrow"><b>Curl con mancuernas</b><span class="v">2 series</span></div>
+            </div>
+            <div class="foot"><div class="cta">Empezar calibración</div></div>
+          </div>
+          <div class="tabs v-now">
+            <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Hoy</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Ajustes</div>
+          </div>
+        </div>
+        <ul class="notes"><li>Sin cifra protagonista: lista gris con un botón.</li><li>Pestaña activa: barra limón sobre crema (1,3:1, ver decisión 2).</li></ul>
+      </div>
+
+      <!-- A: HUD -->
+      <div class="opt">
+        <div class="opt-h"><span class="letter">A</span> HUD de recreativa</div>
+        <div class="phone">
+          <div class="scroll">
+            <div class="band bevel"><div class="pad">
+              <div class="hud-top"><span>SEMANA 03</span><span class="streak">RACHA ×4</span><span class="tag">14 días</span></div>
+              <div class="title">Nivel 2: torso</div>
+              <p class="sub">Elige partida. Hoy está desbloqueado.</p>
+            </div></div>
+            <div class="stripes"></div>
+            <div class="pad">
+              <div class="levels">
+                <div class="lv done">L<span>✓</span></div>
+                <div class="lv rest">M</div>
+                <div class="lv today">X<span>▶</span></div>
+                <div class="lv rest">J</div>
+                <div class="lv train">V</div>
+                <div class="lv rest">S</div>
+                <div class="lv rest">D</div>
+              </div>
+              <div class="seglab"><span>SEMANA</span><span>1/3</span></div>
+              <div class="seg" style="grid-template-columns:repeat(3,1fr)"><i class="on"></i><i></i><i></i></div>
+              <div class="seglab"><span>HOY · EJERCICIOS</span><span>0/6</span></div>
+              <div class="seg" style="grid-template-columns:repeat(6,1fr)"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div style="margin-top:12px">
+                <div class="lvrow"><span class="i">EJ 01</span><b>Press banca mancuernas</b><span class="v">3×</span></div>
+                <div class="lvrow"><span class="i">EJ 02</span><b>Remo en polea baja</b><span class="v">3×</span></div>
+                <div class="lvrow"><span class="i">EJ 03</span><b>Press militar sentado</b><span class="v">3×</span></div>
+              </div>
+            </div>
+            <div class="foot"><div class="cta">Empezar partida</div></div>
+          </div>
+          <div class="tabs v-cell">
+            <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Hoy</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Ajustes</div>
+          </div>
+        </div>
+        <ul class="notes">
+          <li>La semana es un mapa de niveles; hoy parpadea 2 veces al entrar y se queda fijo.</li>
+          <li>Racha y semana en el marcador, como puntos de recreativa.</li>
+          <li>Pixelada en más sitios (contadores, numeración).</li>
+          <li class="risk">Riesgo: si se pasa, infantiliza, y la frontera con la seguridad (cribado, Molestia) tiene que ser muy clara.</li>
+        </ul>
+      </div>
+
+      <!-- B: Revista -->
+      <div class="opt">
+        <div class="opt-h"><span class="letter">B</span> Revista de Venice <span class="rec">RECOMENDADA</span></div>
+        <div class="phone">
+          <div class="scroll">
+            <div class="band"><div class="pad cover">
+              <div class="band-row" style="min-height:28px"><span class="kicker">SEMANA 1 · DÍA 1</span><span class="tag">14 días</span></div>
+              <div class="title">Hoy toca torso</div>
+              <div class="heroes">
+                <div class="hero"><div class="lab">Ejercicios</div><div class="num">6</div></div>
+                <div class="hero"><div class="lab">Minutos</div><div class="num">45<small>min</small></div></div>
+              </div>
+            </div></div>
+            <div class="stripes"></div>
+            <div class="pad">
+              <div class="week-lab"><span>Tu semana</span><span>1 de 3 hechas</span></div>
+              <div class="week">
+                <div class="d done">L</div><div class="d rest">M</div><div class="d today">X</div><div class="d rest">J</div><div class="d train">V</div><div class="d rest">S</div><div class="d rest">D</div>
+              </div>
+              <div class="rule-title">La sesión</div>
+              <div class="nrow"><span class="i">01</span><b>Press banca mancuernas</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+              <div class="nrow"><span class="i">02</span><b>Remo en polea baja</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+              <div class="nrow"><span class="i">03</span><b>Press militar sentado</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+            </div>
+            <div class="foot"><div class="cta">Empezar calibración</div></div>
+          </div>
+          <div class="tabs v-cell">
+            <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Hoy</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Ajustes</div>
+          </div>
+        </div>
+        <ul class="notes">
+          <li>Marcador "portada": una cifra enorme por pantalla (6 en Hoy, 3 días en Plan, +15 kg en Progreso).</li>
+          <li>Reglas de imprenta, filas numeradas 01–03, dato de reps en 2 líneas fijas.</li>
+          <li>La pixelada solo en antetítulo, etiquetas y celebraciones: el arcade se guarda para los logros.</li>
+          <li>Es la que más se apoya en decisiones ya tomadas (§4 bis, D17).</li>
+        </ul>
+      </div>
+
+      <!-- C: Noche -->
+      <div class="opt">
+        <div class="opt-h"><span class="letter">C</span> Muscle Beach de noche</div>
+        <div class="phone night">
+          <div class="scroll">
+            <div class="band"><div class="pad">
+              <div class="band-row"><span></span><span class="tag">14 días</span></div>
+              <div class="title">Hoy toca torso</div>
+              <p class="sub">Tu primera sesión es de calibración.</p>
+            </div></div>
+            <div class="pad">
+              <div class="n-stats">
+                <div><div class="lab">Ejercicios</div><div class="num">6</div></div>
+                <div><div class="lab">Minutos</div><div class="num">45</div></div>
+              </div>
+              <div class="rule-title">La sesión</div>
+              <div class="n-list">
+                <div class="n-row"><span>Press banca mancuernas</span><span class="v">3×</span></div>
+                <div class="n-row"><span>Remo en polea baja</span><span class="v">3×</span></div>
+                <div class="n-row"><span>Press militar sentado</span><span class="v">3×</span></div>
+                <div class="n-row"><span>Jalón al pecho</span><span class="v">3×</span></div>
+              </div>
+            </div>
+            <div class="foot"><div class="cta">Empezar calibración</div></div>
+          </div>
+          <div class="tabs">
+            <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Hoy</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Ajustes</div>
+          </div>
+        </div>
+        <ul class="notes">
+          <li>Oscuro por defecto; superficies en 3 tonos de morado con filetes de 1 px.</li>
+          <li>La franja se vuelve un destello diagonal, una vez por pantalla.</li>
+          <li>Cifras en limón (12:1); sombra del CTA en rosa neón.</li>
+          <li class="risk">Riesgo: pierde el papel crema y la calidez de revista. Cambia DESIGN.md (tema por defecto y grosor de bordes).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DECISIÓN 2 ===================== -->
+  <section class="decision">
+    <h2><span class="n">2</span>Pestaña activa de la barra inferior</h2>
+    <p class="q">DESIGN.md §5 pide "barra limón arriba" y §2 prohíbe el limón como borde sobre crema (1,3:1). Hay que elegir y cambiar §5.</p>
+    <div class="row">
+      <div class="opt">
+        <div class="opt-h">Barra limón 4 px <span class="now">ACTUAL</span></div>
+        <div class="phone" style="height:auto"><div class="tabs v-now">
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Hoy</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Ajustes</div>
+        </div></div>
+        <ul class="notes"><li class="risk">Incumple §2: casi no se ve con la luz del gimnasio.</li></ul>
+      </div>
+      <div class="opt">
+        <div class="opt-h">Celda limón + filete de tinta <span class="rec">PROPUESTA</span></div>
+        <div class="phone" style="height:auto"><div class="tabs v-cell">
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Hoy</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Ajustes</div>
+        </div></div>
+        <ul class="notes"><li>Mismo patrón que el menú lateral de escritorio. Tinta sobre limón: 15:1.</li></ul>
+      </div>
+      <div class="opt">
+        <div class="opt-h">Barra morada 4 px</div>
+        <div class="phone" style="height:auto"><div class="tabs v-purple">
+          <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Hoy</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</div>
+          <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Ajustes</div>
+        </div></div>
+        <ul class="notes"><li>Cumple el contraste y es más sobria, pero no lleva el limón de la marca.</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DECISIÓN 3 ===================== -->
+  <section class="decision">
+    <h2><span class="n">3</span>Hoy con protagonista en escritorio (D24)</h2>
+    <p class="q">1280 px con menú lateral de 240 px. A la izquierda la sesión y el CTA (420 px como máximo); a la derecha las cifras y la semana. Dibujado con la dirección B; con A o C cambia la piel, no la rejilla. Desliza en horizontal si la ventana es estrecha.</p>
+    <div class="desk-wrap"><div class="desk">
+      <nav class="side">
+        <div class="logo">BUDDY</div>
+        <a class="on" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="5" width="16" height="15"/><path d="M4 10h16"/></svg>Hoy</a>
+        <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 5h14M5 12h14M5 19h9"/></svg>Plan</a>
+        <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 20V14M10 20V9M16 20V12M22 20V4"/></svg>Progreso</a>
+        <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3.5"/></svg>Ajustes</a>
+        <div class="sub-st"><span class="tag prem">Premium</span><br><br>Prueba: quedan 14 días</div>
+      </nav>
+      <div class="dmain">
+        <div class="dband"><div class="dinner">
+          <div class="band-row" style="min-height:24px"><span class="tag" style="background:transparent;color:var(--lemon);padding:0">SEMANA 1 · DÍA 1</span><span></span></div>
+          <div class="title">Hoy toca torso</div>
+          <p class="sub" style="font-size:15px">Tu primera sesión es de calibración: empiezas suave y lo ajustamos serie a serie.</p>
+        </div></div>
+        <div class="stripes"></div>
+        <div class="dinner"><div class="dgrid">
+          <div>
+            <div class="rule-title" style="margin-top:0">La sesión · 6 ejercicios</div>
+            <div class="nrow"><span class="i">01</span><b>Press banca con mancuernas</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+            <div class="nrow"><span class="i">02</span><b>Remo en polea baja</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+            <div class="nrow"><span class="i">03</span><b>Press militar sentado</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+            <div class="nrow"><span class="i">04</span><b>Jalón al pecho</b><span class="v"><b>3 series</b><span>10 a 15 reps</span></span></div>
+            <div class="nrow"><span class="i">05</span><b>Curl con mancuernas</b><span class="v"><b>2 series</b><span>10 a 15 reps</span></span></div>
+            <div class="nrow"><span class="i">06</span><b>Extensión de tríceps en polea</b><span class="v"><b>2 series</b><span>10 a 15 reps</span></span></div>
+            <div class="cta">Empezar calibración</div>
+            <p class="disc">BUDDY no es consejo médico. Si algo duele, para.</p>
+          </div>
+          <aside class="aside-h">
+            <div class="pair">
+              <div><div class="lab">Ejercicios</div><div class="num">6</div></div>
+              <div><div class="lab">Minutos</div><div class="num">45<small>min</small></div></div>
+            </div>
+            <div class="week-lab"><span>Tu semana</span><span>1 de 3 hechas</span></div>
+            <div class="week">
+              <div class="d done">L</div><div class="d rest">M</div><div class="d today">X</div><div class="d rest">J</div><div class="d train">V</div><div class="d rest">S</div><div class="d rest">D</div>
+            </div>
+            <div class="note" style="margin-top:22px"><svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.5" fill="none" stroke="#5b2a86" stroke-width="2.5"/><path d="M9 8v5M9 5v.5" stroke="#5b2a86" stroke-width="2.5"/></svg>Siguiente: día 2, pierna (viernes).</div>
+          </aside>
+        </div></div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ===================== DECISIÓN 4 ===================== -->
+  <section class="decision">
+    <h2><span class="n">4</span>Tema oscuro</h2>
+    <p class="q">Los tokens <code>.dark</code> ya existen pero nada los activa. Si eliges A o B, el oscuro sería un interruptor en Ajustes (U11, después de la línea de corte). Si eliges C, es el tema por defecto. Así se ve B con los tokens oscuros actuales, sin cambiar nada más:</p>
+    <div class="row">
+      <div class="opt">
+        <div class="opt-h"><span class="letter">B</span> en claro</div>
+        <div class="phone" style="height:520px">
+          <div class="scroll">
+            <div class="band"><div class="pad cover">
+              <div class="band-row" style="min-height:28px"><span class="kicker">SEMANA 1 · DÍA 1</span><span class="tag">14 días</span></div>
+              <div class="title">Hoy toca torso</div>
+              <div class="heroes"><div class="hero"><div class="lab">Ejercicios</div><div class="num">6</div></div><div class="hero"><div class="lab">Minutos</div><div class="num">45<small>min</small></div></div></div>
+            </div></div>
+            <div class="stripes"></div>
+            <div class="pad">
+              <div class="week-lab"><span>Tu semana</span><span>1 de 3 hechas</span></div>
+              <div class="week"><div class="d done">L</div><div class="d rest">M</div><div class="d today">X</div><div class="d rest">J</div><div class="d train">V</div><div class="d rest">S</div><div class="d rest">D</div></div>
+              <div class="rule-title">La sesión</div>
+              <div class="nrow"><span class="i">01</span><b>Press banca mancuernas</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="opt">
+        <div class="opt-h"><span class="letter">B</span> en oscuro (tokens <code>.dark</code>)</div>
+        <div class="phone dark-b" style="height:520px">
+          <div class="scroll">
+            <div class="band" style="background:#2a1a45"><div class="pad cover">
+              <div class="band-row" style="min-height:28px"><span class="kicker">SEMANA 1 · DÍA 1</span><span class="tag">14 días</span></div>
+              <div class="title">Hoy toca torso</div>
+              <div class="heroes"><div class="hero"><div class="lab" style="color:#d9cbea">Ejercicios</div><div class="num">6</div></div><div class="hero"><div class="lab" style="color:#d9cbea">Minutos</div><div class="num">45<small>min</small></div></div></div>
+            </div></div>
+            <div class="stripes"></div>
+            <div class="pad">
+              <div class="week-lab"><span>Tu semana</span><span>1 de 3 hechas</span></div>
+              <div class="week"><div class="d done">L</div><div class="d rest">M</div><div class="d today">X</div><div class="d rest">J</div><div class="d train">V</div><div class="d rest">S</div><div class="d rest">D</div></div>
+              <div class="rule-title">La sesión</div>
+              <div class="nrow"><span class="i">01</span><b>Press banca mancuernas</b><span class="v"><b>3 series</b><span>8 a 12 reps</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="opt" style="width:340px">
+        <ul class="notes" style="margin-top:34px">
+          <li><b>Opción 1:</b> claro por defecto, oscuro como interruptor en Ajustes (U11). Coste ahora: 0.</li>
+          <li><b>Opción 2:</b> seguir el tema del sistema (<code>prefers-color-scheme</code>) desde ya. Coste: ~1 h para revisar contrastes de todas las pantallas construidas.</li>
+          <li><b>Opción 3:</b> oscuro por defecto = dirección C.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DECISIÓN 5 ===================== -->
+  <section class="decision">
+    <h2><span class="n">5</span>Letra pixelada (D58)</h2>
+    <p class="q">Press Start 2P dibuja las mayúsculas con tilde a altura de minúscula ("SESIóN"). Ya está aplicada Silkscreen; confirma o cambia. Mismos textos, mismo cuerpo (11 px en etiqueta, 20 px en celebración).</p>
+    <div class="fonts">
+      <div class="fcard">
+        <h3>Press Start 2P <span class="now" style="font-family:var(--pixel);font-size:10px;background:#c2185b;color:#fff;padding:4px 6px;border-radius:3px">DESCARTADA</span></h3>
+        <div class="s" style="font-family:'Press Start 2P'"><span class="tag" style="font-family:inherit;font-size:9px">PRIMERA SESIÓN</span><span class="tag" style="font-family:inherit;font-size:9px">14 DÍAS</span></div>
+        <div class="big" style="font-family:'Press Start 2P';font-size:18px">ÍÓÁÉÚÑ</div>
+        <div class="pop" style="font-family:'Press Start 2P';font-size:14px">¡NIVEL ARRIBA!</div>
+        <p>Referencia: la que había antes. Las tildes fallan.</p>
+      </div>
+      <div class="fcard">
+        <h3 style="font-family:var(--display)">Silkscreen <span class="rec" style="font-family:var(--pixel);font-size:10px;background:var(--lemon);padding:4px 6px;border-radius:3px">APLICADA</span></h3>
+        <div class="s" style="font-family:'Silkscreen'"><span class="tag" style="font-family:inherit">PRIMERA SESIÓN</span><span class="tag" style="font-family:inherit">14 DÍAS</span></div>
+        <div class="big" style="font-family:'Silkscreen'">ÍÓÁÉÚÑ</div>
+        <div class="pop" style="font-family:'Silkscreen'">¡NIVEL ARRIBA!</div>
+        <p>Bloque arcade más parecido a la anterior. Solo mayúsculas visuales.</p>
+      </div>
+      <div class="fcard">
+        <h3>Tiny5</h3>
+        <div class="s" style="font-family:'Tiny5'"><span class="tag" style="font-family:inherit;font-size:13px">PRIMERA SESIÓN</span><span class="tag" style="font-family:inherit;font-size:13px">14 DÍAS</span></div>
+        <div class="big" style="font-family:'Tiny5';font-size:32px">ÍÓÁÉÚÑ</div>
+        <div class="pop" style="font-family:'Tiny5';font-size:24px">¡NIVEL ARRIBA!</div>
+        <p>Más estrecha: cabe más texto en la etiqueta. Necesita 13 px para leerse igual que Silkscreen a 11.</p>
+      </div>
+      <div class="fcard">
+        <h3>Pixelify Sans</h3>
+        <div class="s" style="font-family:'Pixelify Sans'"><span class="tag" style="font-family:inherit;font-size:13px;font-weight:600">PRIMERA SESIÓN</span><span class="tag" style="font-family:inherit;font-size:13px;font-weight:600">14 DÍAS</span></div>
+        <div class="big" style="font-family:'Pixelify Sans';font-weight:600">ÍÓÁÉÚÑ</div>
+        <div class="pop" style="font-family:'Pixelify Sans';font-weight:700">¡NIVEL ARRIBA!</div>
+        <p>Más redondeada y con pesos; menos "recreativa", más "juego indie".</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="sum">
+    <b>Qué hace falta de ti:</b> 1) A, B o C · 2) pestaña activa · 3) ¿Hoy en 2 columnas en escritorio como arriba? · 4) tema oscuro: opción 1, 2 o 3 · 5) Silkscreen, Tiny5 o Pixelify Sans.<br>
+    Recomendación del informe A: <b>B</b>, celda limón, 2 columnas sí, oscuro en Ajustes después de la línea de corte, Silkscreen.
+  </footer>
+</div>
+</body>
+</html>
