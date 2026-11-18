@@ -12,7 +12,8 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
     const previous = document.activeElement as HTMLElement | null;
     const node = ref.current;
     const focusables = () => Array.from(node?.querySelectorAll<HTMLElement>("button:not([disabled]), [href], input") ?? []);
-    focusables()[0]?.focus();
+    // Sin desplazar la hoja: si el primer botón está abajo, el título y el contenido siguen a la vista.
+    focusables()[0]?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
