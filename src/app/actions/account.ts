@@ -229,12 +229,14 @@ export async function retirarConsentimiento(): Promise<RetirarResult> {
   // Primero se borran los datos de salud y después se retira: si un borrado falla, el consentimiento
   // sigue vigente y el usuario puede reintentar desde Ajustes (revisión de U11; guardarraíl 8).
   const admin = createAdminClient();
-  const [health, marks] = await Promise.all([
+  // Las escalas del check-in (sensación y fatiga) también se borran (D71, decidido por Pablo: RGPD).
+  const [health, marks, checkins] = await Promise.all([
     admin.from("health_profile").delete().eq("user_id", userId),
     admin.from("discomfort_marks").delete().eq("user_id", userId),
+    admin.from("checkins").delete().eq("user_id", userId),
   ]);
-  for (const write of [health, marks]) if (write.error) logError("borrar_datos_salud", write.error);
-  if (health.error || marks.error) return { ok: false, error: "fallo" };
+  for (const write of [health, marks, checkins]) if (write.error) logError("borrar_datos_salud", write.error);
+  if (health.error || marks.error || checkins.error) return { ok: false, error: "fallo" };
 
   const withdrawn = await supabase.from("consents").update({ withdrawn_at: new Date().toISOString() }).eq("user_id", userId).is("withdrawn_at", null);
   if (withdrawn.error) {
