@@ -316,30 +316,39 @@ export type Database = {
           equipment_type_id: string
           id: string
           joints: string[]
+          joints_light: string[]
+          light_note: string | null
           muscle_groups: string[]
           name: string
           pattern: string
           region: string
+          technique: string | null
         }
         Insert: {
           calibration_load_kg: number
           equipment_type_id: string
           id: string
           joints?: string[]
+          joints_light?: string[]
+          light_note?: string | null
           muscle_groups: string[]
           name: string
           pattern: string
           region: string
+          technique?: string | null
         }
         Update: {
           calibration_load_kg?: number
           equipment_type_id?: string
           id?: string
           joints?: string[]
+          joints_light?: string[]
+          light_note?: string | null
           muscle_groups?: string[]
           name?: string
           pattern?: string
           region?: string
+          technique?: string | null
         }
         Relationships: [
           {

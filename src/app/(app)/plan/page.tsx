@@ -16,6 +16,8 @@ const REGION_TEXT: Record<string, string> = {
   traccion_superior_horizontal: "espalda (remo)",
   empuje_superior_vertical: "hombro",
   traccion_superior_vertical: "espalda (jalón)",
+  brazo: "brazo",
+  core: "core",
 };
 
 function SlotRow({ slot, index }: { slot: ActiveSlot; index: number }) {

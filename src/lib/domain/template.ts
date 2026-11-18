@@ -1,4 +1,5 @@
-import type { Focus, Region } from "./types";
+import { EXTRA_REGIONS, type ExtraRegion, type Focus, type Region } from "./types";
+import { MIN_SETS_PER_EXERCISE } from "./volume";
 
 // Plantilla determinista por días (PRD §7): la IA no decide la estructura, solo rellena los huecos.
 // 2–3 días: cuerpo completo; 4–5 días: torso y pierna alternos.
@@ -57,21 +58,54 @@ const PIERNA: Region[] = ["empuje_inferior", "traccion_inferior", "empuje_inferi
 
 const REGIONS: Record<SessionKind, Region[]> = { cuerpo_completo: FULL_BODY, torso: TORSO, pierna: PIERNA };
 
+// Huecos extra de complemento (catálogo ampliado, 18/11), en orden de preferencia. Solo entran si,
+// después de las series de los huecos principales, sobran minutos para al menos 2 series más. Nunca
+// quitan series a los huecos principales.
+const EXTRAS: Record<SessionKind, ExtraRegion[]> = {
+  cuerpo_completo: ["core", "brazo"],
+  torso: ["brazo", "brazo", "core"],
+  pierna: ["core"],
+};
+const EXTRA_MAX_SETS = 3;
+
+export const isExtraRegion = (region: string): boolean => (EXTRA_REGIONS as readonly string[]).includes(region);
+
+// Unas 2,5 minutos por serie con su descanso.
+const MINUTES_PER_SET = 2.5;
+
+// Series de cada hueco principal según los minutos y el foco.
+export function setsPerSlot(slotCount: number, minutes: number, focus: Focus): number {
+  const maxPerSession = Math.floor(minutes / MINUTES_PER_SET);
+  const ceiling = focus === "musculo" ? 5 : 4;
+  return Math.min(Math.max(Math.floor(maxPerSession / slotCount), MIN_SETS_PER_EXERCISE), ceiling);
+}
+
 function sessionKinds(days: Days): SessionKind[] {
   if (days <= 3) return Array<SessionKind>(days).fill("cuerpo_completo");
   return Array.from({ length: days }, (_, i) => (i % 2 === 0 ? "torso" : "pierna"));
 }
 
-export function buildTemplate(days: Days, focus: Focus): Template {
+// Sin `minutes`, solo los huecos principales (así se comportaba antes del catálogo ampliado).
+export function buildTemplate(days: Days, focus: Focus, minutes?: number): Template {
   const params = focusParams(focus);
   return {
-    sessions: sessionKinds(days).map((kind) => ({
-      kind,
-      slots: REGIONS[kind].map((region, index) => {
+    sessions: sessionKinds(days).map((kind) => {
+      const slots: TemplateSlot[] = REGIONS[kind].map((region, index) => {
         const principal = params.mainReps !== null && index === 0;
         const reps = principal && params.mainReps ? params.mainReps : params.reps;
         return { region, sets: DEFAULT_SETS, repMin: reps.min, repMax: reps.max, principal };
-      }),
-    })),
+      });
+      if (minutes !== undefined) {
+        const mainCount = slots.length;
+        let leftover = Math.floor(minutes / MINUTES_PER_SET) - setsPerSlot(mainCount, minutes, focus) * mainCount;
+        for (const region of EXTRAS[kind]) {
+          if (leftover < MIN_SETS_PER_EXERCISE) break;
+          const sets = Math.min(EXTRA_MAX_SETS, leftover);
+          slots.push({ region, sets, repMin: params.reps.min, repMax: params.reps.max, principal: false });
+          leftover -= sets;
+        }
+      }
+      return { kind, slots };
+    }),
   };
 }

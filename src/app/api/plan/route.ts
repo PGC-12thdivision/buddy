@@ -63,7 +63,7 @@ export async function POST() {
   const result = await generatePlan({
     model: PLAN_MODEL,
     callModel: callPlanModel,
-    template: buildTemplate(days, focus),
+    template: buildTemplate(days, focus, answers.data.minutes_per_session),
     profile: { focus, daysPerWeek: days, minutesPerSession: answers.data.minutes_per_session, sports: answers.data.sports },
     catalog,
     equipmentIds,

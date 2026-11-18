@@ -16,14 +16,15 @@ export async function equipmentCatalog(): Promise<EquipmentOption[]> {
   return data ?? [];
 }
 
-export type CatalogExercise = Exercise & { name: string };
+// Técnica (1–2 frases) y nota de contribución leve: solo se muestran en la sesión, nunca van al prompt.
+export type CatalogExercise = Exercise & { name: string; jointsLight: Joint[]; technique: string | null; lightNote: string | null };
 
 // Ejercicios del catálogo con la forma del dominio (src/lib/domain/types.ts). Orden fijo por ID
 // para que el prompt y el refiltrado sean deterministas.
 export async function exerciseCatalog(): Promise<CatalogExercise[]> {
   const { data, error } = await createAdminClient()
     .from("exercises")
-    .select("id, name, equipment_type_id, pattern, region, muscle_groups, joints, calibration_load_kg")
+    .select("id, name, equipment_type_id, pattern, region, muscle_groups, joints, joints_light, calibration_load_kg, technique, light_note")
     .order("id");
   if (error) logError("leer_ejercicios", error);
   return (data ?? []).map((row) => ({
@@ -34,7 +35,10 @@ export async function exerciseCatalog(): Promise<CatalogExercise[]> {
     region: row.region as Region,
     muscleGroups: row.muscle_groups,
     joints: row.joints as Joint[],
+    jointsLight: (row.joints_light ?? []) as Joint[],
     calibrationLoadKg: Number(row.calibration_load_kg),
+    technique: row.technique,
+    lightNote: row.light_note,
   }));
 }
 
