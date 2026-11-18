@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 
 // Navegación de la app (DESIGN.md §5; diseño D3 y D24): barra inferior de 4 pestañas hasta 1023 px
 // y menú lateral fijo de 240 px desde 1024 px, con el estado de la suscripción abajo.
+// Pestaña activa: celda limón con texto en tinta y filete de tinta (D60), el mismo patrón que el
+// menú lateral. La barra limón sobre crema incumplía la regla de contraste de DESIGN.md §2.
 
 const SECTIONS: { href: Route; label: string; icon: string }[] = [
   { href: "/hoy", label: "Hoy", icon: "M4 5h16v15H4zM4 10h16M9 3v4M15 3v4" },
@@ -37,9 +39,8 @@ export function AppNav({ subscription }: { subscription: string }) {
             key={s.href}
             href={s.href}
             aria-current={active(s.href) ? "page" : undefined}
-            className="relative flex min-w-11 flex-col items-center justify-center gap-0.5 text-[12px] font-bold text-muted-foreground aria-[current=page]:text-foreground"
+            className="flex min-w-11 flex-col items-center justify-center gap-0.5 text-[12px] font-bold text-muted-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground aria-[current=page]:shadow-[inset_0_3px_0_var(--foreground)]"
           >
-            {active(s.href) ? <span aria-hidden="true" className="absolute inset-x-3 top-0 h-1 bg-primary" /> : null}
             <Icon d={s.icon} />
             {s.label}
           </Link>
