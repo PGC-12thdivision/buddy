@@ -1,16 +1,21 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { loadSeedCatalog } from "@/test/seed-catalog";
+import { ZONE_LABELS } from "./zones";
 import { BASIC_PRESET_EQUIPMENT, FREE_WEIGHT_PRESET_EQUIPMENT, presetEquipment, templateHint } from "./answers";
 
-// IDs de equipo del catálogo semilla (U2): los presets solo pueden marcar equipo que exista.
-const seed = readFileSync("supabase/migrations/20261112131416_catalogo_semilla.sql", "utf8");
-const seedEquipment = [...seed.matchAll(/^\s+\('([a-z0-9_]+)',\s+'[^']+',\s+'(?:pierna|espalda|pecho_hombro|brazo|peso_libre|cardio)'/gm)].map(
-  (m) => m[1],
-);
+// IDs de equipo del catálogo (semilla de U2 más el catálogo ampliado del 18/11): los presets solo
+// pueden marcar equipo que exista.
+const { equipment } = loadSeedCatalog();
+const seedEquipment = equipment.map((e) => e.id);
 
 describe("presets de Mi gimnasio", () => {
-  it("el catálogo semilla se ha leído", () => {
-    expect(seedEquipment.length).toBeGreaterThanOrEqual(25);
+  it("el catálogo semilla y el ampliado se han leído", () => {
+    expect(seedEquipment.length).toBeGreaterThanOrEqual(40);
+    expect(new Set(seedEquipment).size).toBe(seedEquipment.length);
+  });
+
+  it("cada tipo de equipo tiene una zona con etiqueta en Mi gimnasio", () => {
+    for (const e of equipment) expect(Object.keys(ZONE_LABELS)).toContain(e.zone);
   });
 
   it("todo el equipo de los presets existe en el catálogo semilla", () => {

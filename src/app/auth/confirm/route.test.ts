@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const verifyOtp = vi.fn();
 const exchangeCodeForSession = vi.fn();
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => ({ auth: { verifyOtp, exchangeCodeForSession } }) }));
+const scheduleWelcome = vi.fn();
+vi.mock("@/lib/email/transactional", () => ({ scheduleWelcome: (userId: string) => scheduleWelcome(userId) }));
 const { GET } = await import("./route");
 
 const get = (query: string) => GET(new NextRequest(`https://buddy.test/auth/confirm?${query}`));
@@ -13,6 +15,25 @@ beforeEach(() => {
   verifyOtp.mockResolvedValue({ error: null });
   exchangeCodeForSession.mockReset();
   exchangeCodeForSession.mockResolvedValue({ error: null });
+  scheduleWelcome.mockReset();
+});
+
+describe("/auth/confirm: bienvenida (U10)", () => {
+  it("con el email confirmado programa la bienvenida del usuario", async () => {
+    verifyOtp.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    await get("token_hash=abc&type=email");
+    exchangeCodeForSession.mockResolvedValue({ data: { user: { id: "u2" } }, error: null });
+    await get("code=xyz");
+    expect(scheduleWelcome.mock.calls).toEqual([["u1"], ["u2"]]);
+  });
+
+  it("si la confirmación falla no programa nada", async () => {
+    verifyOtp.mockResolvedValue({ data: { user: null }, error: { code: "otp_expired" } });
+    await get("token_hash=abc&type=email");
+    exchangeCodeForSession.mockResolvedValue({ data: { user: null }, error: { code: "bad_code_verifier" } });
+    await get("code=xyz");
+    expect(scheduleWelcome).not.toHaveBeenCalled();
+  });
 });
 
 describe("/auth/confirm", () => {
