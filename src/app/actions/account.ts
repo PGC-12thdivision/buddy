@@ -62,6 +62,9 @@ export async function guardarGimnasio(input: unknown): Promise<RefilteredResult 
     logError("guardar_gimnasio", error);
     return { ok: false, error: "fallo" };
   }
+  // Sin consentimiento vigente el plan está pausado y no hay limitaciones que leer: refiltrar ahora
+  // rellenaría huecos con ejercicios de la zona antigua. Se refiltra al volver a consentir.
+  if (!(await hasActiveConsent(supabase, userId))) return { ok: true, changed: 0, holes: 0 };
   return refilter(supabase, userId);
 }
 
@@ -79,7 +82,9 @@ const limitacionesSchema = z.object({ limitations: z.array(z.enum(JOINTS)).max(J
 
 // Cambia solo las limitaciones: el resultado del cribado no se toca. Quitar una zona también
 // refiltra (los huecos por limitación pueden volver a llenarse).
-export async function guardarLimitaciones(input: unknown): Promise<RefilteredResult | Fail<"sin_consentimiento" | "sin_cribado" | "fallo">> {
+export async function guardarLimitaciones(
+  input: unknown,
+): Promise<RefilteredResult | Fail<"sin_consentimiento" | "sin_cribado" | "plan_sin_actualizar" | "fallo">> {
   const parsed = limitacionesSchema.safeParse(input);
   if (!parsed.success) return INVALID;
   const { supabase, userId } = await claims();
@@ -99,7 +104,9 @@ export async function guardarLimitaciones(input: unknown): Promise<RefilteredRes
   }
   // Sin perfil de salud (cribado sin superar) no se crea uno aquí: eso es el wizard.
   if (!Array.isArray(data) || data.length === 0) return { ok: false, error: "sin_cribado" };
-  return refilter(supabase, userId);
+  const refiltered = await refilter(supabase, userId);
+  // Las limitaciones sí están guardadas: se dice tal cual y se puede reintentar (revisión de U11).
+  return refiltered.ok ? refiltered : { ok: false, error: "plan_sin_actualizar" };
 }
 
 // --- Foco y días -----------------------------------------------------------------------------
@@ -133,7 +140,10 @@ export async function cambiarFocoDias(input: unknown): Promise<FocoDiasResult> {
   // Sin consentimiento vigente o sin cribado superado no se llama a la IA (guardarraíles 5 y 8).
   if (!consent || !health.data) return { ok: false, error: "sin_permiso" };
   if (!answers.data || !gym.data) return { ok: false, error: "incompleto" };
-  if (answers.data.focus === focus && answers.data.days_per_week === daysPerWeek) return { ok: false, error: "sin_cambios" };
+  // Se compara con el plan activo (fuente de verdad): si falló alinear las respuestas, no se gasta otro cambio.
+  const { data: active } = await supabase.from("plans").select("focus, days_per_week").eq("user_id", userId).eq("is_active", true).maybeSingle();
+  const current = active ?? { focus: answers.data.focus, days_per_week: answers.data.days_per_week };
+  if (current.focus === focus && current.days_per_week === daysPerWeek) return { ok: false, error: "sin_cambios" };
 
   const catalog = await exerciseCatalog();
   const equipmentIds = sanitizeEquipment(gym.data.equipment_type_ids, [...new Set(catalog.map((e) => e.equipmentTypeId))]);
@@ -185,16 +195,17 @@ export async function guardarPreferencias(input: unknown): Promise<{ ok: true } 
   if (!userId) return NO_SESSION;
   const { theme, showRestTimer } = parsed.data;
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("user_settings")
     .update({
       ...(theme !== undefined ? { theme } : {}),
       ...(showRestTimer !== undefined ? { show_rest_timer: showRestTimer } : {}),
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", userId);
-  if (error) {
-    logError("guardar_preferencias", error);
+    .eq("user_id", userId)
+    .select("user_id");
+  if (error || !Array.isArray(updated) || updated.length === 0) {
+    logError("guardar_preferencias", error ?? { code: "sin_fila" });
     return { ok: false, error: "fallo" };
   }
   if (theme !== undefined) {
@@ -215,12 +226,8 @@ export async function retirarConsentimiento(): Promise<RetirarResult> {
   const { supabase, userId } = await claims();
   if (!userId) return NO_SESSION;
 
-  const withdrawn = await supabase.from("consents").update({ withdrawn_at: new Date().toISOString() }).eq("user_id", userId).is("withdrawn_at", null);
-  if (withdrawn.error) {
-    logError("retirar_consentimiento", withdrawn.error);
-    return { ok: false, error: "fallo" };
-  }
-
+  // Primero se borran los datos de salud y después se retira: si un borrado falla, el consentimiento
+  // sigue vigente y el usuario puede reintentar desde Ajustes (revisión de U11; guardarraíl 8).
   const admin = createAdminClient();
   const [health, marks] = await Promise.all([
     admin.from("health_profile").delete().eq("user_id", userId),
@@ -228,6 +235,12 @@ export async function retirarConsentimiento(): Promise<RetirarResult> {
   ]);
   for (const write of [health, marks]) if (write.error) logError("borrar_datos_salud", write.error);
   if (health.error || marks.error) return { ok: false, error: "fallo" };
+
+  const withdrawn = await supabase.from("consents").update({ withdrawn_at: new Date().toISOString() }).eq("user_id", userId).is("withdrawn_at", null);
+  if (withdrawn.error) {
+    logError("retirar_consentimiento", withdrawn.error);
+    return { ok: false, error: "fallo" };
+  }
 
   return { ok: true, next: nextScreenForAccount(await accountProgress(supabase, userId)) };
 }
