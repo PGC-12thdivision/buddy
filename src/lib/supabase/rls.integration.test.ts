@@ -28,6 +28,19 @@ const secret = env.SUPABASE_SECRET_KEY ?? "";
 const requested = env.RUN_RLS_TESTS === "1";
 const enabled = requested && url.includes(STAGING_REF) && secret.startsWith("sb_secret_");
 
+// Pedida pero sin claves de staging: falla en voz alta en vez de saltarse en silencio.
+describe.runIf(requested && !enabled)("RLS en staging (configuración)", () => {
+  it("necesita NEXT_PUBLIC_SUPABASE_URL de staging y SUPABASE_SECRET_KEY en .env.local", () => {
+    throw new Error("La suite de RLS se pidió sin las claves de staging; nunca se ejecuta contra prod.");
+  });
+});
+
+// Falla si la operación de preparación devolvió error: así la suite no pasa sin haber sembrado nada.
+function must<T extends { error: { code?: string } | null }>(result: T, label: string): T {
+  if (result.error) throw new Error(`${label}: ${result.error.code ?? "error"}`);
+  return result;
+}
+
 describe.skipIf(!enabled)("RLS en staging", () => {
   // Se crea al usarse: con la suite desactivada no hay clave y createClient fallaría al cargar el archivo.
   const admin = enabled
@@ -39,6 +52,7 @@ describe.skipIf(!enabled)("RLS en staging", () => {
   let clientA: SupabaseClient;
   let clientB: SupabaseClient;
   let sessionB = "";
+  let exerciseId = "";
 
   async function signedInClient(email: string) {
     const client = createClient(url, publishable, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -62,17 +76,23 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     sessionB = randomUUID();
     const { error } = await clientB.from("workout_sessions").insert({ id: sessionB, kind: "normal" });
     if (error) throw new Error(`sesión de B: ${error.code}`);
-    const exercise = await admin.from("exercises").select("id").limit(1).single();
-    if (exercise.data) {
+    const exercise = must(await admin.from("exercises").select("id").limit(1).single(), "catálogo vacío");
+    exerciseId = exercise.data!.id;
+    must(
       await clientB.from("set_logs").insert({
-        id: randomUUID(), session_id: sessionB, exercise_id: exercise.data.id,
+        id: randomUUID(), session_id: sessionB, exercise_id: exerciseId,
         set_index: 1, weight_kg: 40, reps: 10, status: "hecha",
-      });
-    }
-    await admin.from("health_profile").insert({
-      user_id: userB, limitations: ["rodilla"], screening_version: "test", screening_passed_at: new Date().toISOString(),
-    });
-    await admin.from("checkins").insert({ user_id: userB, week_start: "2026-11-16", feeling: 3, fatigue: 3 });
+      }),
+      "serie de B",
+    );
+    must(
+      await admin.from("health_profile").insert({
+        user_id: userB, limitations: ["rodilla"], screening_version: "test", screening_passed_at: new Date().toISOString(),
+      }),
+      "salud de B",
+    );
+    must(await admin.from("checkins").insert({ user_id: userB, week_start: "2026-11-16", feeling: 3, fatigue: 3 }), "check-in de B");
+    must(await admin.from("discomfort_marks").insert({ user_id: userB, exercise_id: exerciseId, session_id: sessionB }), "molestia de B");
   }, 60_000);
 
   afterAll(async () => {
@@ -80,11 +100,36 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     if (userB) await admin.auth.admin.deleteUser(userB);
   }, 60_000);
 
-  it("A no lee las series, el perfil de salud ni los check-ins de B", async () => {
-    for (const table of ["set_logs", "health_profile", "checkins", "workout_sessions"]) {
-      const { data } = await clientA.from(table).select("*").eq("user_id", userB);
-      expect(data ?? []).toHaveLength(0);
+  it("A no lee las series, el perfil de salud, las molestias ni los check-ins de B (y B sí los suyos)", async () => {
+    for (const table of ["set_logs", "health_profile", "checkins", "workout_sessions", "discomfort_marks"]) {
+      // Control positivo: la fila existe y su dueño la ve; si no, la prueba no demostraría nada.
+      const own = await clientB.from(table).select("*").eq("user_id", userB);
+      expect(own.error, table).toBeNull();
+      expect((own.data ?? []).length, table).toBeGreaterThan(0);
+      const other = await clientA.from(table).select("*").eq("user_id", userB);
+      expect(other.error, table).toBeNull();
+      expect(other.data, table).toHaveLength(0);
     }
+  });
+
+  it("A da su consentimiento y solo puede retirarlo: ni reescribirlo ni volver a darlo por la misma fila", async () => {
+    const given = must(await clientA.from("consents").insert({ version: "test" }).select("id").single(), "consentimiento de A");
+    const id = given.data!.id as string;
+    await clientA.from("consents").update({ version: "otra" }).eq("id", id);
+    const withdrawn = await clientA.from("consents").update({ withdrawn_at: new Date().toISOString() }).eq("id", id).select("id");
+    expect(withdrawn.error).toBeNull();
+    expect(withdrawn.data).toHaveLength(1);
+    await clientA.from("consents").update({ withdrawn_at: null }).eq("id", id);
+    const { data } = await admin.from("consents").select("version, withdrawn_at").eq("id", id).single();
+    expect(data!.version).toBe("test");
+    expect(data!.withdrawn_at).not.toBeNull();
+  });
+
+  it("A no puede tocar el consentimiento de B", async () => {
+    const givenB = must(await clientB.from("consents").insert({ version: "test" }).select("id").single(), "consentimiento de B");
+    await clientA.from("consents").update({ withdrawn_at: new Date().toISOString() }).eq("id", givenB.data!.id);
+    const { data } = await admin.from("consents").select("withdrawn_at").eq("id", givenB.data!.id).single();
+    expect(data!.withdrawn_at).toBeNull();
   });
 
   it("A no puede cambiar su rol ni su suscripción", async () => {
@@ -114,22 +159,24 @@ describe.skipIf(!enabled)("RLS en staging", () => {
       clientA.from("events").insert({ user_id: userA, name: "registro" }),
       clientA.from("stripe_events").insert({ event_id: `evt_${randomUUID()}` }),
       clientA.from("email_log").insert({ user_id: userA, kind: "bienvenida", period: "x", status: "sent" }),
+      clientA.from("discomfort_marks").insert({ user_id: userA, exercise_id: exerciseId, session_id: sessionB }),
     ]);
     for (const { error } of attempts) expect(error).not.toBeNull();
   });
 
-  it("A no puede ejecutar el contador diario (función SECURITY DEFINER)", async () => {
+  it("ni A ni un anónimo pueden ejecutar el contador diario (función SECURITY DEFINER)", async () => {
     const { error } = await clientA.rpc("bump_daily_counter", { p_metric: "molestia" });
     expect(error).not.toBeNull();
+    const anon = createClient(url, publishable, { auth: { persistSession: false } });
+    const anonymous = await anon.rpc("bump_daily_counter", { p_metric: "molestia" });
+    expect(anonymous.error).not.toBeNull();
   });
 
   it("insertar dos veces la misma serie deja una sola fila", async () => {
-    const exercise = await admin.from("exercises").select("id").limit(1).single();
-    if (!exercise.data) return; // sin catálogo sembrado todavía
     const session = randomUUID();
-    await clientA.from("workout_sessions").insert({ id: session, kind: "normal" });
+    must(await clientA.from("workout_sessions").insert({ id: session, kind: "normal" }), "sesión de A");
     const set = {
-      id: randomUUID(), session_id: session, exercise_id: exercise.data.id,
+      id: randomUUID(), session_id: session, exercise_id: exerciseId,
       set_index: 1, weight_kg: 40, reps: 10, status: "hecha",
     };
     await clientA.from("set_logs").upsert(set, { onConflict: "id", ignoreDuplicates: true });
@@ -139,22 +186,22 @@ describe.skipIf(!enabled)("RLS en staging", () => {
   });
 
   it("A no puede colgar una serie de la sesión de B, ni editar o borrar series de B", async () => {
-    const exercise = await admin.from("exercises").select("id").limit(1).single();
-    if (!exercise.data) return;
     const { error } = await clientA.from("set_logs").insert({
-      id: randomUUID(), session_id: sessionB, exercise_id: exercise.data.id,
+      id: randomUUID(), session_id: sessionB, exercise_id: exerciseId,
       set_index: 1, weight_kg: 40, reps: 10, status: "hecha",
     });
     expect(error).not.toBeNull();
     await clientA.from("set_logs").update({ reps: 99 }).eq("user_id", userB);
     await clientA.from("set_logs").delete().eq("user_id", userB);
     const { data } = await admin.from("set_logs").select("reps").eq("user_id", userB);
-    expect((data ?? []).every((row) => row.reps === 10)).toBe(true);
+    expect(data!.length).toBeGreaterThan(0);
+    expect(data!.every((row) => row.reps === 10)).toBe(true);
   });
 
   it("un usuario con sesión lee el catálogo y un anónimo no", async () => {
     const withSession = await clientA.from("exercises").select("id").limit(1);
     expect(withSession.error).toBeNull();
+    expect(withSession.data!.length).toBe(1);
     const anon = createClient(url, publishable, { auth: { persistSession: false } });
     const anonymous = await anon.from("exercises").select("id").limit(1);
     expect(anonymous.error !== null || (anonymous.data ?? []).length === 0).toBe(true);

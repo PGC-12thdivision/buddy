@@ -29,15 +29,20 @@ export function nextPrescription(input: ProgressionInput, equipment: EquipmentTy
   const last = sessions[sessions.length - 1];
   if (!last) return { loadKg: load, reps: repRange.min };
 
+  // La Molestia se mira en el historial completo: parar antes de hacer ninguna serie deja la
+  // sesión sin series hechas, pero sigue siendo una Molestia hoy (guardarraíl 7).
+  const discomfortToday = input.history.at(-1)?.discomfort === true;
   const lastTwo = sessions.slice(-2);
   const bothAtLoad = lastTwo.length === 2 && lastTwo.every((s) => s.loadKg === load);
+  // Una sesión con Molestia no sirve como prueba para subir ni para bajar.
+  const usable = bothAtLoad && !discomfortToday && lastTwo.every((s) => !s.discomfort);
   const atTop = (reps: number[]) => reps.every((r) => r >= repRange.max);
   const belowFloor = (reps: number[]) => reps.some((r) => r < repRange.min);
 
-  if (!last.discomfort && bothAtLoad && lastTwo.every((s) => atTop(s.reps))) {
+  if (usable && lastTwo.every((s) => atTop(s.reps))) {
     return { loadKg: load + equipment.incrementKg, reps: repRange.min };
   }
-  if (!last.discomfort && bothAtLoad && lastTwo.every((s) => belowFloor(s.reps))) {
+  if (usable && lastTwo.every((s) => belowFloor(s.reps))) {
     return { loadKg: Math.max(load - equipment.incrementKg, equipment.minKg), reps: repRange.min };
   }
   const lowest = Math.min(...last.reps);

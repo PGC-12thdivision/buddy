@@ -12,7 +12,7 @@ import { useWizard } from "./wizard-provider";
 // gimnasio). Antes del registro guarda en el borrador; desde el resumen ("Cambiar"), en la cuenta.
 export function useStepNext(step: WizardEvent["step"], nextHref: Route, editing: boolean) {
   const router = useRouter();
-  const { setAnswers, track } = useWizard();
+  const { draft, setAnswers, track } = useWizard();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +25,9 @@ export function useStepNext(step: WizardEvent["step"], nextHref: Route, editing:
     }
     setPending(true);
     setError(null);
-    const result = await actualizarRespuestas(patch);
+    // Todas las respuestas que tiene el borrador, no solo las de esta pantalla: si a la cuenta le
+    // falta alguna (registro a medias), el servidor puede completarla en vez de devolver "incompleto".
+    const result = await actualizarRespuestas({ ...draft.answers, ...patch });
     setPending(false);
     if (result.ok) router.push("/resumen");
     else if (result.error === "sin_sesion") router.push("/entrar");

@@ -9,9 +9,14 @@ export type ConfirmType = (typeof CONFIRM_TYPES)[number];
 
 const DEFAULT_NEXT = "/consentimiento";
 
+// Caracteres de control: el parser de URL quita tabuladores y saltos de línea, así que
+// "/\t/evil.com" acabaría siendo "//evil.com".
+const CONTROL_CHARS = /[\u0000-\u001F\u007F]/;
+const PROBE_ORIGIN = "http://buddy.invalid";
+
 export function safeNext(next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return DEFAULT_NEXT;
-  if (next.includes("\\")) return DEFAULT_NEXT;
+  if (next.includes("\\") || CONTROL_CHARS.test(next)) return DEFAULT_NEXT;
   // Rechaza también "//" codificado (p. ej. "/%2F%2Fevil.com").
   let decoded: string;
   try {
@@ -19,8 +24,11 @@ export function safeNext(next: string | null): string {
   } catch {
     return DEFAULT_NEXT;
   }
-  if (decoded.startsWith("//") || decoded.includes("\\")) return DEFAULT_NEXT;
-  return next;
+  if (decoded.startsWith("//") || decoded.includes("\\") || CONTROL_CHARS.test(decoded)) return DEFAULT_NEXT;
+  // Última barrera: resuelta contra un origen de prueba, tiene que quedarse en ese origen.
+  const url = new URL(next, PROBE_ORIGIN);
+  if (url.origin !== PROBE_ORIGIN) return DEFAULT_NEXT;
+  return url.pathname + url.search + url.hash;
 }
 
 export type ConfirmParams =

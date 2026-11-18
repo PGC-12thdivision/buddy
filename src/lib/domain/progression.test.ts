@@ -64,4 +64,14 @@ describe("nextPrescription (doble progresión)", () => {
   it("una Molestia hoy no sube la carga", () => {
     expect(next([session(40, done(12, 12, 12)), session(40, done(12, 12, 12), true)])).toEqual({ loadKg: 40, reps: 12 });
   });
+
+  it("una Molestia antes de terminar ninguna serie tampoco sube (guardarraíl 7)", () => {
+    const stoppedEarly = session(40, [{ reps: 0, skipped: true }], true);
+    expect(next([session(40, done(12, 12, 12)), session(40, done(12, 12, 12)), stoppedEarly]).loadKg).toBe(40);
+  });
+
+  it("una sesión con Molestia no cuenta como prueba para subir después", () => {
+    const partial = session(40, [...done(12), { reps: 0, skipped: true }], true);
+    expect(next([session(40, done(12, 12, 12)), partial, session(40, done(12, 12, 12))]).loadKg).toBe(40);
+  });
 });

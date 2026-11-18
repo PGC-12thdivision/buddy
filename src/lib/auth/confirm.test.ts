@@ -10,7 +10,21 @@ describe("safeNext", () => {
   });
 
   it("rechaza rutas que salen del sitio y usa la de por defecto", () => {
-    for (const bad of ["//evil.com", "https://evil.com", "/\\evil.com", "\\\\evil.com", "evil.com", "", null, "/%2F%2Fevil.com"]) {
+    for (const bad of [
+      "//evil.com",
+      "https://evil.com",
+      "/\\evil.com",
+      "\\\\evil.com",
+      "evil.com",
+      "",
+      null,
+      "/%2F%2Fevil.com",
+      // Tabulador y saltos de línea: el parser de URL los quita y "/\t/evil.com" se vuelve "//evil.com".
+      "/\t/evil.com",
+      "/\n/evil.com",
+      "/\r/evil.com",
+      "/%09/evil.com",
+    ]) {
       expect(safeNext(bad)).toBe("/consentimiento");
     }
   });

@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { activityCatalog, equipmentCatalog } from "@/lib/catalog";
 import { evaluateScreening, SCREENING_QUESTIONS } from "@/lib/domain/screening";
 import { JOINTS } from "@/lib/domain/types";
 import { logError } from "@/lib/log";
@@ -45,15 +46,11 @@ const REGISTRO_MESSAGES: Record<Exclude<RegistroField, "form">, string> = {
 };
 const GENERIC_ERROR = "No hemos podido crear la cuenta. Inténtalo de nuevo en un momento.";
 
-async function catalogIds(table: "equipment_types" | "activity_types"): Promise<Set<string>> {
-  const { data, error } = await createAdminClient().from(table).select("id");
-  if (error) logError("leer_catalogo", error);
-  return new Set((data ?? []).map((row) => row.id));
-}
-
 async function answersMatchCatalog(answers: Pick<WizardAnswers, "equipmentTypeIds" | "sports">): Promise<boolean> {
-  const [equipment, activities] = await Promise.all([catalogIds("equipment_types"), catalogIds("activity_types")]);
-  return answers.equipmentTypeIds.every((id) => equipment.has(id)) && answers.sports.every((id) => activities.has(id));
+  const [equipment, activities] = await Promise.all([equipmentCatalog(), activityCatalog()]);
+  const equipmentIds = new Set(equipment.map((e) => e.id));
+  const activityIds = new Set(activities.map((a) => a.id));
+  return answers.equipmentTypeIds.every((id) => equipmentIds.has(id)) && answers.sports.every((id) => activityIds.has(id));
 }
 
 // Adónde vuelve el enlace del email de confirmación. Con la plantilla por defecto de Supabase

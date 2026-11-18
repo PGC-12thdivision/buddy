@@ -32,6 +32,7 @@ function fakeDb(responses: Record<string, Result> = {}) {
       is: filter,
       in: filter,
       limit: () => builder,
+      order: () => builder,
       maybeSingle: () => builder,
       then: (resolve: (value: unknown) => void) => {
         ops.push(op);
@@ -156,7 +157,8 @@ describe("registro", () => {
 
   it("no acepta un campo de salud colado en las respuestas", async () => {
     server.auth.signUp.mockResolvedValue({ data: { user: { id: "nuevo", identities: [{ id: "i" }] } }, error: null });
-    await actions.registrarse(registro({ answers: { ...answers, limitations: ["rodilla"] } }));
+    expect(await actions.registrarse(registro({ answers: { ...answers, limitations: ["rodilla"] } }))).toEqual({ ok: true });
+    expect(writesTo(admin, "onboarding_answers")).toHaveLength(1);
     expect(JSON.stringify(admin.ops)).not.toContain("rodilla");
   });
 });
@@ -192,6 +194,8 @@ describe("acciones con sesión", () => {
     expect(writesTo(admin, "health_profile")).toEqual([]);
     expect(writesTo(admin, "events")).toEqual([]);
     expect(JSON.stringify(admin.rpcs)).not.toContain("u1");
+    // Un cribado superado antes deja de valer (guardarraíl 5).
+    expect(admin.ops).toContainEqual({ table: "health_profile", op: "delete", payload: undefined, filters: [["user_id", "u1"]] });
   });
 
   it("el «Sí» articular sin zona pide marcarla y no guarda nada", async () => {
@@ -228,5 +232,96 @@ describe("acciones con sesión", () => {
     setup({ userId: "u1" });
     expect(await actions.borrarCuenta()).toEqual({ ok: true });
     expect(admin.auth.admin.deleteUser).toHaveBeenCalledWith("u1");
+  });
+});
+
+describe("registro: errores de Supabase", () => {
+  const cases: [string, unknown][] = [
+    ["weak_password", { ok: false, errors: { password: expect.any(String) } }],
+    ["email_address_invalid", { ok: false, errors: { email: expect.any(String) } }],
+    ["over_email_send_rate_limit", { ok: false, errors: { form: expect.stringContaining("Demasiados") } }],
+    ["unexpected_failure", { ok: false, errors: { form: expect.any(String) } }],
+    ["user_already_exists", { ok: true }],
+  ];
+  for (const [code, expected] of cases) {
+    it(`${code} se traduce sin escribir nada ni mostrar el mensaje de Supabase`, async () => {
+      server.auth.signUp.mockResolvedValue({ data: { user: null }, error: { code, message: "mensaje interno de Supabase" } });
+      const result = await actions.registrarse(registro());
+      expect(result).toEqual(expected);
+      expect(JSON.stringify(result)).not.toContain("mensaje interno");
+      expect(admin.ops.filter((o) => o.op !== "select")).toEqual([]);
+    });
+  }
+});
+
+describe("entrar", () => {
+  it("sin email válido no llama a Supabase", async () => {
+    expect(await actions.entrar({ email: "no-es-email", password: "x" })).toEqual({ ok: false, error: "no_valido" });
+    expect(server.auth.signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  for (const [code, error] of [
+    ["email_not_confirmed", "sin_confirmar"],
+    ["over_request_rate_limit", "limite"],
+    ["invalid_credentials", "credenciales"],
+  ]) {
+    it(`${code} → ${error}`, async () => {
+      server.auth.signInWithPassword.mockResolvedValue({ data: { user: null }, error: { code } });
+      expect(await actions.entrar({ email: "a@b.es", password: "x" })).toEqual({ ok: false, error });
+    });
+  }
+
+  it("con credenciales correctas lleva a la pantalla que toca a la cuenta", async () => {
+    setup({ serverResponses: { "consents.select": { data: [{ id: "c1" }] }, "health_profile.select": { data: [] } } });
+    server.auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    expect(await actions.entrar({ email: "a@b.es", password: "x" })).toEqual({ ok: true, next: "/limitaciones" });
+  });
+});
+
+describe("reenviarConfirmacion", () => {
+  it("responde lo mismo exista o no la cuenta, salvo el límite de envíos", async () => {
+    server.auth.resend.mockResolvedValue({ error: { code: "user_not_found" } });
+    expect(await actions.reenviarConfirmacion({ email: "a@b.es" })).toEqual({ ok: true });
+    server.auth.resend.mockResolvedValue({ error: { code: "over_email_send_rate_limit" } });
+    expect(await actions.reenviarConfirmacion({ email: "a@b.es" })).toEqual({ ok: false, error: "limite" });
+  });
+});
+
+describe("actualizarRespuestas", () => {
+  const stored = {
+    "onboarding_answers.select": {
+      data: { focus: "equilibrado", experience: "nunca", days_per_week: 2, minutes_per_session: 30, sports: [] },
+    },
+    "gym_profiles.select": { data: { preset: "basico", equipment_type_ids: ["jalon"] } },
+  };
+
+  it("con plan activo no cambia nada (eso es la regeneración de U6)", async () => {
+    setup({ userId: "u1", serverResponses: { ...stored, "plans.select": { data: [{ id: "p1" }] } } });
+    expect(await actions.actualizarRespuestas({ focus: "fuerza" })).toEqual({ ok: false, error: "plan_activo" });
+    expect(admin.ops.filter((o) => o.op !== "select")).toEqual([]);
+  });
+
+  it("mezcla el cambio con lo guardado y escribe con el user_id de la sesión", async () => {
+    setup({ userId: "u1", serverResponses: stored });
+    expect(await actions.actualizarRespuestas({ focus: "fuerza", userId: "otro" })).toEqual({ ok: true });
+    expect(writesTo(admin, "onboarding_answers")[0].payload).toMatchObject({
+      user_id: "u1",
+      focus: "fuerza",
+      experience: "nunca",
+      days_per_week: 2,
+    });
+    expect(writesTo(server, "gym_profiles")[0].payload).toMatchObject({ user_id: "u1", preset: "basico" });
+  });
+
+  it("si a la cuenta le faltan las respuestas, las completa con el borrador entero", async () => {
+    setup({ userId: "u1" });
+    expect(await actions.actualizarRespuestas({ focus: "musculo" })).toEqual({ ok: false, error: "incompleto" });
+    expect(await actions.actualizarRespuestas({ ...answers, focus: "musculo" })).toEqual({ ok: true });
+    expect(writesTo(admin, "onboarding_answers")[0].payload).toMatchObject({ user_id: "u1", focus: "musculo" });
+  });
+
+  it("equipo fuera del catálogo se rechaza", async () => {
+    setup({ userId: "u1", serverResponses: stored });
+    expect(await actions.actualizarRespuestas({ equipmentTypeIds: ["inventada"] })).toEqual({ ok: false, error: "no_valido" });
   });
 });
