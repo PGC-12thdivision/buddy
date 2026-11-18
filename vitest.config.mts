@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -12,5 +12,7 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts"],
     passWithNoTests: true,
+    // La suite de RLS contra staging solo se activa con `npm run test:rls` (vitest --mode rls); `npm test` la omite.
+    env: mode === "rls" ? { RUN_RLS_TESTS: "1" } : {},
   },
-});
+}));

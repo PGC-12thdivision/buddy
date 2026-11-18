@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:rls": "vitest run --mode rls src/lib/supabase/rls.integration.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
