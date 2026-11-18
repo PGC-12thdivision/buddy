@@ -31,8 +31,10 @@ export type ExerciseView = {
   reps: number;
   // Subida de carga por doble progresión ("NIVEL ARRIBA"), con la carga anterior.
   levelUpFromKg: number | null;
-  // Técnica del catálogo (1–2 frases). Se muestra plegada para no romper la regla de 360×640.
+  // Técnica del catálogo (1–2 frases) y patrón y región, que eligen el dibujo de técnica.
   technique: string | null;
+  pattern: string;
+  region: string;
   // Aviso de contribución leve: solo si las limitaciones del usuario coinciden con joints_light.
   lightWarning: string | null;
 };
@@ -139,6 +141,8 @@ export async function loadSessionData(supabase: Client, userId: string, sessionI
       incrementKg: increment,
       minKg: eq.minKg,
       technique: exercise.technique,
+      pattern: exercise.pattern,
+      region: exercise.region,
       lightWarning: lightWarningFor(exercise, scope.limitations),
     };
 
