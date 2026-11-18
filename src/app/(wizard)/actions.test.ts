@@ -72,6 +72,8 @@ function setup({ userId = null as string | null, serverResponses = {}, adminResp
   );
 }
 
+const refilterForUser = vi.fn(async () => ({ ok: true, changed: 1, holes: 0 }));
+vi.mock("@/lib/app/refilter-core", () => ({ refilterForUser: (...args: unknown[]) => refilterForUser(...(args as [])) }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ origin: "https://buddy.test" }) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => server }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => admin }));
@@ -208,11 +210,26 @@ describe("acciones con sesión", () => {
   it("con todo respondido y apto guarda limitaciones y resultado con el user_id de la sesión", async () => {
     setup({ userId: "u1", serverResponses: { "consents.select": { data: [{ id: "c1" }] } } });
     const result = await actions.guardarSeguridad({ limitations: ["rodilla", "hombro"], answers: { ...allNo, articular: true } });
-    expect(result).toEqual({ ok: true, status: "apto" });
+    expect(result).toEqual({ ok: true, status: "apto", hasPlan: false });
     const [write] = writesTo(admin, "health_profile");
     expect(write).toMatchObject({ op: "upsert", payload: { user_id: "u1", limitations: ["rodilla", "hombro"] } });
     // Del cribado se guarda el resultado, nunca las respuestas.
     expect(JSON.stringify(write.payload)).not.toMatch(/articular|cardiaco/);
+  });
+
+  it("con plan activo, las limitaciones nuevas refiltran el plan en el acto (guardarraíl 6)", async () => {
+    setup({ userId: "u1", serverResponses: { "consents.select": { data: [{ id: "c1" }] }, "plans.select": { data: [{ id: "p1" }] } } });
+    refilterForUser.mockClear();
+    const result = await actions.guardarSeguridad({ limitations: ["rodilla"], answers: { ...allNo, articular: true } });
+    expect(result).toEqual({ ok: true, status: "apto", hasPlan: true });
+    expect(refilterForUser).toHaveBeenCalledTimes(1);
+    expect((refilterForUser.mock.calls[0] as unknown[])[1]).toBe("u1");
+  });
+
+  it("si el refiltrado falla, no se da por guardado", async () => {
+    setup({ userId: "u1", serverResponses: { "consents.select": { data: [{ id: "c1" }] }, "plans.select": { data: [{ id: "p1" }] } } });
+    refilterForUser.mockResolvedValueOnce({ ok: false, error: "fallo" } as never);
+    expect(await actions.guardarSeguridad({ limitations: ["rodilla"], answers: { ...allNo, articular: true } })).toEqual({ ok: false, error: "fallo" });
   });
 
   it("un evento fuera de la lista cerrada se rechaza", async () => {

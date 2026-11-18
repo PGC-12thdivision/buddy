@@ -53,7 +53,7 @@ export function SeguridadStep() {
       else setProblem("fallo");
       return;
     }
-    if (result.status === "apto") router.push("/resumen");
+    if (result.status === "apto") router.push(result.hasPlan ? "/plan" : "/resumen");
     else if (result.status === "requiere_zona") setProblem("zona");
     else setView("bloqueo");
   }

@@ -52,6 +52,22 @@ describe("generatePlan", () => {
     expect(result.attempts.map((a) => a.outcome)).toEqual(["validation_failed", "ok"]);
   });
 
+  it("pasado el plazo no empieza otro intento (la ruta cierra antes de su maxDuration)", async () => {
+    const bad = goodOutput();
+    bad.sesiones.pop();
+    let clock = 0;
+    const callModel = vi.fn(async () => {
+      clock += 40_000;
+      return parsed(bad);
+    });
+    const result = await generatePlan({
+      model: "claude-sonnet-5-5", callModel, template, profile, catalog: CATALOG, equipmentIds: ALL_EQUIPMENT_IDS, limitations: [],
+      deadlineMs: 75_000, now: () => clock,
+    });
+    expect(result.status).toBe("validation_failed");
+    expect(callModel).toHaveBeenCalledTimes(2);
+  });
+
   it("rechazo y respuesta vacía son resultados distintos y no se reintentan", async () => {
     expect((await run(vi.fn(async (): Promise<ModelReply> => ({ kind: "refused", inputTokens: 5, outputTokens: 0 })))).status).toBe("refused");
     expect((await run(vi.fn(async (): Promise<ModelReply> => ({ kind: "empty", inputTokens: 5, outputTokens: 0 })))).status).toBe("empty");

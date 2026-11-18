@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { refilterForUser } from "@/lib/app/refilter-core";
 import { activityCatalog, equipmentCatalog } from "@/lib/catalog";
 import { evaluateScreening, SCREENING_QUESTIONS } from "@/lib/domain/screening";
 import { JOINTS } from "@/lib/domain/types";
@@ -190,7 +191,7 @@ const seguridadSchema = z.object({
   answers: z.object(Object.fromEntries(SCREENING_QUESTIONS.map((q) => [q, z.boolean()]))),
 });
 
-export type SeguridadResult = { ok: true; status: "apto" | "bloqueado" | "requiere_zona" } | Fail;
+export type SeguridadResult = { ok: true; status: "apto"; hasPlan: boolean } | { ok: true; status: "bloqueado" | "requiere_zona" } | Fail;
 
 export async function guardarSeguridad(input: unknown): Promise<SeguridadResult> {
   const supabase = await createClient();
@@ -231,7 +232,14 @@ export async function guardarSeguridad(input: unknown): Promise<SeguridadResult>
     logError("guardar_seguridad", error);
     return { ok: false, error: "fallo" };
   }
-  return { ok: true, status: "apto" };
+  // Con plan activo, las limitaciones nuevas se aplican en el acto con el refiltrado determinista
+  // (D35; guardarraíl 6): ningún plan puede quedar con un ejercicio que cargue una zona limitada.
+  const { hasActivePlan } = await accountProgress(supabase, userId);
+  if (hasActivePlan) {
+    const refiltered = await refilterForUser(supabase, userId);
+    if (!refiltered.ok) return { ok: false, error: "fallo" };
+  }
+  return { ok: true, status: "apto", hasPlan: hasActivePlan };
 }
 
 export async function registrarEvento(input: unknown): Promise<{ ok: true } | Fail> {

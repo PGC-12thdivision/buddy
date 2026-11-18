@@ -102,6 +102,31 @@ describe("POST /api/plan", () => {
     expect(callPlanModel).not.toHaveBeenCalled();
   });
 
+  it("el tope técnico diario se distingue de ya tener plan", async () => {
+    rpc.mockResolvedValueOnce({ data: { ok: false, reason: "tope_diario" }, error: null });
+    expect((await post()).body.status).toBe("tope_diario");
+    expect(callPlanModel).not.toHaveBeenCalled();
+  });
+
+  it("rechazo y respuesta vacía cierran la llamada con su resultado y sus tokens", async () => {
+    for (const kind of ["refused", "empty"] as const) {
+      updates = [];
+      callPlanModel.mockResolvedValueOnce({ kind, inputTokens: 900, outputTokens: 5 });
+      expect((await post()).body.status).toBe("validacion");
+      expect(updates[0].payload).toMatchObject({ outcome: kind, input_tokens: 900, output_tokens: 5 });
+    }
+  });
+
+  it("si falla el guardado del plan, la llamada queda como fallida con sus tokens y sin evento", async () => {
+    callPlanModel.mockResolvedValue(goodReply());
+    rpc.mockImplementation(async (fn: string) =>
+      fn === "reserve_ai_call" ? { data: { ok: true, id: "call-1" }, error: null } : { data: null, error: { code: "23514" } },
+    );
+    expect((await post()).body.status).toBe("validacion");
+    expect(updates).toEqual([{ table: "ai_calls", payload: expect.objectContaining({ outcome: "validation_failed", input_tokens: 1000, output_tokens: 300 }) }]);
+    expect(inserts).toEqual([]);
+  });
+
   it("una respuesta correcta se guarda con su llamada marcada como ok y deja el evento", async () => {
     callPlanModel.mockResolvedValue(goodReply());
     expect(await post()).toEqual({ http: 200, body: { status: "ok" } });

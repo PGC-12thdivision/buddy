@@ -216,6 +216,60 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     expect(results.map((r) => (r.data as { reason?: string }).reason)).toContain("limite_alcanzado");
   });
 
+  it("una reserva pendiente caducada o un intento fallido no bloquean; una pendiente reciente o un ok, sí", async () => {
+    const created = await admin.auth.admin.createUser({ email: `rls-ia-${Date.now()}@buddy.test`, password, email_confirm: true });
+    const userD = created.data.user!.id;
+    const args = { p_user: userD, p_kind: "plan", p_model: "test", p_period_limit: 1, p_max_duration_s: 120 };
+    const old = new Date(Date.now() - 10 * 60_000).toISOString();
+    try {
+      must(await admin.from("ai_calls").insert({ user_id: userD, kind: "plan", model: "t", outcome: "pending", created_at: old }), "pendiente caducada");
+      for (const outcome of ["validation_failed", "connection", "refused", "empty"]) {
+        must(await admin.from("ai_calls").insert({ user_id: userD, kind: "plan", model: "t", outcome }), outcome);
+      }
+      const first = await admin.rpc("reserve_ai_call", args);
+      expect(first.data).toMatchObject({ ok: true });
+      // La que acaba de crear está pendiente y es reciente: bloquea.
+      expect((await admin.rpc("reserve_ai_call", args)).data).toMatchObject({ ok: false, reason: "limite_alcanzado" });
+      // Marcada como fallida deja de bloquear; marcada como ok, bloquea.
+      must(await admin.from("ai_calls").update({ outcome: "validation_failed" }).eq("id", (first.data as { id: string }).id), "fallida");
+      const second = await admin.rpc("reserve_ai_call", args);
+      expect(second.data).toMatchObject({ ok: true });
+      must(await admin.from("ai_calls").update({ outcome: "ok" }).eq("id", (second.data as { id: string }).id), "ok");
+      expect((await admin.rpc("reserve_ai_call", args)).data).toMatchObject({ ok: false, reason: "limite_alcanzado" });
+    } finally {
+      await admin.auth.admin.deleteUser(userD);
+    }
+  });
+
+  it("save_plan guarda versiones nuevas con un solo plan activo y marca la llamada como ok", async () => {
+    const created = await admin.auth.admin.createUser({ email: `rls-plan-${Date.now()}@buddy.test`, password, email_confirm: true });
+    const userE = created.data.user!.id;
+    const plan = (source: string) => ({
+      focus: "equilibrado", days_per_week: 2, template: "cuerpo_completo", source,
+      sessions: [{ day_index: 0, label: "Cuerpo completo", slots: [
+        { position: 0, pattern: "x", region: "empuje_inferior", exercise_id: exerciseId, gap_reason: null, sets: 3, rep_min: 8, rep_max: 12 },
+        { position: 1, pattern: "y", region: "traccion_superior_vertical", exercise_id: null, gap_reason: "sin_alternativa_equipo", sets: null, rep_min: null, rep_max: null },
+      ] }],
+    });
+    try {
+      const call = await admin.rpc("reserve_ai_call", { p_user: userE, p_kind: "plan", p_model: "test", p_period_limit: 1, p_max_duration_s: 120 });
+      const callId = (call.data as { id: string }).id;
+      must(await admin.rpc("save_plan", { p_user: userE, p_plan: plan("ia"), p_ai_call: callId, p_input_tokens: 10, p_output_tokens: 2, p_cost_usd: 0.001 }), "plan 1");
+      must(await admin.rpc("save_plan", { p_user: userE, p_plan: plan("refiltrado"), p_ai_call: null as unknown as string, p_input_tokens: 0, p_output_tokens: 0, p_cost_usd: 0 }), "plan 2");
+      const { data: plans } = await admin.from("plans").select("version, is_active, source").eq("user_id", userE).order("version");
+      expect(plans).toEqual([
+        { version: 1, is_active: false, source: "ia" },
+        { version: 2, is_active: true, source: "refiltrado" },
+      ]);
+      const { count } = await admin.from("plan_slots").select("*", { count: "exact", head: true }).eq("user_id", userE);
+      expect(count).toBe(4);
+      const { data: ai } = await admin.from("ai_calls").select("outcome, input_tokens").eq("id", callId).single();
+      expect(ai).toEqual({ outcome: "ok", input_tokens: 10 });
+    } finally {
+      await admin.auth.admin.deleteUser(userE);
+    }
+  });
+
   it("A no puede reservar llamadas de IA ni guardar planes (solo el servidor)", async () => {
     const reserve = await clientA.rpc("reserve_ai_call", {
       p_user: userA, p_kind: "plan", p_model: "x", p_period_limit: 99, p_max_duration_s: 1,

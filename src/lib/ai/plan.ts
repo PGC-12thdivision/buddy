@@ -83,6 +83,9 @@ export type GenerateInput = {
   catalog: readonly Exercise[];
   equipmentIds: readonly string[];
   limitations: readonly Joint[];
+  // Plazo total: no se empieza otro intento pasado este tiempo (la ruta tiene maxDuration de 120 s).
+  deadlineMs?: number;
+  now?: () => number;
 };
 
 export type AttemptLog = {
@@ -98,7 +101,8 @@ export type GenerateResult =
   | { status: "validation_failed" | "refused" | "empty" | "connection"; attempts: AttemptLog[] };
 
 export async function generatePlan(input: GenerateInput): Promise<GenerateResult> {
-  const { model, callModel, template, profile, catalog, equipmentIds, limitations } = input;
+  const { model, callModel, template, profile, catalog, equipmentIds, limitations, deadlineMs = 75_000, now = Date.now } = input;
+  const startedAt = now();
   const schema = planOutputSchema(catalog.map((e) => e.id));
   // A la IA solo se le piden los huecos con algún ejercicio posible con el equipo; los demás quedan
   // vacíos con motivo de equipo (un hueco imposible haría fallar cualquier respuesta).
@@ -110,6 +114,7 @@ export async function generatePlan(input: GenerateInput): Promise<GenerateResult
   const attempts: AttemptLog[] = [];
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    if (attempt > 0 && now() - startedAt > deadlineMs) break;
     const reply = await callModel({ model, system: SYSTEM_PROMPT, user, schema });
     if (reply.kind === "connection") {
       attempts.push({ outcome: "connection", inputTokens: 0, outputTokens: 0 });

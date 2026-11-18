@@ -8,7 +8,7 @@ import { useStepView } from "@/components/wizard/wizard-provider";
 // Pantalla 11, generando el plan (sistema §7 y §11.7, diseño D9). Llama a /api/plan una vez y,
 // si sale bien, lleva a la pestaña Plan (U6). Errores con cabecera sobria y role="alert".
 
-type State = "cargando" | "conexion" | "validacion" | "limite";
+type State = "cargando" | "conexion" | "validacion" | "limite" | "tope_diario";
 
 const STEPS = [
   "Filtrando tu equipo",
@@ -41,7 +41,7 @@ export function Generando() {
     }
     if (status === "sin_sesion") return router.replace("/entrar");
     if (status === "sin_permiso" || status === "incompleto") return router.replace("/resumen");
-    setState(status === "limite" ? "limite" : status === "validacion" ? "validacion" : "conexion");
+    setState(status === "limite" || status === "tope_diario" || status === "validacion" ? status : "conexion");
   }, [router]);
 
   useEffect(() => {
@@ -81,6 +81,16 @@ export function Generando() {
       >
         <p role="alert" className="m-0 text-[17px]">
           No hemos podido montar un plan seguro con estas opciones. No hemos guardado nada y este intento no cuenta.
+        </p>
+      </WizardScreen>
+    );
+  }
+
+  if (state === "tope_diario") {
+    return (
+      <WizardScreen sober title="Por ahora, no más" footer={<CtaLink href="/resumen">Volver al resumen</CtaLink>}>
+        <p role="alert" className="m-0 text-[17px]">
+          Hoy ya has hecho muchos intentos. Tus respuestas están guardadas: vuelve a probar mañana.
         </p>
       </WizardScreen>
     );

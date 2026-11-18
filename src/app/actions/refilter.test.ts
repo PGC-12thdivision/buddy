@@ -4,6 +4,7 @@ import { ALL_EQUIPMENT_IDS, CATALOG } from "@/lib/domain/test-fixtures";
 
 let userId: string | null = "u1";
 let limitations: string[] = [];
+let gymError: { code: string } | null = null;
 let plan: ActivePlan | null;
 const rpc = vi.fn(async () => ({ data: "plan-2", error: null }));
 
@@ -11,8 +12,13 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     auth: { getClaims: async () => ({ data: userId ? { claims: { sub: userId } } : null }) },
     from: (table: string) => {
-      const data = table === "health_profile" ? { limitations } : { equipment_type_ids: ALL_EQUIPMENT_IDS };
-      const builder = { select: () => builder, eq: () => builder, maybeSingle: async () => ({ data, error: null }) };
+      const rows: Record<string, unknown> = {
+        health_profile: { limitations },
+        gym_profiles: gymError ? null : { equipment_type_ids: ALL_EQUIPMENT_IDS },
+        onboarding_answers: { minutes_per_session: 60 },
+      };
+      const error = table === "gym_profiles" ? gymError : null;
+      const builder = { select: () => builder, eq: () => builder, maybeSingle: async () => ({ data: rows[table] ?? null, error }) };
       return builder;
     },
   }),
@@ -34,6 +40,7 @@ const slot = (position: number, exerciseId: string) => {
 beforeEach(() => {
   userId = "u1";
   limitations = [];
+  gymError = null;
   rpc.mockClear();
   plan = {
     id: "p1",
@@ -66,6 +73,13 @@ describe("refiltrarPlan", () => {
       if (s.exercise_id) expect(byId.get(s.exercise_id)!.joints).not.toContain("rodilla");
       else expect(s.gap_reason).toMatch(/^sin_alternativa_/);
     }
+  });
+
+  it("si falla la lectura del gimnasio no vacía el plan: no guarda nada", async () => {
+    limitations = ["rodilla"];
+    gymError = { code: "PGRST000" };
+    expect(await refiltrarPlan()).toEqual({ ok: false, error: "fallo" });
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("si nada cambia no guarda una versión nueva", async () => {

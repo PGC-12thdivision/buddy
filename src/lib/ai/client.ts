@@ -12,8 +12,9 @@ import type { CallModel, ModelReply } from "./plan";
 
 let client: Anthropic | null = null;
 function anthropic(): Anthropic {
-  // Un reintento del SDK ante 429/5xx/red; el tiempo total queda por debajo del maxDuration de la ruta.
-  client ??= new Anthropic({ apiKey: serverVar("ANTHROPIC_API_KEY"), timeout: 50_000, maxRetries: 1 });
+  // Sin reintentos del SDK y 30 s por llamada: con el plazo de generatePlan, la ruta siempre llega a
+  // cerrar la fila de ai_calls antes de su maxDuration de 120 s.
+  client ??= new Anthropic({ apiKey: serverVar("ANTHROPIC_API_KEY"), timeout: 30_000, maxRetries: 0 });
   return client;
 }
 

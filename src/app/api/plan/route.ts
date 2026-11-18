@@ -17,7 +17,7 @@ import { hasActiveConsent, sessionUserId } from "@/lib/wizard/account";
 // Tope de la función en Vercel (KTD10). Una reserva pendiente más antigua se da por liberada.
 export const maxDuration = 120;
 
-type PlanStatus = "ok" | "sin_sesion" | "sin_permiso" | "incompleto" | "limite" | "conexion" | "validacion";
+type PlanStatus = "ok" | "sin_sesion" | "sin_permiso" | "incompleto" | "limite" | "tope_diario" | "conexion" | "validacion";
 const reply = (status: PlanStatus, httpStatus = 200) => NextResponse.json({ status }, { status: httpStatus });
 
 export async function POST() {
@@ -54,8 +54,9 @@ export async function POST() {
     logError("reservar_ia", reservation.error);
     return reply("conexion", 503);
   }
-  const reserved = reservation.data as { ok: boolean; id?: string };
-  if (!reserved.ok || !reserved.id) return reply("limite");
+  const reserved = reservation.data as { ok: boolean; id?: string; reason?: string };
+  // El tope técnico diario no es "ya tienes tu plan": se puede volver a intentar mañana.
+  if (!reserved.ok || !reserved.id) return reply(reserved.reason === "tope_diario" ? "tope_diario" : "limite");
 
   const focus = answers.data.focus as Focus;
   const days = answers.data.days_per_week as Days;
@@ -114,7 +115,11 @@ export async function POST() {
   });
   if (saved.error) {
     logError("guardar_plan", saved.error);
-    await admin.from("ai_calls").update({ outcome: "validation_failed", completed_at: new Date().toISOString() }).eq("id", reserved.id);
+    await admin
+      .from("ai_calls")
+      .update({ outcome: "validation_failed", input_tokens: inputTokens, output_tokens: outputTokens, cost_usd: cost, completed_at: new Date().toISOString() })
+      .eq("id", reserved.id)
+      .eq("user_id", userId);
     return reply("validacion");
   }
 

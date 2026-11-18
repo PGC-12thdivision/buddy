@@ -96,24 +96,37 @@ export function assemblePlan(input: AssembleInput): AssembleResult {
     sessions.push({ dayIndex: index, kind: session.kind, label: LABELS[session.kind], slots });
   }
 
-  // Limitaciones: mismo refiltrado que al cambiarlas después (sustituye o deja hueco con motivo).
+  const result = applyConstraints(sessions, catalog, equipmentIds, limitations);
+  if (!result.ok) return { ok: false, reason: "topes" };
+
+  return { ok: true, plan: { template: template.sessions[0].kind === "cuerpo_completo" ? "cuerpo_completo" : "torso_pierna", sessions } };
+}
+
+// Aplica limitaciones y equipo a un plan ya montado y ajusta los topes (lo usan la generación y el
+// refiltrado, D35; misma lógica en los dos): refiltrado (sustituye o deja hueco con motivo), relleno
+// de huecos, reparación del suelo y ajuste del techo. Modifica las sesiones y devuelve el resultado
+// del validador único. Nunca deja un ejercicio que cargue una zona limitada (guardarraíl 6).
+export function applyConstraints(
+  sessions: BuiltSession[],
+  catalog: readonly Exercise[],
+  equipmentIds: readonly string[],
+  limitations: readonly Joint[],
+) {
+  const byId = new Map(catalog.map((e) => [e.id, e]));
   const refiltered = refilterPlan(toPlan(sessions), { catalog, equipmentIds, limitations });
   refiltered.sessions.forEach((session, i) =>
     session.slots.forEach((slot, j) => {
       const built = sessions[i].slots[j];
       built.exerciseId = slot.exerciseId;
-      built.holeReason = slot.holeReason;
+      built.holeReason = slot.exerciseId ? undefined : (slot.holeReason ?? built.holeReason);
+      if (slot.exerciseId) built.pattern = byId.get(slot.exerciseId)?.pattern ?? built.pattern;
     }),
   );
-
   fillHoles(sessions, catalog, equipmentIds, limitations);
   const available = availableExercises(catalog, equipmentIds, limitations);
   repairFloor(sessions, catalog, available);
   fitCeiling(sessions, catalog, available);
-  const result = validateVolume(toPlan(sessions), catalog, available);
-  if (!result.ok) return { ok: false, reason: "topes" };
-
-  return { ok: true, plan: { template: template.sessions[0].kind === "cuerpo_completo" ? "cuerpo_completo" : "torso_pierna", sessions } };
+  return validateVolume(toPlan(sessions), catalog, available);
 }
 
 // Un hueco que la limitación dejó vacío se rellena con otro ejercicio de la misma región que el

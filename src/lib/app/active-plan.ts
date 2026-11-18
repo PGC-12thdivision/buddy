@@ -38,12 +38,14 @@ export async function loadActivePlan(supabase: Client, userId: string): Promise<
     .maybeSingle();
   if (!plan) return null;
 
-  const [{ data: sessions }, { data: slots }, { data: exercises }] = await Promise.all([
-    supabase.from("plan_sessions").select("id, day_index, label").eq("plan_id", plan.id).order("day_index"),
+  const { data: sessions } = await supabase.from("plan_sessions").select("id, day_index, label").eq("plan_id", plan.id).order("day_index");
+  const sessionIds = (sessions ?? []).map((s) => s.id);
+  // Solo los huecos del plan activo: las versiones antiguas no cuentan para el límite de filas.
+  const [{ data: slots }, { data: exercises }] = await Promise.all([
     supabase
       .from("plan_slots")
       .select("plan_session_id, position, pattern, region, exercise_id, gap_reason, sets, rep_min, rep_max")
-      .eq("user_id", userId)
+      .in("plan_session_id", sessionIds.length ? sessionIds : ["00000000-0000-0000-0000-000000000000"])
       .order("position"),
     supabase.from("exercises").select("id, name"),
   ]);
