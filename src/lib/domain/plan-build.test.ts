@@ -157,3 +157,33 @@ describe("assemblePlan", () => {
     expect(result.plan.sessions.map((s) => s.label)).toEqual(["Torso", "Pierna", "Torso", "Pierna"]);
   });
 });
+
+// D68: ninguna sesión vacía. Con el hombro limitado, todos los ejercicios de torso del catálogo
+// quedan fuera; los días de torso se rehacen con lo posible, sin cargar nunca la zona limitada.
+describe("ninguna sesión vacía (D68)", () => {
+  const cases = [["hombro"], ["rodilla"], ["espalda_baja"], ["hombro", "codo"], ["hombro", "rodilla"]] as const;
+  for (const days of [2, 3, 4, 5] as const) {
+    for (const focus of ["equilibrado", "fuerza", "musculo", "grasa"] as const) {
+      for (const limitations of cases) {
+        it(`${days} días, ${focus}, ${limitations.join("+")}`, () => {
+          const template = buildTemplate(days, focus);
+          const result = assemblePlan(ctx({ template, choices: choose(template), limitations: [...limitations], focus }));
+          expect(result.ok).toBe(true);
+          if (!result.ok) return;
+          const byId = new Map(CATALOG.map((e) => [e.id, e]));
+          expect(validateVolume({ sessions: result.plan.sessions.map((x) => ({ slots: x.slots })) }, CATALOG, availableExercises(CATALOG, ALL_EQUIPMENT_IDS, [...limitations])).issues.filter((i) => i.code !== "suelo_frecuencia_grupo")).toEqual([]);
+          const available = availableExercises(CATALOG, ALL_EQUIPMENT_IDS, [...limitations]);
+          for (const session of result.plan.sessions) {
+            const filled = session.slots.filter((s) => s.exerciseId !== null);
+            // Si hay ejercicios posibles, ninguna sesión se queda vacía. Puede quedarse por debajo de la
+            // mitad cuando el techo de 20 series por grupo no deja meter más (guardarraíl 4).
+            if (available.length > 0) expect(filled.length).toBeGreaterThan(0);
+            for (const slot of filled) {
+              expect(byId.get(slot.exerciseId!)!.joints.some((j) => (limitations as readonly string[]).includes(j))).toBe(false);
+            }
+          }
+        });
+      }
+    }
+  }
+});
