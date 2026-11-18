@@ -77,6 +77,8 @@ vi.mock("@/lib/app/refilter-core", () => ({ refilterForUser: (...args: unknown[]
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ origin: "https://buddy.test" }) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => server }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => admin }));
+const scheduleWelcome = vi.fn();
+vi.mock("@/lib/email/transactional", () => ({ scheduleWelcome: (userId: string) => scheduleWelcome(userId) }));
 
 const actions = await import("./actions");
 
@@ -284,7 +286,9 @@ describe("entrar", () => {
   ]) {
     it(`${code} → ${error}`, async () => {
       server.auth.signInWithPassword.mockResolvedValue({ data: { user: null }, error: { code } });
+      scheduleWelcome.mockClear();
       expect(await actions.entrar({ email: "a@b.es", password: "x" })).toEqual({ ok: false, error });
+      expect(scheduleWelcome).not.toHaveBeenCalled();
     });
   }
 
@@ -292,6 +296,7 @@ describe("entrar", () => {
     setup({ serverResponses: { "consents.select": { data: [{ id: "c1" }] }, "health_profile.select": { data: [] } } });
     server.auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
     expect(await actions.entrar({ email: "a@b.es", password: "x" })).toEqual({ ok: true, next: "/limitaciones" });
+    expect(scheduleWelcome).toHaveBeenCalledWith("u1");
   });
 });
 
