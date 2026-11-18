@@ -12,7 +12,7 @@ export function LimitacionesAjustes({ initial }: { initial: Joint[] }) {
   const router = useRouter();
   const [zones, setZones] = useState<Joint[]>(initial);
   const [pending, setPending] = useState(false);
-  const [result, setResult] = useState<{ changed: number; holes: number } | "error" | null>(null);
+  const [result, setResult] = useState<{ changed: number; holes: number } | "error" | "sin_refiltrar" | null>(null);
 
   async function save() {
     if (pending) return;
@@ -25,6 +25,7 @@ export function LimitacionesAjustes({ initial }: { initial: Joint[] }) {
       router.refresh();
     } else if (res.error === "sin_sesion") router.push("/entrar");
     else if (res.error === "sin_consentimiento") router.push("/consentimiento");
+    else if (res.error === "plan_sin_actualizar") setResult("sin_refiltrar");
     else setResult("error");
   }
 
@@ -38,7 +39,11 @@ export function LimitacionesAjustes({ initial }: { initial: Joint[] }) {
           setResult(null);
         }}
       />
-      {result === "error" ? (
+      {result === "sin_refiltrar" ? (
+        <Note tone="warn" role="alert">
+          Hemos guardado tus limitaciones, pero no hemos podido ajustar tu plan. Pulsa Guardar otra vez en un momento.
+        </Note>
+      ) : result === "error" ? (
         <Note tone="danger" role="alert">
           No hemos podido guardar el cambio. Inténtalo de nuevo.
         </Note>

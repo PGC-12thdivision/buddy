@@ -212,6 +212,7 @@ describe("guardarPreferencias", () => {
   });
 
   it("guarda el tema en user_settings y en la cookie", async () => {
+    results["user_settings:update"] = { data: [{ user_id: "u1" }], error: null };
     expect(await guardarPreferencias({ theme: "dark" })).toEqual({ ok: true });
     const update = writes("update")[0];
     expect(update.table).toBe("user:user_settings");
@@ -221,6 +222,7 @@ describe("guardarPreferencias", () => {
   });
 
   it("guarda el contador de descanso sin tocar el tema", async () => {
+    results["user_settings:update"] = { data: [{ user_id: "u1" }], error: null };
     expect(await guardarPreferencias({ showRestTimer: false })).toEqual({ ok: true });
     expect(writes("update")[0].args[0]).toMatchObject({ show_rest_timer: false });
     expect(writes("update")[0].args[0]).not.toHaveProperty("theme");
@@ -257,10 +259,17 @@ describe("retirarConsentimiento", () => {
     expect(writes("delete")).toHaveLength(2);
   });
 
-  it("si no se puede retirar, no borra nada", async () => {
+  it("si el borrado falla, el consentimiento no se retira: se puede reintentar desde Ajustes", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    results["consents:update"] = { data: null, error: { code: "42501" } };
+    results["health_profile:delete"] = { data: null, error: { code: "57014" } };
     expect(await retirarConsentimiento()).toEqual({ ok: false, error: "fallo" });
-    expect(writes("delete")).toHaveLength(0);
+    expect(writes("update").some((c) => c.table === "user:consents")).toBe(false);
+  });
+
+  it("si la fila de preferencias no existe, no dice que se ha guardado", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    results["user_settings:update"] = { data: [], error: null };
+    expect(await guardarPreferencias({ theme: "dark" })).toEqual({ ok: false, error: "fallo" });
+    expect(cookieSet).not.toHaveBeenCalled();
   });
 });

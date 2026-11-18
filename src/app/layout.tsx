@@ -46,11 +46,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${display.variable} ${body.variable} ${pixel.variable} h-full antialiased${theme === "dark" ? " dark" : ""}`}
       suppressHydrationWarning={theme === "system"}
     >
-      {theme === "system" ? (
-        <head>
-          <script dangerouslySetInnerHTML={{ __html: SYSTEM_THEME_SCRIPT }} />
-        </head>
-      ) : null}
+      {/* El <head> siempre existe; solo el script depende del tema (revisión de U11). */}
+      <head>{theme === "system" ? <script dangerouslySetInnerHTML={{ __html: SYSTEM_THEME_SCRIPT }} /> : null}</head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
