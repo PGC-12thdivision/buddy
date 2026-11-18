@@ -93,7 +93,7 @@ export default async function FinPage({ params }: PageProps<"/sesion/[id]/fin">)
           <span className="wz-tag">Partida terminada</span>
         </div>
         <h1 className="wz-title">Sesión completada</h1>
-        <p className="wz-subtitle">{minutes ? `${label}, ${minutes} minutos` : label}</p>
+        <p className="wz-subtitle">{minutes ? `${label}, ${minutes} ${minutes === 1 ? "minuto" : "minutos"}` : label}</p>
         <div className="wz-heroes">
           <div>
             <p className="wz-hero-label">Ejercicios</p>
