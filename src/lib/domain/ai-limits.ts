@@ -81,3 +81,32 @@ export function canStartAiCall(input: AiLimitInput): AiLimitResult {
   const limit = premium ? PREMIUM_REGENERATIONS_PER_MONTH : FREE_PLAN_CHANGES_PER_MONTH;
   return used >= limit ? { allowed: false, reason: "limite_mensual" } : { allowed: true };
 }
+
+const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+// "1 de diciembre": cuándo vuelve el cambio de foco o días del mes (diseño D26), en Madrid.
+export function nextMonthStartText(now: Date): string {
+  const month = Number(madridMonthKey(now).slice(5, 7));
+  return `1 de ${MONTHS[month % 12]}`;
+}
+
+// Filas de ai_calls (tipo y resultado de la base de datos) con la forma de canStartAiCall. Para el
+// límite de cambios solo importan el tipo "regenerar" y el total del día; el resto de tipos premium
+// (estancamiento, semana…) cuentan solo para el tope diario.
+const KIND_FROM_DB: Record<string, AiCallKind> = { plan: "plan_inicial", regenerar: "cambio_foco_dias", checkin: "checkin" };
+const OUTCOME_FROM_DB: Record<string, AiCallOutcome> = {
+  pending: "pendiente",
+  ok: "ok",
+  validation_failed: "validation_failed",
+  connection: "connection",
+  refused: "refused",
+  empty: "empty",
+};
+
+export function aiCallRecords(rows: readonly { kind: string; outcome: string; created_at: string }[]): AiCallRecord[] {
+  return rows.map((row) => ({
+    kind: KIND_FROM_DB[row.kind] ?? "checkin",
+    outcome: OUTCOME_FROM_DB[row.outcome] ?? "validation_failed",
+    createdAt: new Date(row.created_at),
+  }));
+}

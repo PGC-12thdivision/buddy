@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { Archivo, Atkinson_Hyperlegible_Next, Silkscreen } from "next/font/google";
+import { parseTheme, SYSTEM_THEME_SCRIPT, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
 // Tipografía de DESIGN.md §3.
@@ -34,12 +36,18 @@ export const metadata: Metadata = {
   description: "Tu plan de gimnasio, hecho para ti y para tu gimnasio, con el peso que toca cada día.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// Tema (Ajustes, U11): la cookie refleja user_settings.theme; claro por defecto (D61). Con "Como el
+// sistema", un script mínimo pone .dark antes de pintar, por eso <html> admite esa diferencia.
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
     <html
       lang="es"
-      className={`${display.variable} ${body.variable} ${pixel.variable} h-full antialiased`}
+      className={`${display.variable} ${body.variable} ${pixel.variable} h-full antialiased${theme === "dark" ? " dark" : ""}`}
+      suppressHydrationWarning={theme === "system"}
     >
+      {/* El <head> siempre existe; solo el script depende del tema (revisión de U11). */}
+      <head>{theme === "system" ? <script dangerouslySetInnerHTML={{ __html: SYSTEM_THEME_SCRIPT }} /> : null}</head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

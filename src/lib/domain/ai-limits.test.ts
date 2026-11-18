@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canStartAiCall, type AiCallRecord } from "./ai-limits";
+import { aiCallRecords, canStartAiCall, nextMonthStartText, type AiCallRecord } from "./ai-limits";
 
 const MAX_DURATION_MS = 60_000;
 const now = new Date("2026-11-12T12:00:00Z");
@@ -98,5 +98,34 @@ describe("canStartAiCall: intentos y tope diario", () => {
       allowed: false,
       reason: "tope_diario",
     });
+  });
+});
+
+describe("nextMonthStartText (diseño D26)", () => {
+  it("anuncia el día 1 del mes siguiente en Madrid", () => {
+    expect(nextMonthStartText(now)).toBe("1 de diciembre");
+    expect(nextMonthStartText(new Date("2026-12-15T12:00:00Z"))).toBe("1 de enero");
+  });
+
+  it("usa el mes de Madrid, no el de UTC", () => {
+    // 31/10 a las 23:30 UTC ya es 1/11 en Madrid.
+    expect(nextMonthStartText(new Date("2026-10-31T23:30:00Z"))).toBe("1 de diciembre");
+  });
+});
+
+describe("aiCallRecords", () => {
+  it("traduce las filas de ai_calls y un segundo cambio en el mes siendo gratis se rechaza", () => {
+    const records = aiCallRecords([
+      { kind: "plan", outcome: "ok", created_at: "2026-11-01T10:00:00Z" },
+      { kind: "regenerar", outcome: "ok", created_at: "2026-11-05T10:00:00Z" },
+      { kind: "estancamiento", outcome: "pending", created_at: "2026-11-05T10:00:00Z" },
+    ]);
+    expect(records.map((r) => [r.kind, r.outcome])).toEqual([
+      ["plan_inicial", "ok"],
+      ["cambio_foco_dias", "ok"],
+      ["checkin", "pendiente"],
+    ]);
+    expect(check("cambio_foco_dias", false, records)).toEqual({ allowed: false, reason: "limite_mensual" });
+    expect(check("cambio_foco_dias", true, records)).toEqual({ allowed: true });
   });
 });
