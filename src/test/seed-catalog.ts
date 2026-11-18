@@ -127,14 +127,41 @@ export function loadSeedCatalog(): { before: SeedExercise[]; after: SeedExercise
   );
 
   const known = new Set(before.map((e) => e.id));
+  const texts = exerciseTexts();
   const after = [
     ...before.map((e) => ({ ...e, ...(updates.get(e.id) ?? {}) })),
     // ON CONFLICT DO NOTHING: un ID que ya existía no se pisa.
     ...added.filter((e) => !known.has(e.id)),
-  ].sort((a, b) => (a.id < b.id ? -1 : 1));
+  ]
+    // Textos legibles del 18/11: pisan nombre, técnica y nota leve; nada más.
+    .map((e) => ({ ...e, ...(texts.get(e.id) ?? {}) }))
+    .sort((a, b) => (a.id < b.id ? -1 : 1));
 
-  const equipment = [...equipmentFrom(seed), ...equipmentFrom(expanded)];
+  const equipmentNames = equipmentTexts();
+  const equipment = [...equipmentFrom(seed), ...equipmentFrom(expanded)].map((e) => ({
+    ...e,
+    name: equipmentNames.get(e.id) ?? e.name,
+  }));
   return { before, after, equipment };
+}
+
+// Migración de textos legibles (18/11): solo UPDATE de textos sobre IDs existentes.
+export const TEXTS_FILE = "supabase/migrations/20261118171727_textos_catalogo_legibles.sql";
+
+export function exerciseTexts(): Map<string, { name: string; technique: string | null; lightNote: string | null }> {
+  const sql = readFileSync(TEXTS_FILE, "utf8");
+  return new Map(
+    parseTuples(between(sql, "from (values", ") as t(id, name, technique, light_note)")).map(([id, name, technique, note]) => [
+      String(id),
+      { name: String(name), technique: technique === null ? null : String(technique), lightNote: note === null ? null : String(note) },
+    ]),
+  );
+}
+
+export function equipmentTexts(): Map<string, string> {
+  const sql = readFileSync(TEXTS_FILE, "utf8");
+  const block = between(sql, "update public.equipment_types as q set name = n.name", ") as n(id, name)");
+  return new Map(parseTuples(block.slice(block.indexOf("(values") + "(values".length)).map(([id, name]) => [String(id), String(name)]));
 }
 
 export function updatedIds(): string[] {
