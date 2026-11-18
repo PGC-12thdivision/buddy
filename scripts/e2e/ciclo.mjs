@@ -244,7 +244,7 @@ try {
     await snap(`hoy-${n}`);
     await page.locator(".wz-cta").last().click();
     await urlIs(/\/sesion\//, 30000);
-    const s = { n, sets: 0, rir: 0, steps: 0, molestia: 0, saltos: 0 };
+    const s = { n, sets: 0, rir: 0, steps: 0, molestia: 0, saltos: 0, pruebas: 0, tecnica: 0, editar: 0 };
     for (let guard = 0; guard < 120; guard++) {
       await page.waitForTimeout(400);
       if (/\/fin/.test(page.url())) break;
@@ -287,8 +287,54 @@ try {
         await page.waitForTimeout(900);
         continue;
       }
+      // Calibración en dos tiempos: la serie de prueba ("Serie hecha") y luego la respuesta.
+      const calibrando = (await page.locator("main[aria-label^=\"Calibración\"]").count()) > 0;
+      if (calibrando && (await page.getByRole("button", { name: "Serie hecha" }).count()) > 0) {
+        if (s.pruebas === 0) await snap(`s${n}-calibracion-serie`);
+        if (s.pruebas === 1) await snap(`s${n}-calibracion-serie-2`);
+        await click("button", "Serie hecha");
+        s.pruebas++;
+        continue;
+      }
       if ((await page.getByRole("button", { name: "Serie hecha" }).count()) > 0) {
-        if (s.sets === 0) await snap(`s${n}-serie`);
+        // Regla de alto (D22): en 360×640, peso, repeticiones, +/− y "Serie hecha" sin scroll.
+        if (s.sets === 0 && s.tecnica === 0) {
+          await page.evaluate(() => window.scrollTo(0, 0));
+          const fold = await page.evaluate(() => {
+            const bottom = (sel) => document.querySelector(sel)?.getBoundingClientRect().bottom ?? 0;
+            const cta = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Serie hecha")?.getBoundingClientRect();
+            const dock = document.querySelector(".ss-dock")?.getBoundingClientRect().top ?? 0;
+            return { pm: bottom(".ss-pm"), dockTop: dock, ctaBottom: cta?.bottom ?? 0, h: window.innerHeight };
+          });
+          if (fold.pm > fold.dockTop || fold.ctaBottom > fold.h) finding("media", `Sesión ${n}: +/− o "Serie hecha" fuera de la pantalla (${JSON.stringify(fold)})`);
+          await snap(`s${n}-serie`);
+        }
+        // Técnica a mano en la serie: se abre una vez, se captura y se cierra con Esc.
+        if (s.tecnica === 0 && (await page.getByRole("button", { name: /Cómo se hace/ }).count()) > 0) {
+          await click("button", /Cómo se hace/);
+          await page.getByRole("dialog").waitFor({ timeout: 5000 });
+          await snap(`s${n}-tecnica`);
+          await page.keyboard.press("Escape");
+          s.tecnica++;
+          continue;
+        }
+        // Corregir una serie hecha (D8): se abre la hoja, se captura y se guarda una corrección.
+        const hecha = page.getByRole("button", { name: /hecha. Tocar para corregirla/ });
+        if (s.editar === 0 && (await hecha.count()) > 0) {
+          await page.evaluate(() => window.scrollTo(0, 0));
+          await snap(`s${n}-serie-con-lista`);
+          await hecha.first().click();
+          await page.getByRole("dialog").waitFor({ timeout: 5000 });
+          await snap(`s${n}-editar-serie`);
+          // Corrige una repetición menos y guarda: el aviso confirma que el servidor la aceptó.
+          const dialog = page.getByRole("dialog");
+          await dialog.getByRole("button", { name: /^Menos repeticiones/ }).click();
+          await dialog.getByRole("button", { name: "Guardar", exact: true }).click();
+          const fixed = await page.getByText(/^Serie 1 corregida.$/).waitFor({ timeout: 10000 }).then(() => true).catch(() => false);
+          if (!fixed) finding("media", `Sesión ${n}: no se pudo corregir la serie 1`);
+          s.editar++;
+          continue;
+        }
         await click("button", "Serie hecha");
         s.sets++;
         continue;
