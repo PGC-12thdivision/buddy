@@ -1,25 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Chip, Cta, Note, WizardScreen } from "@/components/wizard/ui";
+import { ZonePicker } from "@/components/wizard/pickers";
+import { Cta, Note, WizardScreen } from "@/components/wizard/ui";
 import { useStepView, useWizard } from "@/components/wizard/wizard-provider";
-import { JOINTS, type Joint } from "@/lib/domain/types";
-import { JOINT_LABELS } from "@/lib/wizard/zones";
 
 // Pantalla 8 (sistema §11.12; guardarraíl 6): zonas con chips y "Ninguna" exclusiva, sin texto
-// libre. Se guardan en memoria y se envían junto con el cribado, con consentimiento vigente.
+// libre. Se guardan en memoria y se envían junto con el cribado, con consentimiento vigente. El
+// selector es el mismo que usa Ajustes (U11).
 export function LimitacionesStep() {
   useStepView("limitaciones");
   const router = useRouter();
   const { limitations, setLimitations, screening, track } = useWizard();
-  const chosen = limitations ?? [];
-  const noneChosen = limitations !== null && limitations.length === 0;
   // Si el cribado articular ya dijo "Sí", hace falta al menos una zona.
-  const needsZone = screening.articular === true && chosen.length === 0;
-
-  function toggle(joint: Joint) {
-    setLimitations(chosen.includes(joint) ? chosen.filter((j) => j !== joint) : [...chosen, joint]);
-  }
+  const needsZone = screening.articular === true && (limitations ?? []).length === 0;
 
   return (
     <WizardScreen
@@ -39,16 +33,7 @@ export function LimitacionesStep() {
       }
     >
       <p className="m-0 text-[15px]">¿Alguna zona te molesta o tienes una lesión?</p>
-      <div role="group" aria-label="Zonas con limitación" className="flex flex-wrap gap-2">
-        {JOINTS.map((joint) => (
-          <Chip key={joint} pressed={chosen.includes(joint)} onToggle={() => toggle(joint)}>
-            {JOINT_LABELS[joint]}
-          </Chip>
-        ))}
-        <Chip pressed={noneChosen} onToggle={() => setLimitations([])}>
-          Ninguna
-        </Chip>
-      </div>
+      <ZonePicker value={limitations} onChange={setLimitations} />
       {needsZone ? (
         <Note tone="warn" role="status">
           Marca la zona que te molesta.

@@ -69,6 +69,106 @@ const click = async (role, name, opts = {}) => {
 };
 const urlIs = (re, timeout = 20000) => page.waitForURL(re, { timeout });
 
+// Plan activo con las articulaciones y el equipo de cada ejercicio.
+async function activePlan() {
+  const { data: plan } = await admin.from("plans").select("id, version, focus, source").eq("user_id", userId).eq("is_active", true).single();
+  const { data: ps } = await admin.from("plan_sessions").select("id").eq("plan_id", plan.id);
+  const { data: slots } = await admin
+    .from("plan_slots")
+    .select("exercise_id, exercise:exercises(joints, equipment_type_id)")
+    .in("plan_session_id", ps.map((s) => s.id));
+  return { ...plan, slots: slots.filter((s) => s.exercise_id) };
+}
+
+// Flujos de Ajustes (U11), cada uno con su comprobación en base de datos.
+async function ajustes() {
+  const sub = async (name, fn) => {
+    try {
+      await fn();
+      step(`ajustes_${name}`, true);
+    } catch (error) {
+      step(`ajustes_${name}`, false, { error: String(error).slice(0, 200) });
+      finding("alta", `Ajustes, ${name}: ${String(error).slice(0, 160)}`);
+      await snap(`ajustes-${name}-fallo`).catch(() => {});
+    }
+  };
+
+  await sub("limitaciones", async () => {
+    const before = await activePlan();
+    await page.goto(`${base}/ajustes/limitaciones`);
+    await click("button", "Hombro", { exact: true });
+    await snap("ajustes-limitaciones");
+    await click("button", "Guardar", { exact: true });
+    await page.waitForTimeout(4000);
+    await snap("ajustes-limitaciones-hecho");
+    const { data: hp } = await admin.from("health_profile").select("limitations").eq("user_id", userId).single();
+    if (!hp.limitations.includes("hombro")) throw new Error("no se guardó la limitación");
+    const after = await activePlan();
+    if (after.slots.some((s) => s.exercise.joints.includes("hombro"))) throw new Error("el plan sigue cargando el hombro");
+    if (after.version === before.version && before.slots.some((s) => s.exercise.joints.includes("hombro"))) throw new Error("no se refiltró");
+  });
+
+  await sub("gimnasio", async () => {
+    await page.goto(`${base}/ajustes/gimnasio`);
+    await page.locator("summary", { hasText: "Pierna" }).first().click();
+    const chip = page.getByRole("button", { name: /Prensa de piernas/ }).first();
+    await chip.waitFor({ timeout: 10000 });
+    const pressed = await chip.getAttribute("aria-pressed");
+    if (pressed === "true") await chip.click();
+    await snap("ajustes-gimnasio");
+    await click("button", "Guardar", { exact: true });
+    await page.waitForTimeout(4000);
+    await snap("ajustes-gimnasio-hecho");
+    const { data: gp } = await admin.from("gym_profiles").select("equipment_type_ids").eq("user_id", userId).single();
+    if (gp.equipment_type_ids.includes("prensa_piernas")) throw new Error("no se guardó el equipo");
+    const after = await activePlan();
+    if (after.slots.some((s) => s.exercise.equipment_type_id === "prensa_piernas")) throw new Error("el plan sigue usando la prensa");
+  });
+
+  await sub("tema", async () => {
+    await page.goto(`${base}/ajustes`);
+    await page.getByRole("radio", { name: "Oscuro", exact: true }).click();
+    await page.waitForTimeout(1500);
+    await snap("ajustes-oscuro");
+    const dark = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+    if (!dark) throw new Error("no se aplica la clase dark");
+    await page.goto(`${base}/hoy`);
+    await snap("hoy-oscuro");
+    await page.goto(`${base}/ajustes`);
+    await page.getByRole("radio", { name: "Claro", exact: true }).click();
+  });
+
+  await sub("foco_dias", async () => {
+    const before = await activePlan();
+    await page.goto(`${base}/ajustes/foco-dias`);
+    const target = before.focus === "fuerza" ? /^Más músculo/ : /^Más fuerza/;
+    await page.getByRole("radio", { name: target }).first().click();
+    await snap("ajustes-foco");
+    await page.locator(".wz-cta").last().click();
+    await click("button", "Sí, crear plan nuevo");
+    await page.waitForURL(/\/plan/, { timeout: 150000 });
+    const after = await activePlan();
+    if (after.version === before.version) throw new Error("no se creó un plan nuevo");
+    await page.goto(`${base}/ajustes/foco-dias`);
+    await page.waitForLoadState("networkidle");
+    await snap("ajustes-foco-limite");
+    // En la prueba premium caben 5 cambios al mes; gratis, 1 (D43).
+    const notice = await page.getByText(/Ya has usado el cambio de este mes|Has usado los cambios de este mes|hasta 5 veces al mes/).count();
+    if (!notice) finding("media", "Foco y días: no se explica el límite de cambios del mes");
+  });
+
+  await sub("retirar_consentimiento", async () => {
+    await page.goto(`${base}/ajustes`);
+    await click("button", "Retirar el consentimiento", { exact: true });
+    await snap("ajustes-retirar");
+    await click("button", "Sí, retirar el consentimiento", { exact: true });
+    await page.waitForURL(/consentimiento/, { timeout: 20000 });
+    const { data: hp } = await admin.from("health_profile").select("user_id").eq("user_id", userId);
+    const { data: dm } = await admin.from("discomfort_marks").select("id").eq("user_id", userId);
+    if (hp.length || dm.length) throw new Error("quedan datos de salud");
+  });
+}
+
 try {
   // Entrar
   await page.goto(`${base}/entrar`);
@@ -223,6 +323,8 @@ try {
     if (notFound) finding("alta", `/${p} da 404`);
   }
   step("ciclo", true);
+
+  if (persona.ajustes) await ajustes();
 } catch (error) {
   step("error", false, { error: String(error).slice(0, 300), url: page.url() });
   finding("alta", `Se paró en ${page.url().replace(base, "")}: ${String(error).slice(0, 200)}`);

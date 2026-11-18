@@ -30,7 +30,7 @@ function SlotRow({ slot, index }: { slot: ActiveSlot; index: number }) {
           <span aria-hidden="true">! </span>Hueco vacío
         </span>
         <span className="text-[14px] text-foreground">{why}</span>
-        <Link href="/ajustes" className="wz-link text-[14px]">
+        <Link href="/ajustes/gimnasio" className="wz-link text-[14px]">
           Revisar Mi gimnasio
         </Link>
       </li>
