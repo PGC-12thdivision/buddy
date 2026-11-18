@@ -7,7 +7,7 @@ import type { Focus, Joint } from "@/lib/domain/types";
 import { logError } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types";
-import { loadActivePlan } from "./active-plan";
+import { loadActivePlan, type ActivePlan } from "./active-plan";
 
 // Refiltrado determinista y gratis del plan activo (D35; guardarraíl 6; plan.md U6). Misma lógica que
 // la generación (applyConstraints): sustituye, rellena huecos, repara el suelo y ajusta los topes.
@@ -19,6 +19,49 @@ export type RefilterResult =
   | { ok: false; error: "sin_plan" | "fallo" };
 
 const KIND_BY_LABEL: Record<string, SessionKind> = { "Cuerpo completo": "cuerpo_completo", Torso: "torso", Pierna: "pierna" };
+
+// Plan activo con la forma del montaje (lo comparten el refiltrado y el check-in, U8).
+export function activeToBuilt(plan: ActivePlan, minutes: number): BuiltSession[] {
+  return plan.sessions.map((s) => ({
+    dayIndex: s.dayIndex,
+    kind: KIND_BY_LABEL[s.label] ?? "cuerpo_completo",
+    label: s.label,
+    slots: s.slots.map((slot) => ({
+      position: slot.position,
+      region: slot.region,
+      pattern: slot.pattern,
+      exerciseId: slot.exerciseId,
+      holeReason: slot.gapReason ?? undefined,
+      sets: slot.sets ?? setsPerSlot(s.slots.length, minutes, plan.focus as Focus),
+      repMin: slot.repMin ?? 8,
+      repMax: slot.repMax ?? 12,
+    })),
+  }));
+}
+
+// Argumento p_plan de save_plan: misma estructura, foco, días y plantilla que el plan activo.
+export function savePlanPayload(plan: ActivePlan, sessions: readonly BuiltSession[], source: "refiltrado" | "checkin") {
+  return {
+    focus: plan.focus,
+    days_per_week: plan.daysPerWeek,
+    template: plan.template,
+    source,
+    sessions: sessions.map((s) => ({
+      day_index: s.dayIndex,
+      label: s.label,
+      slots: s.slots.map((slot) => ({
+        position: slot.position,
+        pattern: slot.pattern,
+        region: slot.region,
+        exercise_id: slot.exerciseId,
+        gap_reason: slot.exerciseId ? null : (slot.holeReason ?? "sin_alternativa_equipo"),
+        sets: slot.exerciseId ? slot.sets : null,
+        rep_min: slot.exerciseId ? slot.repMin : null,
+        rep_max: slot.exerciseId ? slot.repMax : null,
+      })),
+    })),
+  };
+}
 
 export async function refilterForUser(supabase: SupabaseClient<Database>, userId: string): Promise<RefilterResult> {
   const [plan, health, gym, answers, catalog] = await Promise.all([
@@ -40,21 +83,7 @@ export async function refilterForUser(supabase: SupabaseClient<Database>, userId
   const limitations = (health.data?.limitations ?? []) as Joint[];
   const minutes = answers.data?.minutes_per_session ?? 45;
 
-  const sessions: BuiltSession[] = plan.sessions.map((s) => ({
-    dayIndex: s.dayIndex,
-    kind: KIND_BY_LABEL[s.label] ?? "cuerpo_completo",
-    label: s.label,
-    slots: s.slots.map((slot) => ({
-      position: slot.position,
-      region: slot.region,
-      pattern: slot.pattern,
-      exerciseId: slot.exerciseId,
-      holeReason: slot.gapReason ?? undefined,
-      sets: slot.sets ?? setsPerSlot(s.slots.length, minutes, plan.focus as Focus),
-      repMin: slot.repMin ?? 8,
-      repMax: slot.repMax ?? 12,
-    })),
-  }));
+  const sessions = activeToBuilt(plan, minutes);
   const before = sessions.map((s) => s.slots.map((slot) => `${slot.exerciseId}:${slot.sets}`).join("|")).join("/");
   // Con las limitaciones prima el guardarraíl 6: el plan se guarda aunque algún grupo quede por debajo
   // del suelo por falta de ejercicios posibles (KTD20); los topes de techo y mínimo sí se ajustan.
@@ -68,26 +97,7 @@ export async function refilterForUser(supabase: SupabaseClient<Database>, userId
 
   const saved = await createAdminClient().rpc("save_plan", {
     p_user: userId,
-    p_plan: {
-      focus: plan.focus,
-      days_per_week: plan.daysPerWeek,
-      template: plan.template,
-      source: "refiltrado",
-      sessions: sessions.map((s) => ({
-        day_index: s.dayIndex,
-        label: s.label,
-        slots: s.slots.map((slot) => ({
-          position: slot.position,
-          pattern: slot.pattern,
-          region: slot.region,
-          exercise_id: slot.exerciseId,
-          gap_reason: slot.exerciseId ? null : (slot.holeReason ?? "sin_alternativa_equipo"),
-          sets: slot.exerciseId ? slot.sets : null,
-          rep_min: slot.exerciseId ? slot.repMin : null,
-          rep_max: slot.exerciseId ? slot.repMax : null,
-        })),
-      })),
-    },
+    p_plan: savePlanPayload(plan, sessions, "refiltrado"),
     // Sin llamada de IA: la función acepta null aunque el tipo generado diga uuid.
     p_ai_call: null as unknown as string,
     p_input_tokens: 0,
