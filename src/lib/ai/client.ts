@@ -18,6 +18,18 @@ function anthropic(): Anthropic {
   return client;
 }
 
+// Código seguro del fallo (KTD17): nunca el mensaje, que podría llevar contenido. Distingue la clave
+// ausente o mal guardada, el rechazo de la API y los fallos de red, para diagnosticar desde los logs.
+export function aiErrorCode(error: unknown, key = process.env.ANTHROPIC_API_KEY): string {
+  if (!key) return "sin_clave";
+  if (key !== key.trim() || /^["']|["']$/.test(key)) return "clave_con_espacios_o_comillas";
+  if (error instanceof Anthropic.APIConnectionTimeoutError) return "tiempo_agotado";
+  if (error instanceof Anthropic.APIConnectionError) return "sin_red";
+  if (error instanceof Anthropic.APIError) return `http_${error.status ?? "red"}`;
+  const name = error instanceof Error ? error.name : "";
+  return /^[A-Za-z]{1,30}$/.test(name) ? `excepcion_${name}` : "desconocido";
+}
+
 export const callPlanModel: CallModel = async ({ model, system, user, schema }): Promise<ModelReply> => {
   try {
     const response = await anthropic().messages.parse({
@@ -34,11 +46,7 @@ export const callPlanModel: CallModel = async ({ model, system, user, schema }):
     if (!response.parsed_output) return { kind: "empty", inputTokens, outputTokens };
     return { kind: "parsed", output: response.parsed_output, inputTokens, outputTokens };
   } catch (error) {
-    if (error instanceof Anthropic.APIError) {
-      logError("ia_plan", { code: `http_${error.status ?? "red"}` });
-    } else {
-      logError("ia_plan", error);
-    }
+    logError("ia_plan", { code: aiErrorCode(error) });
     // Red, tiempo agotado, límite de la API o error del servidor: el intento no cuenta (D9).
     return { kind: "connection" };
   }
