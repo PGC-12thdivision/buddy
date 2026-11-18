@@ -8,7 +8,7 @@ import { setRowLabel, setRows, type SetRow } from "@/lib/app/set-rows";
 import { calibrationState, formatKg, MAX_CALIBRATION_SETS } from "@/lib/domain/session";
 import type { Joint } from "@/lib/domain/types";
 import { JOINT_LABELS } from "@/lib/wizard/zones";
-import { ExerciseFigure } from "./exercise-figure";
+import { ExerciseFigure, ExerciseThumb } from "./exercise-figure";
 import { Sheet } from "./sheet";
 
 // Sesión del día y calibración en una sola pantalla (plan.md U7; D63). Un ejercicio por pantalla,
@@ -48,27 +48,10 @@ function LightWarning({ view }: { view: ExerciseView }) {
 // Técnica a la vista (feedback de Pablo, 18/11): dibujo del movimiento y texto del catálogo. En la
 // pantalla de paso, lo que toca va al lado del dibujo para que el texto se lea sin scroll.
 function HowTo({ view, aside }: { view: ExerciseView; aside?: ReactNode }) {
-  const figure = <ExerciseFigure pattern={view.pattern} region={view.region} />;
   return (
     <div className="ss-howto">
-      {aside ? (
-        <div className="ss-howto-top">
-          {figure}
-          {aside}
-        </div>
-      ) : (
-        figure
-      )}
-      <p className="ss-howto-legend" aria-hidden="true">
-        <span>
-          <i data-ghost="" />
-          Empiezas
-        </span>
-        <span>
-          <i data-arrow="" />
-          Hacia dónde va el peso
-        </span>
-      </p>
+      <ExerciseFigure exerciseId={view.exerciseId} name={view.name} />
+      {aside}
       {view.technique ? <p className="ss-guide">{view.technique}</p> : null}
     </div>
   );
@@ -79,8 +62,8 @@ function HowTo({ view, aside }: { view: ExerciseView; aside?: ReactNode }) {
 function HowToRow({ view, withText, compact, onOpen }: { view: ExerciseView; withText?: boolean; compact?: boolean; onOpen: () => void }) {
   return (
     <button type="button" className="ss-howto-row" data-compact={compact ? "" : undefined} onClick={onOpen} aria-haspopup="dialog">
-      <ExerciseFigure pattern={view.pattern} region={view.region} className="ss-figure-thumb" />
-      <span>
+      <ExerciseThumb exerciseId={view.exerciseId} />
+      <span className="ss-howto-text">
         <b>Cómo se hace</b>
         {withText && view.technique ? <small>{view.technique}</small> : null}
       </span>

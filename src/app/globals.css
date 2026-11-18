@@ -1093,83 +1093,94 @@
     background: var(--card);
     box-shadow: none;
   }
-  /* Dibujo de técnica (feedback de Pablo, 18/11): maniquí de trazos de 2,5 px que no escalan, posición
-     inicial en discontinuo, flecha morada y carga en limón con borde de tinta. */
-  .ss-figure {
-    display: block;
-    width: 100%;
-    height: auto;
+  /* Dibujo de técnica (feedback de Pablo, 18/11): ilustración de Everkinetic adaptada. Solo el trazo,
+     como máscara pintada con la tinta del tema; fotograma 1 en papel, fotograma 2 en celda limón y
+     flecha morada entre los dos. */
+  .ss-drawing {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+  }
+  .ss-drawing-frames {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+    align-items: center;
+  }
+  .ss-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: clamp(112px, 32vw, 176px);
+    padding: 22px 6px 6px;
+    border: 2px solid var(--foreground);
     border-radius: 6px;
     background: var(--card);
   }
-  .ss-figure path,
-  .ss-figure circle,
-  .ss-figure rect {
+  .ss-frame[data-end] {
+    background: var(--primary);
+  }
+  .ss-frame-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 1px 6px;
+    border-right: 2px solid var(--foreground);
+    border-bottom: 2px solid var(--foreground);
+    border-bottom-right-radius: 4px;
+    background: var(--foreground);
+    color: var(--background);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .ss-frame-art {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    background: var(--foreground);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+  }
+  .ss-frame[data-end] .ss-frame-art {
+    background: var(--primary-foreground);
+  }
+  .ss-drawing-arrow svg {
+    display: block;
+    width: 22px;
+    height: 22px;
     fill: none;
-    stroke-width: 2.5;
-    stroke-linecap: square;
-    stroke-linejoin: miter;
-    vector-effect: non-scaling-stroke;
-  }
-  .ss-figure-props path {
-    stroke: var(--muted-foreground);
-  }
-  .ss-figure-ghost path {
-    stroke: var(--muted-foreground);
-    stroke-dasharray: 4 4;
-  }
-  .ss-figure-body path,
-  .ss-figure-body circle {
-    stroke: var(--foreground);
-  }
-  .ss-figure-body circle {
-    fill: var(--card);
-  }
-  .ss-figure-load rect {
-    fill: var(--primary);
-    stroke: var(--foreground);
-  }
-  .ss-figure-arrow path {
     stroke: var(--secondary);
+    stroke-width: 3;
+  }
+  .ss-drawing figcaption {
+    font-size: 11px;
+    color: var(--muted-foreground);
+  }
+  .ss-drawing figcaption a {
+    color: inherit;
+  }
+  .ss-thumb {
+    display: flex;
+    width: 56px;
+    height: 48px;
+    flex: none;
+    padding: 3px;
+    border: 2px solid var(--foreground);
+    border-radius: 4px;
+    background: var(--primary);
+  }
+  .ss-thumb .ss-frame-art {
+    background: var(--primary-foreground);
   }
   .ss-howto {
     display: flex;
     flex-direction: column;
     gap: 8px;
-  }
-  .ss-howto-top {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    align-items: center;
-    gap: 12px;
-  }
-  .ss-howto-legend {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 4px 8px;
-    margin: 0;
-    font-size: 13px;
-    color: var(--muted-foreground);
-  }
-  .ss-howto-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-  .ss-howto-legend i {
-    width: 18px;
-    height: 0;
-    border-top: 2.5px dashed var(--muted-foreground);
-  }
-  .ss-howto-legend i[data-arrow] {
-    border-top: 2.5px solid var(--secondary);
-  }
-  .ss-sheet .ss-howto .ss-figure {
-    max-width: 240px;
-    margin-inline: auto;
   }
   .ss-sheet .ss-howto .ss-guide {
     color: var(--foreground);
@@ -1190,7 +1201,7 @@
     text-align: left;
     cursor: pointer;
   }
-  .ss-howto-row > span:first-of-type {
+  .ss-howto-row > .ss-howto-text {
     display: flex;
     min-width: 0;
     flex: 1;
@@ -1210,10 +1221,6 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
-  .ss-figure.ss-figure-thumb {
-    width: 64px;
-    flex: none;
-  }
   /* Versión mínima, en la fila "Serie 2 de 3": sin filetes ni texto, para no quitar alto (D22). */
   .ss-howto-row[data-compact] {
     width: auto;
@@ -1224,8 +1231,9 @@
     border: 0;
     font-size: 14px;
   }
-  .ss-howto-row[data-compact] .ss-figure-thumb {
-    width: 48px;
+  .ss-howto-row[data-compact] .ss-thumb {
+    width: 44px;
+    height: 38px;
   }
   /* Plan del ejercicio en la pantalla de paso: la carga en cifra y lo que toca. */
   .ss-plan {
