@@ -61,8 +61,7 @@ export default async function Resumen() {
         step={10}
         title="Todo listo"
         subtitle="Revisa y cambia lo que quieras antes de generar tu plan."
-        // /generando llega con U5 (generación del plan).
-        footer={missing ? null : <CtaLink href={"/generando" as Route}>Generar mi plan</CtaLink>}
+        footer={missing ? null : <CtaLink href="/generando">Generar mi plan</CtaLink>}
       >
         <h2 className="wz-rule-title">Tus respuestas</h2>
         <dl className="m-0">

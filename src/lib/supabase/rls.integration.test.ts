@@ -207,6 +207,26 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     expect(anonymous.error !== null || (anonymous.data ?? []).length === 0).toBe(true);
   });
 
+  it("dos reservas simultáneas del plan inicial: solo una pasa (KTD18)", async () => {
+    const args = { p_user: userB, p_kind: "plan", p_model: "test", p_period_limit: 1, p_max_duration_s: 120 };
+    const results = await Promise.all([admin.rpc("reserve_ai_call", args), admin.rpc("reserve_ai_call", args)]);
+    for (const r of results) expect(r.error).toBeNull();
+    const oks = results.filter((r) => (r.data as { ok: boolean }).ok);
+    expect(oks).toHaveLength(1);
+    expect(results.map((r) => (r.data as { reason?: string }).reason)).toContain("limite_alcanzado");
+  });
+
+  it("A no puede reservar llamadas de IA ni guardar planes (solo el servidor)", async () => {
+    const reserve = await clientA.rpc("reserve_ai_call", {
+      p_user: userA, p_kind: "plan", p_model: "x", p_period_limit: 99, p_max_duration_s: 1,
+    });
+    expect(reserve.error).not.toBeNull();
+    const save = await clientA.rpc("save_plan", {
+      p_user: userA, p_plan: {}, p_ai_call: null, p_input_tokens: 0, p_output_tokens: 0, p_cost_usd: 0,
+    });
+    expect(save.error).not.toBeNull();
+  });
+
   it("borrar la cuenta deja cero filas del usuario", async () => {
     const stamp = Date.now();
     const created = await admin.auth.admin.createUser({ email: `rls-c-${stamp}@buddy.test`, password, email_confirm: true });
