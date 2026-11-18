@@ -71,6 +71,7 @@ function setup({ userId = null as string | null, serverResponses = {}, adminResp
   );
 }
 
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ origin: "https://buddy.test" }) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => server }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => admin }));
 
@@ -121,6 +122,9 @@ describe("registro", () => {
   it("guarda las respuestas previas con el user.id de signUp, nunca con uno de la entrada", async () => {
     server.auth.signUp.mockResolvedValue({ data: { user: { id: "nuevo", identities: [{ id: "i" }] } }, error: null });
     const result = await actions.registrarse(registro({ userId: "otro", user_id: "otro" }));
+    expect(server.auth.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({ options: { emailRedirectTo: "https://buddy.test/auth/confirm?next=/consentimiento" } }),
+    );
 
     expect(result).toEqual({ ok: true });
     const [answersInsert] = writesTo(admin, "onboarding_answers");

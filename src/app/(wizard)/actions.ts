@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { z } from "zod";
 import { evaluateScreening, SCREENING_QUESTIONS } from "@/lib/domain/screening";
 import { JOINTS } from "@/lib/domain/types";
@@ -55,6 +56,17 @@ async function answersMatchCatalog(answers: Pick<WizardAnswers, "equipmentTypeId
   return answers.equipmentTypeIds.every((id) => equipment.has(id)) && answers.sports.every((id) => activities.has(id));
 }
 
+// Adónde vuelve el enlace del email de confirmación. Con la plantilla por defecto de Supabase
+// (sin SMTP propio no se puede editar), el enlace pasa por Supabase, que confirma el email, y
+// vuelve aquí con un `code`. Supabase solo acepta las URLs de su lista de Redirect URLs.
+async function confirmRedirect(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
+  const origin = h.get("origin") ?? (host ? `${proto}://${host}` : "");
+  return `${origin}/auth/confirm?next=/consentimiento`;
+}
+
 // Una hora del cliente fuera de lo razonable se cambia por la del servidor.
 function eventTime(at: string, now: Date): string {
   const time = new Date(at).getTime();
@@ -77,7 +89,7 @@ export async function registrarse(input: unknown): Promise<RegistroResult> {
   if (!(await answersMatchCatalog(answers))) return { ok: false, errors: { form: GENERIC_ERROR } };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: await confirmRedirect() } });
   if (error) {
     logError("registro", error);
     if (error.code === "weak_password") return { ok: false, errors: { password: "Elige una contraseña más difícil de adivinar." } };
@@ -125,7 +137,11 @@ export async function reenviarConfirmacion(input: unknown): Promise<{ ok: true }
   const parsed = z.object({ email: z.email() }).safeParse(input);
   if (!parsed.success) return INVALID;
   const supabase = await createClient();
-  const { error } = await supabase.auth.resend({ type: "signup", email: parsed.data.email });
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: { emailRedirectTo: await confirmRedirect() },
+  });
   if (error) {
     logError("reenviar_confirmacion", error);
     if (error.code?.startsWith("over_")) return { ok: false, error: "limite" };

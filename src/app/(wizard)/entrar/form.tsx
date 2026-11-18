@@ -12,7 +12,7 @@ const MESSAGES = {
   no_valido: "Escribe tu email y tu contraseña.",
 } as const;
 
-export function EntrarForm({ invalidLink }: { invalidLink: boolean }) {
+export function EntrarForm({ notice }: { notice: "enlace" | "confirmado" | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,7 +54,12 @@ export function EntrarForm({ invalidLink }: { invalidLink: boolean }) {
           </>
         }
       >
-        {invalidLink ? (
+        {notice === "confirmado" ? (
+          <Note tone="ok" role="status">
+            Tu email está confirmado. Entra con tu email y contraseña para seguir.
+          </Note>
+        ) : null}
+        {notice === "enlace" ? (
           <Note tone="warn" role="alert">
             Ese enlace no vale o ha caducado. Entra con tu email y contraseña; si aún no habías confirmado, te lo reenviamos.
           </Note>

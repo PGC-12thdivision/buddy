@@ -20,6 +20,7 @@ describe("parseConfirmParams", () => {
   it("acepta el enlace de confirmación de la plantilla", () => {
     expect(parseConfirmParams(params("token_hash=abc123&type=email&next=/consentimiento"))).toEqual({
       ok: true,
+      kind: "token_hash",
       tokenHash: "abc123",
       type: "email",
       next: "/consentimiento",
@@ -42,5 +43,19 @@ describe("parseConfirmParams", () => {
   it("un next externo se cambia por la ruta interna", () => {
     expect(parseConfirmParams(params("token_hash=abc&type=email&next=//evil.com"))).toMatchObject({ next: "/consentimiento" });
     expect(parseConfirmParams(params("token_hash=abc&type=email&next=https://evil.com"))).toMatchObject({ next: "/consentimiento" });
+  });
+});
+
+describe("parseConfirmParams con la plantilla por defecto (code)", () => {
+  it("acepta el code de vuelta de Supabase", () => {
+    expect(parseConfirmParams(params("code=xyz&next=/consentimiento"))).toEqual({ ok: true, kind: "code", code: "xyz", next: "/consentimiento" });
+  });
+
+  it("un enlace caducado vuelve con error_code y se rechaza", () => {
+    expect(parseConfirmParams(params("error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid"))).toEqual({ ok: false });
+  });
+
+  it("con code, un next externo también se cambia por la ruta interna", () => {
+    expect(parseConfirmParams(params("code=xyz&next=//evil.com"))).toMatchObject({ next: "/consentimiento" });
   });
 });
