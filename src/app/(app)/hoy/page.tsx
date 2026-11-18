@@ -42,7 +42,7 @@ export default async function HoyPage() {
           {exercises.map((slot) => (
             <li key={slot.position} className="wz-rule-row">
               <span className="font-bold">{slot.exerciseName}</span>
-              <span className="text-[14px] text-muted-foreground" data-numeric>{`${slot.sets} series`}</span>
+              <span className="wz-rule-value text-[14px] text-muted-foreground">{`${slot.sets} series`}</span>
             </li>
           ))}
         </ul>

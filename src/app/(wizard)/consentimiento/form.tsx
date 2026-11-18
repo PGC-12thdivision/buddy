@@ -60,8 +60,8 @@ export function ConsentimientoForm() {
           <b>Cómo retirarlo:</b> cuando quieras, en Ajustes. Al retirarlo borramos tus datos de salud.
         </li>
       </ul>
-      <label className="mt-2 flex min-h-11 cursor-pointer items-start gap-3 rounded-md border-2 border-border bg-card p-3 text-[15px] font-bold">
-        <input type="checkbox" className="mt-0.5 size-6 flex-none accent-[var(--secondary)]" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
+      <label className="mt-2 flex min-h-11 cursor-pointer items-start gap-3 border-y-2 border-foreground py-3 text-[15px] font-bold">
+        <input type="checkbox" className="wz-check mt-0.5" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
         Acepto que BUDDY trate mis limitaciones y el resultado del cuestionario de seguridad para generar y ajustar mi plan.
       </label>
       {failed ? (

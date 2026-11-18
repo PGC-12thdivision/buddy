@@ -1,6 +1,26 @@
 import type { Route } from "next";
 import Link from "next/link";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, InputHTMLAttributes, KeyboardEvent, ReactNode } from "react";
+import { radioKeyMove } from "@/lib/a11y/radio";
+
+// Grupo de radio accesible: las flechas mueven la selección y el foco (WAI-ARIA radiogroup; auditoría 18/11).
+// Solo la opción elegida (o la primera si no hay ninguna) entra en el orden de tabulación.
+function radioKeys<T>(values: readonly T[], value: T | undefined, onChange: (value: T) => void) {
+  return (event: KeyboardEvent<HTMLDivElement>) => {
+    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    const focused = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const move = radioKeyMove(values.length, value === undefined ? -1 : values.indexOf(value), focused, event.key);
+    if (!move) return;
+    event.preventDefault();
+    buttons[move.index]?.focus();
+    if (move.select) onChange(values[move.index]);
+  };
+}
+// Entra en el orden de tabulación la opción elegida o, si no hay ninguna válida, la primera.
+const tabIndexFor = <T,>(values: readonly T[], value: T | undefined, option: T) => {
+  const chosen = value !== undefined && values.includes(value);
+  return chosen ? (value === option ? 0 : -1) : values[0] === option ? 0 : -1;
+};
 
 // Componentes del wizard (DESIGN.md §6, sistema §11.12). Estilos en globals.css (.wz-*).
 
@@ -112,13 +132,19 @@ export function ChoiceCards<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex flex-col gap-2.5">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="flex flex-col gap-2.5"
+      onKeyDown={radioKeys(options.map((o) => o.value), value, onChange)}
+    >
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           role="radio"
           aria-checked={value === option.value}
+          tabIndex={tabIndexFor(options.map((o) => o.value), value, option.value)}
           className="wz-card"
           onClick={() => onChange(option.value)}
         >
@@ -146,13 +172,14 @@ export function Segmented<T extends string | number | boolean>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="wz-seg">
+    <div role="radiogroup" aria-label={label} className="wz-seg" onKeyDown={radioKeys(options.map((o) => o.value), value, onChange)}>
       {options.map((option) => (
         <button
           key={String(option.value)}
           type="button"
           role="radio"
           aria-checked={value === option.value}
+          tabIndex={tabIndexFor(options.map((o) => o.value), value, option.value)}
           onClick={() => onChange(option.value)}
         >
           {option.text}

@@ -4,8 +4,9 @@
 
 export type AccountProgress = { hasConsent: boolean; hasHealthProfile: boolean; hasActivePlan: boolean };
 
-export function nextScreenForAccount(progress: AccountProgress): "/consentimiento" | "/limitaciones" | "/resumen" {
+export function nextScreenForAccount(progress: AccountProgress): "/consentimiento" | "/limitaciones" | "/resumen" | "/hoy" {
   if (!progress.hasConsent) return "/consentimiento";
   if (!progress.hasHealthProfile) return "/limitaciones";
-  return "/resumen";
+  // Con plan, la app empieza en Hoy (diseño D3).
+  return progress.hasActivePlan ? "/hoy" : "/resumen";
 }

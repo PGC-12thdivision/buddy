@@ -14,6 +14,14 @@ describe("a dónde va una cuenta al entrar", () => {
     expect(nextScreenForAccount({ hasConsent: true, hasHealthProfile: true, hasActivePlan: false })).toBe("/resumen");
   });
 
+  it("con plan pero sin cribado vigente, a limitaciones antes que a Hoy", () => {
+    expect(nextScreenForAccount({ hasConsent: true, hasHealthProfile: false, hasActivePlan: true })).toBe("/limitaciones");
+  });
+
+  it("con plan activo, a Hoy", () => {
+    expect(nextScreenForAccount({ hasConsent: true, hasHealthProfile: true, hasActivePlan: true })).toBe("/hoy");
+  });
+
   it("si retiró el consentimiento, vuelve al consentimiento aunque tuviera plan", () => {
     expect(nextScreenForAccount({ hasConsent: false, hasHealthProfile: false, hasActivePlan: true })).toBe("/consentimiento");
   });

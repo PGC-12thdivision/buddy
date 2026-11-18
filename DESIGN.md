@@ -35,7 +35,7 @@ Franja decorativa de 8 px bajo el marcador: limón, `#FF5FA2`, `#2ED3C1` en bloq
 |---|---|---|
 | Títulos, números grandes, CTA | Archivo, anchura 125 %, 900 cursiva | Mayúsculas en títulos y CTA; cifras tabulares |
 | Cuerpo y controles | Atkinson Hyperlegible Next 400–800 | Cuerpo de 15–16 px. Su cero lleva barra: las cifras de datos van en Archivo |
-| Etiquetas y celebraciones | Press Start 2P | **Mínimo 11 px**, 1 o 2 palabras; celebraciones de 14 px como mínimo |
+| Etiquetas y celebraciones | Silkscreen (D58; sustituye a Press Start 2P, que dibuja mal las mayúsculas con tilde) | **Mínimo 11 px**, 1 o 2 palabras; celebraciones de 14 px como mínimo |
 Escala: 12, 13, 14, 15, 17, 20, 24, 28 (título; con `clamp()` de 22 a 32), 44–60 (peso y repeticiones), 46–72 (logotipo).
 
 ## 4. Espacio, forma y tacto
