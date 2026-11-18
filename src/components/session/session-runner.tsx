@@ -167,10 +167,13 @@ export function SessionRunner({ data }: { data: SessionData }) {
     });
   };
 
+  // Siguiente número de serie: el mayor guardado más uno (las series 1–20; la fila "detenida" va aparte).
+  const nextIndex = Math.max(0, ...ownSets.filter((s) => s.setIndex <= 20).map((s) => s.setIndex)) + 1;
+
   // --- Serie normal --------------------------------------------------------------------------
   const setDone = async () => {
     if (!current || busy) return;
-    const set: SavedSet = { id: newId(), exerciseId: current.exerciseId, setIndex: ownSets.length + 1, weightKg: weight, reps, rir: null, status: "hecha" };
+    const set: SavedSet = { id: newId(), exerciseId: current.exerciseId, setIndex: nextIndex, weightKg: weight, reps, rir: null, status: "hecha" };
     const all = [...saved, set];
     const queueBefore = queue;
     setSaved(all);
@@ -178,6 +181,14 @@ export function SessionRunner({ data }: { data: SessionData }) {
     setNow(clock());
     const n = doneCount + 1;
     const exerciseDone = n >= current.sets;
+    // Última serie de la sesión: se espera al guardado antes de cerrarla (revisión de código).
+    if (exerciseDone && queue.length === 1) {
+      setBusy(true);
+      const res = await saveOne(set);
+      setBusy(false);
+      if (res) advance([], true);
+      return;
+    }
     setToast({ text: `Serie ${n} hecha.`, undo: undoSets([set.id], queueBefore, step), key: clock() });
     if (exerciseDone) advance(queue.slice(1), true);
     else setPop({ title: `Serie ${n} hecha`, sub: `A por la ${n + 1}`, key: clock() });
@@ -191,7 +202,7 @@ export function SessionRunner({ data }: { data: SessionData }) {
     const set: SavedSet = {
       id: newId(),
       exerciseId: current.exerciseId,
-      setIndex: ownSets.length + 1,
+      setIndex: nextIndex,
       weightKg: weight,
       // "No llegué": cuenta como una repetición menos que el objetivo (PRD §8: baja un salto).
       reps: reached ? target : Math.max(0, target - 1),
@@ -221,11 +232,11 @@ export function SessionRunner({ data }: { data: SessionData }) {
   // --- Botonera ------------------------------------------------------------------------------
   const skip = async () => {
     if (!current || busy) return;
-    const remaining = current.calibration ? 1 : Math.max(1, current.sets - ownSets.length);
+    const remaining = current.calibration ? 1 : Math.max(1, current.sets - doneCount);
     const sets: SavedSet[] = Array.from({ length: remaining }, (_, i) => ({
       id: newId(),
       exerciseId: current.exerciseId,
-      setIndex: ownSets.length + 1 + i,
+      setIndex: Math.min(20, nextIndex + i),
       weightKg: weight,
       reps: 0,
       rir: null,
@@ -233,11 +244,13 @@ export function SessionRunner({ data }: { data: SessionData }) {
     }));
     const queueBefore = queue;
     setSaved((all) => [...all, ...sets]);
+    // Se guarda antes de avanzar: si era el último ejercicio, la sesión se cierra después (revisión de código).
+    setBusy(true);
+    const results = await Promise.all(sets.map((s) => saveOne(s)));
+    setBusy(false);
+    if (results.some((r) => r === null)) return;
     setToast({ text: "Saltado. No cuenta para tu progreso y no te penaliza.", undo: undoSets(sets.map((s) => s.id), queueBefore, step), key: clock() });
     advance(queue.slice(1), false);
-    setBusy(true);
-    for (const s of sets) await saveOne(s);
-    setBusy(false);
   };
 
   const later = () => {
@@ -282,7 +295,7 @@ export function SessionRunner({ data }: { data: SessionData }) {
       setError("No hemos podido guardarlo. Revisa la conexión y vuelve a intentarlo.");
       return;
     }
-    setSaved((all) => [...all, { id: newId(), exerciseId: current.exerciseId, setIndex: 99, weightKg: 0, reps: 0, rir: null, status: "detenida" }]);
+    setSaved((all) => [...all, { id: newId(), exerciseId: current.exerciseId, setIndex: 100, weightKg: 0, reps: 0, rir: null, status: "detenida" }]);
     if (res.repeated && res.zones.length > 0) {
       setZones(res.zones);
       setPicked([]);
@@ -300,8 +313,13 @@ export function SessionRunner({ data }: { data: SessionData }) {
     const res = await anadirLimitacion({ sessionId: data.id, exerciseId: current.exerciseId, zones: picked });
     setBusy(false);
     setSheet(null);
-    if (!res.ok) setError("No hemos podido ajustar tu plan. Puedes hacerlo luego desde Ajustes.");
-    else setToast({ text: res.changed > 0 ? `Plan ajustado: ${res.changed} ${res.changed === 1 ? "cambio" : "cambios"}.` : "Plan revisado: no había nada que cambiar.", key: clock() });
+    if (res.ok) {
+      // Las limitaciones nuevas cambian lo que se puede hacer hoy: se vuelve a cargar la sesión desde
+      // el servidor, que ya no ofrece ejercicios que carguen la zona (guardarraíl 6; revisión de código).
+      window.location.reload();
+      return;
+    }
+    setError("No hemos podido ajustar tu plan. Puedes hacerlo luego desde Ajustes.");
     advance(queue.slice(1), false);
   };
 

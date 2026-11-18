@@ -203,8 +203,16 @@ describe("anadirLimitacion", () => {
 });
 
 describe("terminarSesion", () => {
-  it("cierra solo con ended_at y lleva al fin de sesión", async () => {
+  it("una sesión sin ninguna serie se borra y no cuenta como hecha", async () => {
     results["set_logs:select"] = { data: [], error: null };
+    results["exercise_state:select"] = { data: [], error: null };
+    await expect(terminarSesion({ sessionId: SESSION })).rejects.toMatchObject({ url: "/hoy" });
+    expect(calls.some((c) => c.table === "admin:workout_sessions" && c.op === "delete")).toBe(true);
+    expect(calls.some((c) => c.table === "user:workout_sessions" && c.op === "update")).toBe(false);
+  });
+
+  it("cierra solo con ended_at y lleva al fin de sesión", async () => {
+    results["set_logs:select"] = { data: [{ exercise_id: "a", set_index: 1, weight_kg: 40, status: "hecha" }], error: null };
     results["exercise_state:select"] = { data: [], error: null };
     await expect(terminarSesion({ sessionId: SESSION })).rejects.toMatchObject({ url: `/sesion/${SESSION}/fin` });
     const update = calls.find((c) => c.table === "user:workout_sessions" && c.op === "update");
@@ -229,8 +237,16 @@ describe("terminarSesion", () => {
       error: null,
     };
     await terminarSesion({ sessionId: SESSION }).catch(() => {});
-    const updates = calls.filter((c) => c.table === "user:exercise_state" && c.op === "update");
+    const updates = calls.filter((c) => c.table === "admin:exercise_state" && c.op === "update");
     expect(updates).toHaveLength(1);
     expect(updates[0].args[0]).toEqual({ working_weight_kg: 45 });
+  });
+
+  it("con marca de Molestia en la sesión tampoco cambia la carga, aunque falte la fila detenida", async () => {
+    results["set_logs:select"] = { data: [{ exercise_id: "a", set_index: 1, weight_kg: 50, status: "hecha" }], error: null };
+    results["exercise_state:select"] = { data: [{ exercise_id: "a", working_weight_kg: 40, calibrated_at: "2026-11-01T00:00:00Z" }], error: null };
+    results["discomfort_marks:select"] = { data: [{ exercise_id: "a" }], error: null };
+    await terminarSesion({ sessionId: SESSION }).catch(() => {});
+    expect(calls.some((c) => c.table === "admin:exercise_state" && c.op === "update")).toBe(false);
   });
 });

@@ -641,6 +641,22 @@
     font-size: 0.3em;
     color: var(--accent-foreground);
   }
+  /* Cifras sobre papel (columna lateral de Hoy en escritorio): morado, nunca limón sobre crema (§2). */
+  .wz-heroes[data-tone="paper"] {
+    margin-top: 0;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--foreground);
+  }
+  .wz-heroes[data-tone="paper"] .wz-hero-label {
+    color: var(--muted-foreground);
+  }
+  .wz-heroes[data-tone="paper"] .wz-hero-num {
+    font-size: 96px;
+    color: var(--secondary);
+  }
+  .wz-heroes[data-tone="paper"] .wz-hero-num small {
+    color: var(--foreground);
+  }
   .wz-week {
     display: grid;
     grid-template-columns: repeat(var(--days, 7), minmax(0, 52px));
@@ -731,6 +747,12 @@
     line-height: 1.05;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+  }
+  /* A 320 px la etiqueta se recorta antes de chocar con "Tengo molestia" (auditoría de la dirección B). */
+  .ss-band-row .wz-tag {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .wz-tag[data-calib] {
     background: #2ed3c1;

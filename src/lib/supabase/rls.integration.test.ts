@@ -213,6 +213,24 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     const row = await admin.from("workout_sessions").select("kind, ended_at").eq("id", first).single();
     expect(row.data?.kind).toBe("normal");
     expect(row.data?.ended_at).not.toBeNull();
+
+    const reopen = await clientA.from("workout_sessions").update({ ended_at: null }).eq("id", first);
+    expect(reopen.error).not.toBeNull();
+  });
+
+  it("U7: A no puede escribir su carga de trabajo ni cambiar el estado de una serie", async () => {
+    const write = await clientA.from("exercise_state").insert({ exercise_id: exerciseId, working_weight_kg: 500 });
+    expect(write.error).not.toBeNull();
+    const session = randomUUID();
+    must(await clientA.from("workout_sessions").insert({ id: session, kind: "normal" }), "sesión de A");
+    const id = randomUUID();
+    must(
+      await clientA.from("set_logs").insert({ id, session_id: session, exercise_id: exerciseId, set_index: 100, weight_kg: 0, reps: 0, status: "detenida" }),
+      "detenida",
+    );
+    const flip = await clientA.from("set_logs").update({ status: "hecha" }).eq("id", id);
+    expect(flip.error).not.toBeNull();
+    await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", session);
   });
 
   it("U7: dos series con distinto ID y el mismo número en la misma sesión no duplican", async () => {

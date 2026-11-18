@@ -13,6 +13,8 @@ import { sessionUserId } from "@/lib/wizard/account";
 // series; cada subida de carga con su "NIVEL ARRIBA"; la Molestia y lo saltado, en una línea sobria
 // y sin animación. La duración es la real, no la estimada.
 
+const COLUMNS = "session_id, exercise_id, set_index, weight_kg, reps, rir, status, created_at";
+
 export default async function FinPage({ params }: PageProps<"/sesion/[id]/fin">) {
   const { id } = await params;
   if (!z.string().uuid().safeParse(id).success) notFound();
@@ -26,7 +28,11 @@ export default async function FinPage({ params }: PageProps<"/sesion/[id]/fin">)
   const [{ data: session }, { data: planSession }, { data: rows }, { data: finished }, { data: states }, plan, { count }] = await Promise.all([
     supabase.from("workout_sessions").select("started_at, ended_at").eq("id", id).eq("user_id", userId).maybeSingle(),
     supabase.from("plan_sessions").select("label").eq("id", scope.session.planSessionId).maybeSingle(),
-    supabase.from("set_logs").select("session_id, exercise_id, set_index, weight_kg, reps, rir, status, created_at").eq("user_id", userId).limit(3000),
+    // Series de esta sesión y el historial reciente, por debajo del máximo de filas de la API (1000).
+    Promise.all([
+      supabase.from("set_logs").select(COLUMNS).eq("user_id", userId).eq("session_id", id),
+      supabase.from("set_logs").select(COLUMNS).eq("user_id", userId).neq("session_id", id).order("created_at", { ascending: false }).limit(900),
+    ]).then(([today, recent]) => ({ data: [...(recent.data ?? []).reverse(), ...(today.data ?? [])] })),
     supabase.from("workout_sessions").select("id").eq("user_id", userId).not("ended_at", "is", null).order("started_at"),
     supabase.from("exercise_state").select("exercise_id, working_weight_kg, calibrated_at").eq("user_id", userId),
     loadActivePlan(supabase, userId),
@@ -106,6 +112,15 @@ export default async function FinPage({ params }: PageProps<"/sesion/[id]/fin">)
       </header>
       <div className="wz-stripes" aria-hidden="true" />
       <main className="wz-pad flex flex-1 flex-col gap-4 py-4" aria-label="Resumen de la sesión">
+        {quiet.length > 0 ? (
+          <section aria-label="Ejercicios parados o saltados" className="flex flex-col gap-1">
+            {quiet.map((q) => (
+              <p key={q} className="m-0 text-[15px] text-muted-foreground">
+                {q}
+              </p>
+            ))}
+          </section>
+        ) : null}
         {wins.length > 0 ? (
           <section aria-labelledby="fin-logros">
             <h2 id="fin-logros" className="wz-rule-title">
@@ -125,15 +140,6 @@ export default async function FinPage({ params }: PageProps<"/sesion/[id]/fin">)
                 </li>
               ))}
             </ul>
-          </section>
-        ) : null}
-        {quiet.length > 0 ? (
-          <section aria-label="Ejercicios parados o saltados" className="flex flex-col gap-1">
-            {quiet.map((q) => (
-              <p key={q} className="m-0 text-[15px] text-muted-foreground">
-                {q}
-              </p>
-            ))}
           </section>
         ) : null}
         {next ? (

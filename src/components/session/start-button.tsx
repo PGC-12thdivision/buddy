@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { empezarSesion } from "@/app/actions/session";
 
@@ -7,20 +8,24 @@ import { empezarSesion } from "@/app/actions/session";
 // si falla, aviso de conexión y el mismo botón para reintentar. Nunca empieza con pesos sin confirmar.
 export function StartButton({ children }: { children: string }) {
   const [pending, start] = useTransition();
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+  const router = useRouter();
 
   const go = () =>
     start(async () => {
-      setFailed(false);
+      setFailed(null);
       const res = await empezarSesion();
-      if (res && !res.ok) setFailed(true);
+      if (!res || res.ok) return;
+      if (res.error === "sin_sesion") router.push("/entrar");
+      else if (res.error === "sin_plan") setFailed("Tu plan no tiene sesiones. Revisa tu plan antes de empezar.");
+      else setFailed("Sin conexión. Necesitamos conexión para cargar y guardar tu sesión.");
     });
 
   return (
     <>
       {failed ? (
         <p role="alert" className="wz-error m-0">
-          Sin conexión. Necesitamos conexión para cargar y guardar tu sesión.
+          {failed}
         </p>
       ) : null}
       <button type="button" className="wz-cta" onClick={go} disabled={pending} aria-busy={pending}>

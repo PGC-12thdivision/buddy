@@ -26,7 +26,8 @@ const pixel = Silkscreen({
 });
 
 // viewport-fit=cover para que env(safe-area-inset-bottom) funcione en la barra inferior y el pie.
-export const viewport: Viewport = { viewportFit: "cover" };
+// themeColor: las barras del navegador se tiñen del morado del marcador (auditoría de la dirección B).
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#3d1a5e" };
 
 export const metadata: Metadata = {
   title: "BUDDY",

@@ -12,6 +12,7 @@ export function AppScreen({
   kicker,
   tags,
   heroes,
+  heroesHiddenOnDesktop,
   children,
   footer,
 }: {
@@ -20,6 +21,8 @@ export function AppScreen({
   kicker?: string;
   tags?: ReactNode;
   heroes?: Hero[];
+  // En escritorio las cifras pueden ir en la columna lateral en vez de en el marcador (D62).
+  heroesHiddenOnDesktop?: boolean;
   children: ReactNode;
   footer?: ReactNode;
 }) {
@@ -36,30 +39,38 @@ export function AppScreen({
         <h1 className="wz-title">{title}</h1>
         {subtitle ? <p className="wz-subtitle">{subtitle}</p> : null}
         {cover ? (
-          <div className="wz-heroes">
-            {heroes.map((h) => (
-              <div key={h.label}>
-                <p className="wz-hero-label">{h.label}</p>
-                <p className="wz-hero-num" data-numeric="">
-                  {h.value}
-                  {h.unit ? <small>{h.unit}</small> : null}
-                </p>
-              </div>
-            ))}
-          </div>
+          <Heroes heroes={heroes} className={heroesHiddenOnDesktop ? "lg:hidden" : undefined} />
         ) : null}
       </header>
       <div className="wz-stripes" aria-hidden="true" />
-      <main className="wz-pad flex flex-1 flex-col gap-4 py-4" aria-label={title}>
+      {/* En escritorio el pie va en el flujo, justo bajo el contenido, y no pegado al fondo (D62). */}
+      <main className="wz-pad flex flex-1 flex-col gap-4 py-4 lg:flex-none" aria-label={title}>
         {children}
       </main>
       {footer ? (
-        <div className="wz-foot wz-pad bottom-[calc(3.5rem+env(safe-area-inset-bottom))] lg:bottom-0">
+        // Encima de la barra de pestañas, que ya respeta la zona segura de iOS: sin sumarla otra vez.
+        <div className="wz-foot wz-pad bottom-[calc(3.5rem+env(safe-area-inset-bottom))] pb-[18px] lg:static lg:pb-8">
           {/* En escritorio el CTA conserva su forma de botón de recreativa (auditoría 18/11). */}
           <div className="flex w-full flex-col gap-2.5 lg:max-w-[420px]">{footer}</div>
         </div>
       ) : null}
     </>
+  );
+}
+
+export function Heroes({ heroes, className, tone = "band" }: { heroes: Hero[]; className?: string; tone?: "band" | "paper" }) {
+  return (
+    <div className={`wz-heroes ${className ?? ""}`} data-tone={tone}>
+      {heroes.map((h) => (
+        <div key={h.label}>
+          <p className="wz-hero-label">{h.label}</p>
+          <p className="wz-hero-num" data-numeric="">
+            {h.value}
+            {h.unit ? <small>{h.unit}</small> : null}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
 

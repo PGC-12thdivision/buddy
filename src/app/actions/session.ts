@@ -21,6 +21,7 @@ import { hasActiveConsent, sessionUserId } from "@/lib/wizard/account";
 type Fail<E extends string = "sin_sesion" | "no_valido" | "fallo"> = { ok: false; error: E | "sin_sesion" };
 
 const STALE_MS = 12 * 60 * 60 * 1000;
+const DETENIDA_INDEX = 100;
 const uuid = z.string().uuid();
 
 async function claims() {
@@ -44,8 +45,11 @@ export async function empezarSesion(): Promise<Fail<"sin_plan" | "fallo">> {
     .maybeSingle();
   if (open && Date.now() - new Date(open.started_at).getTime() < STALE_MS) redirect(`/sesion/${open.id}`);
   if (open) {
-    // Una sesión olvidada de hace más de 12 h se cierra tal cual, sin tocar cargas.
-    await supabase.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", open.id).eq("user_id", userId);
+    // Una sesión olvidada de hace más de 12 h se cierra tal cual, sin tocar cargas; si no tiene
+    // ninguna serie, se borra para que no haga avanzar el día del plan (revisión de código).
+    const { count: rows } = await supabase.from("set_logs").select("id", { count: "exact", head: true }).eq("session_id", open.id).eq("user_id", userId);
+    if (rows === 0) await createAdminClient().from("workout_sessions").delete().eq("id", open.id).eq("user_id", userId);
+    else await supabase.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", open.id).eq("user_id", userId);
   }
 
   const plan = await loadActivePlan(supabase, userId);
@@ -140,7 +144,10 @@ async function syncCalibration(
   const write = result.done
     ? { working_weight_kg: result.fixedLoadKg, calibrated_at: new Date().toISOString() }
     : { working_weight_kg: null, calibrated_at: null };
-  const { error } = await supabase.from("exercise_state").upsert({ user_id: userId, exercise_id: exerciseId, ...write }, { onConflict: "user_id,exercise_id" });
+  // La carga la escribe solo el servidor (el usuario no tiene permiso de escritura en exercise_state).
+  const { error } = await createAdminClient()
+    .from("exercise_state")
+    .upsert({ user_id: userId, exercise_id: exerciseId, ...write }, { onConflict: "user_id,exercise_id" });
   if (error) logError("calibracion_estado", error);
   return result;
 }
@@ -276,13 +283,13 @@ export async function marcarMolestia(input: unknown): Promise<MolestiaResult> {
     .eq("user_id", userId)
     .eq("exercise_id", v.exerciseId);
   if (!(own ?? []).some((s) => s.status === "detenida")) {
-    const setIndex = Math.max(0, ...(own ?? []).map((s) => s.set_index)) + 1;
     const { error } = await supabase.from("set_logs").insert({
       id: crypto.randomUUID(),
       user_id: userId,
       session_id: v.sessionId,
       exercise_id: v.exerciseId,
-      set_index: Math.min(setIndex, 20),
+      // Índice fijo fuera del rango de series (1–20): nunca choca con una serie real.
+      set_index: DETENIDA_INDEX,
       weight_kg: 0,
       reps: 0,
       rir: null,
@@ -375,10 +382,18 @@ export async function terminarSesion(input: unknown): Promise<Fail<"no_valido" |
   const scope = await loadSessionScope(supabase, userId, sessionId);
   if (!scope) return { ok: false, error: "no_valido" };
   if (scope.session.open) {
-    const [{ data: sets }, { data: states }] = await Promise.all([
+    const [{ data: sets }, { data: states }, { data: marks }] = await Promise.all([
       supabase.from("set_logs").select("exercise_id, set_index, weight_kg, status").eq("session_id", sessionId).eq("user_id", userId),
       supabase.from("exercise_state").select("exercise_id, working_weight_kg, calibrated_at").eq("user_id", userId),
+      supabase.from("discomfort_marks").select("exercise_id").eq("session_id", sessionId).eq("user_id", userId),
     ]);
+    // Una sesión sin ninguna serie no cuenta como hecha: se borra y no hace avanzar el día del plan.
+    if ((sets ?? []).length === 0) {
+      const { error } = await createAdminClient().from("workout_sessions").delete().eq("id", sessionId).eq("user_id", userId).is("ended_at", null);
+      if (error) logError("borrar_sesion_vacia", error);
+      redirect("/hoy");
+    }
+    const stopped = new Set((marks ?? []).map((m) => m.exercise_id));
     const started = new Date(scope.session.startedAt);
     for (const state of states ?? []) {
       if (!state.calibrated_at || new Date(state.calibrated_at) >= started) continue;
@@ -387,9 +402,10 @@ export async function terminarSesion(input: unknown): Promise<Fail<"no_valido" |
         .map((s) => ({ setIndex: s.set_index, weightKg: Number(s.weight_kg), status: s.status as LoggedSet["status"] }));
       if (own.length === 0) continue;
       const current = state.working_weight_kg === null ? null : Number(state.working_weight_kg);
-      const next = workingWeightAfter(current, own, false);
+      const next = workingWeightAfter(current, own, stopped.has(state.exercise_id));
       if (next !== current) {
-        const { error } = await supabase
+        // La carga la escribe solo el servidor (revisión de código: el usuario ya no puede escribir exercise_state).
+        const { error } = await createAdminClient()
           .from("exercise_state")
           .update({ working_weight_kg: next })
           .eq("user_id", userId)

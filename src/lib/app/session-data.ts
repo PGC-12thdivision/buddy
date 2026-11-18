@@ -61,23 +61,30 @@ export async function loadSessionData(supabase: Client, userId: string, sessionI
   const scope = await loadSessionScope(supabase, userId, sessionId);
   if (!scope) return null;
 
-  const [planSession, equipment, states, answers, history, marks, settings, finished] = await Promise.all([
+  // Historial solo de los ejercicios posibles hoy, los más recientes primero y por debajo del máximo
+  // de filas de la API (1000). Las series de esta sesión van aparte: nunca se pierden (revisión de código).
+  const dayExerciseIds = [...new Set(scope.day.flatMap((d) => [d.exerciseId, ...d.alternatives]))];
+  const columns = "id, session_id, exercise_id, set_index, weight_kg, reps, rir, status, created_at";
+  const [planSession, equipment, states, answers, history, today, marks, settings, finished] = await Promise.all([
     supabase.from("plan_sessions").select("label").eq("id", scope.session.planSessionId).maybeSingle(),
     supabase.from("equipment_types").select("id, name, increment_kg, min_kg"),
     supabase.from("exercise_state").select("exercise_id, working_weight_kg, increment_kg_override, calibrated_at").eq("user_id", userId),
     supabase.from("onboarding_answers").select("experience").eq("user_id", userId).maybeSingle(),
     supabase
       .from("set_logs")
-      .select("id, session_id, exercise_id, set_index, weight_kg, reps, rir, status, created_at")
+      .select(columns)
       .eq("user_id", userId)
-      .order("created_at")
-      .limit(3000),
+      .neq("session_id", sessionId)
+      .in("exercise_id", dayExerciseIds.length ? dayExerciseIds : ["-"])
+      .order("created_at", { ascending: false })
+      .limit(900),
+    supabase.from("set_logs").select(columns).eq("user_id", userId).eq("session_id", sessionId).order("set_index"),
     supabase.from("discomfort_marks").select("exercise_id, session_id").eq("user_id", userId),
     supabase.from("user_settings").select("show_rest_timer").eq("user_id", userId).maybeSingle(),
     // Sesiones cerradas anteriores, en orden: son el historial de la doble progresión.
     supabase.from("workout_sessions").select("id").eq("user_id", userId).not("ended_at", "is", null).neq("id", sessionId).order("started_at"),
   ]);
-  if (!planSession.data || equipment.error || states.error || history.error) return null;
+  if (!planSession.data || equipment.error || states.error || history.error || today.error) return null;
 
   const sessionOrder = (finished.data ?? []).map((s) => s.id);
   const equipmentById = new Map(
@@ -85,7 +92,7 @@ export async function loadSessionData(supabase: Client, userId: string, sessionI
   );
   const stateById = new Map((states.data ?? []).map((s) => [s.exercise_id, s]));
   const experience = (answers.data?.experience ?? "6_meses_2_anos") as Experience;
-  const rows = history.data ?? [];
+  const rows = [...(history.data ?? []).reverse(), ...(today.data ?? [])];
   const allSets: (LoggedSet & { id: string })[] = rows.map((s) => ({
     id: s.id,
     sessionId: s.session_id,
@@ -146,10 +153,16 @@ export async function loadSessionData(supabase: Client, userId: string, sessionI
       .filter((v): v is ExerciseView => v !== null);
     const exercise = byId.get(item.exerciseId);
     const main = exercise && scope.allowed.has(item.exerciseId) ? view(exercise, item.rule) : null;
+    // Si hoy ya se cambió el ejercicio por una alternativa con series, se retoma esa (revisión de código).
+    const swapped = alternatives.find((a) => allSets.some((s) => s.sessionId === sessionId && s.exerciseId === a.exerciseId));
     // Si el ejercicio del plan ya no encaja con las limitaciones, se ofrece su primera alternativa.
-    const shown = main ?? alternatives[0];
+    const shown = swapped ?? main ?? alternatives[0];
     if (!shown) continue;
-    slots.push({ ...shown, position: item.rule.position, alternatives: alternatives.filter((a) => a.exerciseId !== shown.exerciseId) });
+    slots.push({
+      ...shown,
+      position: item.rule.position,
+      alternatives: [...(main && main !== shown ? [main] : []), ...alternatives.filter((a) => a.exerciseId !== shown.exerciseId)],
+    });
   }
 
   return {

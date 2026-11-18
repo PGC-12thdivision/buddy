@@ -10,7 +10,13 @@ export default async function ProgresoPage() {
   const { supabase, userId, plan } = await requireAppContext();
   const [{ data: sessions }, { data: rows }, { data: states }, { data: exercises }] = await Promise.all([
     supabase.from("workout_sessions").select("id").eq("user_id", userId).not("ended_at", "is", null).order("started_at"),
-    supabase.from("set_logs").select("session_id, exercise_id, set_index, weight_kg, reps, rir, status, created_at").eq("user_id", userId).limit(3000),
+    // Lo más reciente, por debajo del máximo de filas de la API (1000).
+    supabase
+      .from("set_logs")
+      .select("session_id, exercise_id, set_index, weight_kg, reps, rir, status, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(900),
     supabase.from("exercise_state").select("exercise_id, working_weight_kg").eq("user_id", userId).not("working_weight_kg", "is", null),
     supabase.from("exercises").select("id, name"),
   ]);
@@ -62,7 +68,7 @@ export default async function ProgresoPage() {
   return (
     <AppScreen
       kicker={`${order.length} ${order.length === 1 ? "sesión hecha" : "sesiones hechas"}`}
-      title={hero ? `${best.name}: +${formatKg(best.gain)} kg` : "Progreso"}
+      title={hero ? best.name : "Progreso"}
       subtitle={hero ? `De ${formatKg(best.first)} a ${formatKg(best.now)} kg desde tu calibración.` : "Las subidas llegan cuando completas el rango dos sesiones seguidas."}
       heroes={[hero ? { label: "Mayor subida", value: `+${formatKg(best.gain)}`, unit: "kg" } : { label: "Sesiones", value: String(order.length) }]}
     >
