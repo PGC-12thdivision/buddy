@@ -339,6 +339,41 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     expect(save.error).not.toBeNull();
   });
 
+  // U9 (KTD8, KTD16): necesita la migración aplicar_evento_stripe en staging.
+  it("apply_stripe_event: solo el servidor; evento y estado juntos; duplicados y clientes ajenos sin efecto", async () => {
+    const created = await admin.auth.admin.createUser({ email: `rls-stripe-${Date.now()}@buddy.test`, password, email_confirm: true });
+    const userF = created.data.user!.id;
+    const customer = `cus_test_${randomUUID()}`;
+    const event = `evt_test_${randomUUID()}`;
+    const args = (overrides: Record<string, string | null> = {}) => ({
+      p_event_id: event, p_customer_id: customer, p_subscription_id: `sub_test_${randomUUID()}`, p_status: "active", ...overrides,
+    });
+    const status = async () =>
+      (await admin.from("account_status").select("subscription_status").eq("user_id", userF).single()).data?.subscription_status;
+    const stored = async (id: string) =>
+      (await admin.from("stripe_events").select("event_id", { count: "exact", head: true }).eq("event_id", id)).count;
+    try {
+      expect((await clientA.rpc("apply_stripe_event", args())).error).not.toBeNull();
+      must(await admin.from("account_status").update({ stripe_customer_id: customer }).eq("user_id", userF), "cliente");
+
+      expect((await admin.rpc("apply_stripe_event", args({ p_customer_id: `cus_ajeno_${randomUUID()}` }))).data).toBe("cliente_desconocido");
+      expect(await stored(event)).toBe(0);
+
+      // Un estado que la tabla no admite falla dentro de la transacción: no queda el evento.
+      expect((await admin.rpc("apply_stripe_event", args({ p_status: "no_valido" }))).error).not.toBeNull();
+      expect(await stored(event)).toBe(0);
+      expect(await status()).toBe("none");
+
+      expect((await admin.rpc("apply_stripe_event", args())).data).toBe("aplicado");
+      expect(await status()).toBe("active");
+      expect((await admin.rpc("apply_stripe_event", args({ p_status: "canceled" }))).data).toBe("duplicado");
+      expect(await status()).toBe("active");
+    } finally {
+      await admin.from("stripe_events").delete().eq("event_id", event);
+      await admin.auth.admin.deleteUser(userF);
+    }
+  });
+
   it("borrar la cuenta deja cero filas del usuario", async () => {
     const stamp = Date.now();
     const created = await admin.auth.admin.createUser({ email: `rls-c-${stamp}@buddy.test`, password, email_confirm: true });
