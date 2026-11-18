@@ -27,7 +27,7 @@ export function AppScreen({
         {children}
       </main>
       {footer ? (
-        <div className="wz-foot wz-pad bottom-14 lg:bottom-0">
+        <div className="wz-foot wz-pad bottom-[calc(3.5rem+env(safe-area-inset-bottom))] lg:bottom-0">
           {/* En escritorio el CTA conserva su forma de botón de recreativa (auditoría 18/11). */}
           <div className="flex w-full flex-col gap-2.5 lg:max-w-[420px]">{footer}</div>
         </div>

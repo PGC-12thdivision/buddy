@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Atkinson_Hyperlegible_Next, Silkscreen } from "next/font/google";
 import "./globals.css";
 
@@ -24,6 +24,9 @@ const pixel = Silkscreen({
   subsets: ["latin", "latin-ext"],
   preload: false,
 });
+
+// viewport-fit=cover para que env(safe-area-inset-bottom) funcione en la barra inferior y el pie.
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export const metadata: Metadata = {
   title: "BUDDY",

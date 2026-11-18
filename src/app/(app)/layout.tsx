@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         : "Plan gratis";
 
   return (
-    <div className="min-h-dvh bg-background pb-14 lg:pb-0 lg:pl-60">
+    <div className="min-h-dvh bg-background pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-60">
       <AppNav subscription={subscription} />
       <div className="mx-auto flex min-h-dvh max-w-[640px] flex-col [container-type:inline-size] lg:max-w-[1100px]">{children}</div>
     </div>

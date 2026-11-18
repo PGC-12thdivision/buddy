@@ -1,23 +1,26 @@
 import type { Route } from "next";
 import Link from "next/link";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, KeyboardEvent, ReactNode } from "react";
+import { radioKeyMove } from "@/lib/a11y/radio";
 
 // Grupo de radio accesible: las flechas mueven la selección y el foco (WAI-ARIA radiogroup; auditoría 18/11).
 // Solo la opción elegida (o la primera si no hay ninguna) entra en el orden de tabulación.
 function radioKeys<T>(values: readonly T[], value: T | undefined, onChange: (value: T) => void) {
   return (event: KeyboardEvent<HTMLDivElement>) => {
-    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
-    if (!step) return;
+    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    const focused = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const move = radioKeyMove(values.length, value === undefined ? -1 : values.indexOf(value), focused, event.key);
+    if (!move) return;
     event.preventDefault();
-    const current = value === undefined ? -1 : values.indexOf(value);
-    const next = (current + step + values.length) % values.length;
-    onChange(values[next]);
-    const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]');
-    buttons[next]?.focus();
+    buttons[move.index]?.focus();
+    if (move.select) onChange(values[move.index]);
   };
 }
-const tabIndexFor = <T,>(values: readonly T[], value: T | undefined, option: T) =>
-  value === option || (value === undefined && values[0] === option) ? 0 : -1;
+// Entra en el orden de tabulación la opción elegida o, si no hay ninguna válida, la primera.
+const tabIndexFor = <T,>(values: readonly T[], value: T | undefined, option: T) => {
+  const chosen = value !== undefined && values.includes(value);
+  return chosen ? (value === option ? 0 : -1) : values[0] === option ? 0 : -1;
+};
 
 // Componentes del wizard (DESIGN.md §6, sistema §11.12). Estilos en globals.css (.wz-*).
 
