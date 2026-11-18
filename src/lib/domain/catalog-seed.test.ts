@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { lightWarningFor } from "@/lib/app/session-data";
-import { loadSeedCatalog, updatedIds } from "@/test/seed-catalog";
+import { equipmentTexts, exerciseTexts, loadSeedCatalog, updatedIds } from "@/test/seed-catalog";
 import {
   availableExercises,
   isExcludedByLimitations,
@@ -71,11 +71,25 @@ describe("catálogo ampliado: cordura", () => {
     }
   });
 
+  it("textos legibles: cada ejercicio y nada más, técnica de 2 o 3 frases, sin separadores raros", () => {
+    expect([...exerciseTexts().keys()].sort()).toEqual(after.map((e) => e.id).sort());
+    const names = after.map((e) => e.name);
+    expect(new Set(names).size).toBe(names.length);
+    for (const e of after) {
+      const sentences = e.technique!.split(/[.?!](?:\s|$)/).filter((s) => s.trim());
+      expect(sentences.length, e.id).toBeGreaterThanOrEqual(2);
+      expect(sentences.length, e.id).toBeLessThanOrEqual(3);
+      for (const text of [e.name, e.technique!, e.lightNote ?? ""])
+        expect(text, e.id).not.toMatch(/[·\u{1F300}-\u{1FAFF}]|[Ee]scápula|[Nn]eutr[oa]|\bRIR\b|[Bb]isagra|[Ll]astre/u);
+    }
+    for (const id of equipmentTexts().keys()) expect(equipmentIds, id).toContain(id);
+  });
+
   it("hay nota de contribución leve solo si hay joints_light, y dice que se pare si duele", () => {
     for (const e of after) {
       expect(e.lightNote !== null, e.id).toBe(e.jointsLight.length > 0);
       if (e.lightNote)
-        expect(e.lightNote, e.id).toMatch(/para y márcalo como molestia/);
+        expect(e.lightNote, e.id).toMatch(/Si notas dolor, para y márcalo como molestia\.$/);
     }
   });
 

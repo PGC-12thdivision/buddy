@@ -243,8 +243,8 @@ describe("retirarConsentimiento", () => {
     const withdraw = writes("update")[0];
     expect(withdraw.table).toBe("user:consents");
     expect(withdraw.args[0]).toHaveProperty("withdrawn_at");
-    expect(writes("delete").map((c) => c.table).sort()).toEqual(["admin:discomfort_marks", "admin:health_profile"]);
-    for (const table of ["admin:health_profile", "admin:discomfort_marks"]) {
+    expect(writes("delete").map((c) => c.table).sort()).toEqual(["admin:checkins", "admin:discomfort_marks", "admin:health_profile"]);
+    for (const table of ["admin:health_profile", "admin:discomfort_marks", "admin:checkins"]) {
       expect(calls.find((c) => c.table === table && c.op === "eq")?.args).toEqual(["user_id", "u1"]);
     }
   });
@@ -256,7 +256,7 @@ describe("retirarConsentimiento", () => {
     results["discomfort_marks:delete"] = { data: null, error: null };
     calls = [];
     expect((await retirarConsentimiento()).ok).toBe(true);
-    expect(writes("delete")).toHaveLength(2);
+    expect(writes("delete")).toHaveLength(3);
   });
 
   it("si el borrado falla, el consentimiento no se retira: se puede reintentar desde Ajustes", async () => {
