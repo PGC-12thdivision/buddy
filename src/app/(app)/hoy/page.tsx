@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppScreen, Disclaimer, Heroes, Tag, WeekStrip } from "@/components/app/screen";
 import { StartButton } from "@/components/session/start-button";
 import { Note } from "@/components/wizard/ui";
@@ -74,7 +75,21 @@ export default async function HoyPage() {
           <Heroes heroes={heroes} tone="paper" className="hidden lg:flex" />
           <WeekStrip days={plan.daysPerWeek} done={thisWeek ?? 0} />
           {premium && trialDaysLeft !== null && trialDaysLeft <= 2 && trialDaysLeft > 0 ? (
-            <Note tone="warn" role="status">{`Te quedan ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"} de premium.`}</Note>
+            <Note tone="warn" role="status">
+              {`Te quedan ${trialDaysLeft} ${trialDaysLeft === 1 ? "día" : "días"} de premium. `}
+              <Link href="/premium" className="font-bold underline underline-offset-2">
+                Ver qué incluye
+              </Link>
+            </Note>
+          ) : null}
+          {/* Prueba terminada sin pago (sistema §7): la decisión de pago está en "¿CONTINUAR?". */}
+          {!premium ? (
+            <Note>
+              {"Tu prueba premium ha terminado. "}
+              <Link href="/premium" className="font-bold underline underline-offset-2">
+                Ver qué incluye
+              </Link>
+            </Note>
           ) : null}
           {calibration ? <div className="hidden lg:block">{calibrationNote}</div> : null}
         </aside>
