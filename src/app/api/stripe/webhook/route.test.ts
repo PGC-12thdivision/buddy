@@ -60,6 +60,9 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from: (table: string) => select(table), rpc }),
 }));
 
+const sendPurchaseConfirmation = vi.fn<(userId: string, ref: string) => Promise<{ status: string }>>(async () => ({ status: "sent" }));
+vi.mock("@/lib/email/transactional", () => ({ sendPurchaseConfirmation: (u: string, r: string) => sendPurchaseConfirmation(u, r) }));
+
 const { POST } = await import("./route");
 
 function event(id: string, type: string, object: Record<string, unknown>, created = 1_800_000_000) {
@@ -101,6 +104,16 @@ describe("POST /api/stripe/webhook", () => {
     const payload = event("evt_cs", "checkout.session.completed", { object: "checkout.session", customer: "cus_A", subscription: "sub_1" });
     expect((await POST(signedRequest(payload))).status).toBe(200);
     expect(accounts[0].subscription_status).toBe("active");
+    // U10: confirmación de compra, una vez y con la suscripción como referencia.
+    expect(sendPurchaseConfirmation).toHaveBeenCalledWith(expect.any(String), "sub_1");
+  });
+
+  it("una actualización de suscripción no envía email de compra", async () => {
+    sendPurchaseConfirmation.mockClear();
+    list.mockResolvedValue({ data: [sub("sub_1", "active", 100)] });
+    const payload = event("evt_up", "customer.subscription.updated", sub("sub_1", "active", 100));
+    expect((await POST(signedRequest(payload))).status).toBe(200);
+    expect(sendPurchaseConfirmation).not.toHaveBeenCalled();
   });
 
   it("con firma inválida devuelve 400 y no cambia nada", async () => {

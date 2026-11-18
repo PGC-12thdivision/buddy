@@ -1,4 +1,6 @@
 import type Stripe from "stripe";
+import { sendPurchaseConfirmation } from "@/lib/email/transactional";
+import { isPayingStatus } from "@/lib/domain/premium";
 import { currentSubscription } from "@/lib/domain/subscription";
 import { logError } from "@/lib/log";
 import { getStripe, webhookSecret } from "@/lib/stripe";
@@ -75,13 +77,18 @@ export async function POST(request: Request) {
     const list = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 20 });
     const current = currentSubscription(list.data);
 
-    const { error } = await admin.rpc("apply_stripe_event", {
+    const { data: applied, error } = await admin.rpc("apply_stripe_event", {
       p_event_id: event.id,
       p_customer_id: customerId,
       p_subscription_id: current.subscriptionId,
       p_status: current.status,
     });
     if (error) throw error;
+    // Email de confirmación de compra (U10): solo al completar el pago y con estado de pago. Nunca
+    // lanza; email_log evita repetirlo si Stripe reintenta el evento.
+    if (applied === "aplicado" && event.type === "checkout.session.completed" && isPayingStatus(current.status)) {
+      await sendPurchaseConfirmation(account.data.user_id, current.subscriptionId ?? event.id);
+    }
     return reply(200);
   } catch (error) {
     logError("stripe_webhook", error);
