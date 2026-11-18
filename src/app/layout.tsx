@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Atkinson_Hyperlegible_Next, Press_Start_2P } from "next/font/google";
+import { Archivo, Atkinson_Hyperlegible_Next, Silkscreen } from "next/font/google";
 import "./globals.css";
 
 // Tipografía de DESIGN.md §3.
@@ -16,9 +16,11 @@ const body = Atkinson_Hyperlegible_Next({
   adjustFontFallback: false,
 });
 
-const pixel = Press_Start_2P({
+// Silkscreen en lugar de Press Start 2P (D58): Press Start dibuja Í, Ó, Á, É, Ú y Ñ a altura de
+// minúscula ("SESIóN", "DíAS"); Silkscreen mantiene el bloque arcade con las tildes bien.
+const pixel = Silkscreen({
   variable: "--font-pixel",
-  weight: "400",
+  weight: ["400", "700"],
   subsets: ["latin", "latin-ext"],
   preload: false,
 });

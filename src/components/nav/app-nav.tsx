@@ -30,7 +30,7 @@ export function AppNav({ subscription }: { subscription: string }) {
     <>
       <nav
         aria-label="Secciones"
-        className="fixed inset-x-0 bottom-0 z-20 grid h-14 grid-cols-4 border-t-2 border-foreground bg-background lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 grid min-h-14 grid-cols-4 border-t-2 border-foreground bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         {SECTIONS.map((s) => (
           <Link
@@ -46,7 +46,7 @@ export function AppNav({ subscription }: { subscription: string }) {
         ))}
       </nav>
 
-      <nav aria-label="Secciones" className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col bg-accent px-4 py-6 text-accent-foreground lg:flex">
+      <nav aria-label="Secciones" className="on-band fixed inset-y-0 left-0 z-20 hidden w-60 flex-col bg-accent px-4 py-6 text-accent-foreground lg:flex">
         <span
           className="mb-8 font-display text-[40px] font-black uppercase italic leading-none text-primary [font-stretch:125%]"
           style={{ textShadow: "3px 3px 0 #ff5fa2" }}

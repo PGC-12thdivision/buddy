@@ -105,6 +105,11 @@
     outline: 3px solid var(--ring);
     outline-offset: 2px;
   }
+  /* Sobre el morado (marcador, menú lateral) el anillo morado no se ve: limón (auditoría 18/11). */
+  .wz-band :focus-visible,
+  .on-band :focus-visible {
+    outline-color: var(--primary);
+  }
   ::selection {
     background: #ffe03a;
     color: #1a0f24;
@@ -226,6 +231,10 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
+  .wz-tag[data-premium] {
+    background: #b38cff;
+    color: #120a1c;
+  }
   .wz-stripes {
     height: 8px;
     flex: none;
@@ -258,9 +267,10 @@
     flex: none;
     flex-direction: column;
     gap: 10px;
-    padding-top: 12px;
-    padding-bottom: 18px;
-    background: var(--background);
+    padding-top: 20px;
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+    /* Fundido de 16 px: se ve que el contenido sigue por debajo (auditoría 18/11). */
+    background: linear-gradient(to bottom, transparent, var(--background) 16px);
   }
 
   .wz-cta {
@@ -291,10 +301,17 @@
     box-shadow: 0 0 0 var(--secondary);
   }
   .wz-cta:disabled {
+    border-style: dashed;
     border-color: var(--muted-foreground);
-    background: var(--card);
+    background: transparent;
     color: var(--muted-foreground);
     box-shadow: none;
+    cursor: not-allowed;
+  }
+  .wz-btn2:disabled {
+    border-style: dashed;
+    border-color: var(--muted-foreground);
+    color: var(--muted-foreground);
     cursor: not-allowed;
   }
   .wz-btn2 {
@@ -339,10 +356,11 @@
     padding: 12px 14px;
     border: 2px solid var(--border);
     border-radius: 6px;
-    background: var(--card);
+    background: transparent;
     color: var(--foreground);
     text-align: left;
     cursor: pointer;
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
   }
   .wz-card b {
     display: block;
@@ -383,7 +401,25 @@
     color: var(--secondary-foreground);
   }
   .wz-chip[aria-pressed="true"]::before {
-    content: "✓ " / "";
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 5px;
+    margin: 0 8px 3px 0;
+    border-bottom: 2.5px solid currentColor;
+    border-left: 2.5px solid currentColor;
+    transform: rotate(-45deg);
+  }
+  @media (hover: hover) {
+    .wz-card:hover:not([aria-checked="true"]),
+    .wz-chip:hover:not([aria-pressed="true"]),
+    .wz-seg button:hover:not([aria-checked="true"]) {
+      box-shadow: 3px 3px 0 var(--secondary);
+    }
+  }
+  .wz-card:active,
+  .wz-chip:active {
+    transform: translate(2px, 2px);
   }
 
   /* Segmentado (Sí/No, días, minutos) */
@@ -411,19 +447,20 @@
   .wz-note {
     display: flex;
     gap: 10px;
-    padding: 12px 14px;
-    border: 2px solid var(--secondary);
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 10px 0;
+    border: 0;
+    border-block: 2px solid var(--secondary);
+    border-radius: 0;
+    font-size: 15px;
   }
   .wz-note[data-tone="warn"] {
-    border-color: var(--warn);
+    border-block-color: var(--warn);
   }
   .wz-note[data-tone="danger"] {
-    border-color: var(--destructive);
+    border-block-color: var(--destructive);
   }
   .wz-note[data-tone="ok"] {
-    border-color: var(--ok);
+    border-block-color: var(--ok);
   }
   .wz-note-icon {
     flex: none;
@@ -462,6 +499,32 @@
     color: var(--muted-foreground);
   }
 
+  .wz-check {
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    width: 24px;
+    height: 24px;
+    flex: none;
+    border: 2px solid var(--foreground);
+    border-radius: 2px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .wz-check:checked {
+    border-color: var(--secondary);
+    background: var(--secondary);
+  }
+  .wz-check:checked::before {
+    content: "";
+    width: 11px;
+    height: 6px;
+    margin-bottom: 3px;
+    border-bottom: 2.5px solid var(--secondary-foreground);
+    border-left: 2.5px solid var(--secondary-foreground);
+    transform: rotate(-45deg);
+  }
+
   .wz-icon {
     width: 24px;
     height: 24px;
@@ -492,6 +555,15 @@
     justify-content: space-between;
     gap: 12px;
     border-bottom: 1px solid var(--muted-foreground);
+  }
+  .wz-rule-row > :first-child {
+    min-width: 0;
+  }
+  .wz-rule-value {
+    flex: none;
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
 
   /* Vacío con marca de agua */

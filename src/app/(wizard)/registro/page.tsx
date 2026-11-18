@@ -34,6 +34,9 @@ export default function Registro() {
     setPending(false);
     if (!result.ok) {
       setErrors(result.errors);
+      const first = (["email", "password", "adult"] as const).find((field) => result.errors[field]);
+      // Tras pintar los errores, el foco va al primer campo que falla.
+      window.setTimeout(() => (first ? document.getElementById(first === "adult" ? "adult" : first)?.focus() : undefined), 0);
       return;
     }
     clearEvents();
@@ -100,8 +103,9 @@ export default function Registro() {
         <div className="flex flex-col gap-1.5">
           <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] font-bold">
             <input
+              id="adult"
               type="checkbox"
-              className="size-6 accent-[var(--secondary)]"
+              className="wz-check"
               checked={adult}
               onChange={(e) => setAdult(e.target.checked)}
               aria-invalid={errors.adult ? true : undefined}

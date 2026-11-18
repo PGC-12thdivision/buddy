@@ -26,14 +26,19 @@ export function AppScreen({
       <main className="wz-pad flex flex-1 flex-col gap-4 py-4" aria-label={title}>
         {children}
       </main>
-      {footer ? <div className="wz-foot wz-pad bottom-14 lg:bottom-0">{footer}</div> : null}
+      {footer ? (
+        <div className="wz-foot wz-pad bottom-14 lg:bottom-0">
+          {/* En escritorio el CTA conserva su forma de botón de recreativa (auditoría 18/11). */}
+          <div className="flex w-full flex-col gap-2.5 lg:max-w-[420px]">{footer}</div>
+        </div>
+      ) : null}
     </>
   );
 }
 
 export function Tag({ children, premium }: { children: ReactNode; premium?: boolean }) {
   return (
-    <span className="wz-tag" style={premium ? { background: "#b38cff", color: "#120a1c" } : undefined}>
+    <span className="wz-tag" data-premium={premium ? "" : undefined}>
       {children}
     </span>
   );
@@ -41,7 +46,7 @@ export function Tag({ children, premium }: { children: ReactNode; premium?: bool
 
 export function Disclaimer() {
   return (
-    <p className="m-0 text-xs text-muted-foreground">
+    <p className="m-0 text-[13px] text-muted-foreground">
       BUDDY no es consejo médico ni sustituye a un entrenador certificado. Si algo duele, para.
     </p>
   );

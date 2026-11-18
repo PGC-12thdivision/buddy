@@ -71,7 +71,7 @@ export default async function Resumen() {
                 <dt className="text-[13px] text-muted-foreground">{row.label}</dt>
                 <dd className="m-0 text-base font-bold">{row.value ?? "Sin responder"}</dd>
               </div>
-              <Link href={row.href} className="wz-link" aria-label={`Cambiar ${row.label.toLowerCase()}`}>
+              <Link href={row.href} className="wz-link" aria-label={`${row.value === null ? "Responder" : "Cambiar"} ${row.label.toLowerCase()}`}>
                 {row.value === null ? "Responder" : "Cambiar"}
               </Link>
             </div>

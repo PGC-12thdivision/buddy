@@ -13,7 +13,7 @@ export default async function AjustesPage() {
         </h2>
         <div className="wz-rule-row">
           <span>Suscripción</span>
-          <span className="font-bold">
+          <span className="wz-rule-value font-bold">
             {premium && trialDaysLeft !== null ? `Prueba premium, ${trialDaysLeft} días` : premium ? "Premium" : "Gratis"}
           </span>
         </div>

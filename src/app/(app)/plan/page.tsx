@@ -38,8 +38,9 @@ function SlotRow({ slot }: { slot: ActiveSlot }) {
   return (
     <li className="wz-rule-row">
       <span className="font-bold">{slot.exerciseName}</span>
-      <span className="text-right text-[14px] text-muted-foreground" data-numeric>
-        {`${slot.sets} series de ${slot.repMin} a ${slot.repMax} reps`}
+      <span className="wz-rule-value flex flex-col text-[14px] leading-tight text-muted-foreground">
+        <span className="font-bold text-foreground">{`${slot.sets} series`}</span>
+        <span>{`${slot.repMin} a ${slot.repMax} reps`}</span>
       </span>
     </li>
   );
