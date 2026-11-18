@@ -30,3 +30,22 @@ Trabajo aplazado con su contexto, para retomarlo tras la entrega del bootcamp (c
 - **Contexto:** el MVP de la demo los acepta como riesgo. Por dónde empezar: el documento oficial PAR-Q+ 2023 y sus condiciones de uso.
 - **Esfuerzo:** humano M / CC S. **Depende de:** decisión de lanzar.
 - **Decisión:** CEO-D17.
+
+## Aplazado en la U7 (18/11/2026)
+
+### Retirar el consentimiento debe borrar `discomfort_marks` y `health_profile` (bloqueante para producción)
+- **Qué:** la acción de retirar el consentimiento (U11) tiene que borrar las marcas de Molestia y el perfil de salud. La fila neutra "detenida" de `set_logs` se queda: no es dato de salud y evita subir carga sobre un ejercicio parado (D65).
+- **Por qué:** guardarraíl 8. Hoy no existe el flujo de retirar el consentimiento.
+
+### Hoja "Editar serie" al tocar un segmento (diseño D8)
+- **Qué:** en la U7 se puede deshacer una serie, pero no editarla tocando su segmento. La acción `editarSerie` ya existe; falta la hoja.
+- **Por qué se aplaza:** la revisión de producto la puso la primera en la lista de recortes; Deshacer cubre la demo.
+
+### Fin de sesión: el peso clave de la próxima sesión (diseño D7, punto 5)
+- **Qué:** hoy se muestran el día y el número de ejercicios; falta "Prensa a 50 kg".
+
+### Variedad al rellenar huecos
+- **Qué:** las tres sesiones del plan de prueba empiezan por "Gemelo en máquina" (auditoría P3.6). Conviene ordenar los huecos para que un compuesto vaya antes que un aislamiento.
+
+### Aviso de seguridad de Next.js
+- **Qué:** al arrancar `npm run dev`, Next 16.4.3 avisa de una vulnerabilidad conocida y recomienda actualizar. No se ha tocado la versión: revisarlo y actualizar en una rama propia, con build y tests.
