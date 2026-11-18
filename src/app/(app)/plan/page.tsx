@@ -1,0 +1,108 @@
+import type { Route } from "next";
+import Link from "next/link";
+import { AppScreen, Disclaimer, Tag } from "@/components/app/screen";
+import { CtaLink, Note } from "@/components/wizard/ui";
+import { FOCUS_TEXT, planTitle, requireAppContext } from "@/lib/app/context";
+import type { ActiveSlot } from "@/lib/app/active-plan";
+
+// Pestaña Plan (diseño D4, D17, D28, D30; plan.md U6). Consulta del plan activo; la variante
+// "recién generado" (antes de la primera sesión) es la única con CTA: empezar la calibración.
+
+const REGION_TEXT: Record<string, string> = {
+  empuje_inferior: "pierna (empuje)",
+  traccion_inferior: "pierna (tracción)",
+  empuje_superior_horizontal: "pecho",
+  traccion_superior_horizontal: "espalda (remo)",
+  empuje_superior_vertical: "hombro",
+  traccion_superior_vertical: "espalda (jalón)",
+};
+
+function SlotRow({ slot }: { slot: ActiveSlot }) {
+  if (!slot.exerciseId) {
+    const why =
+      slot.gapReason === "sin_alternativa_limitacion"
+        ? `Ningún ejercicio de ${REGION_TEXT[slot.region] ?? "este hueco"} encaja con tus limitaciones y tu equipo.`
+        : `Tu gimnasio no tiene equipo para ${REGION_TEXT[slot.region] ?? "este hueco"}.`;
+    return (
+      <li className="wz-rule-row flex-col items-start justify-center py-2 text-warn">
+        <span className="font-bold">
+          <span aria-hidden="true">! </span>Hueco vacío
+        </span>
+        <span className="text-[14px] text-foreground">{why}</span>
+        <Link href="/ajustes" className="wz-link min-h-0 text-[14px]">
+          Revisar Mi gimnasio
+        </Link>
+      </li>
+    );
+  }
+  return (
+    <li className="wz-rule-row">
+      <span className="font-bold">{slot.exerciseName}</span>
+      <span className="text-right text-[14px] text-muted-foreground" data-numeric>
+        {`${slot.sets} series de ${slot.repMin} a ${slot.repMax} reps`}
+      </span>
+    </li>
+  );
+}
+
+export default async function PlanPage() {
+  const { plan, trialDaysLeft, completedSessions } = await requireAppContext();
+  const fresh = completedSessions === 0;
+  const minutes = await minutesPerSession();
+
+  return (
+    <AppScreen
+      title={planTitle(plan.daysPerWeek, plan.template)}
+      subtitle={`${minutes ? `${minutes} minutos por sesión. ` : ""}${FOCUS_TEXT[plan.focus] ?? ""}.`}
+      tags={fresh ? <Tag>Plan listo</Tag> : plan.source === "refiltrado" ? <Tag>Plan actualizado</Tag> : null}
+      footer={fresh ? <CtaLink href={"/sesion" as Route}>Empezar calibración</CtaLink> : undefined}
+    >
+      <Disclaimer />
+      {fresh ? (
+        <div className="-rotate-1 rounded-md border-[3px] border-foreground bg-primary p-3 text-primary-foreground shadow-[4px_4px_0_var(--secondary)]">
+          <span className="wz-tag bg-foreground text-background">Primera sesión</span>
+          <p className="m-0 mt-2">
+            <b>Es de calibración.</b> No adivinamos tu peso: lo encontramos serie a serie.
+          </p>
+          {trialDaysLeft !== null && trialDaysLeft > 0 ? (
+            <p className="m-0 mt-2 text-[14px]">Tienes 14 días de premium gratis: tu coach semanal te espera al acabar tu primera semana.</p>
+          ) : null}
+        </div>
+      ) : null}
+      {plan.sessions.some((s) => s.slots.some((slot) => !slot.exerciseId)) ? (
+        <Note tone="warn" role="status">
+          Algún hueco se ha quedado sin ejercicio. Nunca te proponemos uno que cargue una zona limitada.
+        </Note>
+      ) : null}
+
+      <div className={`grid gap-6 ${plan.sessions.length > 3 ? "lg:grid-cols-3" : "lg:grid-cols-[repeat(auto-fit,minmax(0,1fr))]"}`}>
+        {plan.sessions.map((session) => (
+          <section key={session.dayIndex} aria-labelledby={`dia-${session.dayIndex}`}>
+            <h2 id={`dia-${session.dayIndex}`} className="wz-rule-title">
+              {`Día ${session.dayIndex + 1}`} <small className="font-sans text-[13px] font-normal not-italic normal-case text-muted-foreground">{session.label}</small>
+            </h2>
+            <ul className="m-0 list-none p-0">
+              {session.slots.map((slot) => (
+                <SlotRow key={slot.position} slot={slot} />
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+
+      {plan.focus === "grasa" ? (
+        <Note>
+          Al final de cada sesión, opcional: 10 a 20 minutos de cardio suave si tu gimnasio tiene cinta, bici o elíptica. La dieta es la palanca
+          principal para perder grasa.
+        </Note>
+      ) : null}
+      <p className="wz-help">Cada grupo muscular principal trabaja al menos 2 veces por semana, siempre que tu equipo y tus limitaciones lo permitan.</p>
+    </AppScreen>
+  );
+}
+
+async function minutesPerSession(): Promise<number | null> {
+  const { supabase, userId } = await requireAppContext();
+  const { data } = await supabase.from("onboarding_answers").select("minutes_per_session").eq("user_id", userId).maybeSingle();
+  return data?.minutes_per_session ?? null;
+}
