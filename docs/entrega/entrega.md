@@ -35,7 +35,7 @@ Acceso a los servicios (no hay credenciales en este documento ni en el repo):
 - **Correos:** sin dominio propio, la confirmación de Supabase solo llega a los miembros del equipo del proyecto y Resend solo envía a la dirección de Pablo (D7, D34).
 
 Estado comprobado el 21/11/2026:
-- `main` está en `MAIN_HASH` y la URL de producción responde 200.
+- `main` incluye la PR #35 (exclusiones visibles, 21/11) y la URL de producción responde 200.
 - Las 12 migraciones de `supabase/migrations/` están aplicadas en staging y en prod (`pfxyjotwlwvegqyzrrwl`).
 - En prod ya ha funcionado todo de punta a punta con la cuenta de Pablo (20/11): un plan generado con IA (`ai_calls`: 1 llamada `ok`), el pago con la tarjeta 4242 (suscripción `active` por el webhook) y los correos de bienvenida y de compra (`email_log`: 2 `sent`). Comprobado con consultas de solo lectura y recuentos, sin datos personales.
 
@@ -168,7 +168,7 @@ flowchart TB
 | RLS (integración contra staging) | Aislamiento entre usuarios, tablas de solo servidor y funciones `SECURITY DEFINER` no ejecutables | `npm run test:rls` |
 | Evaluación de la IA | 10 perfiles fijos con Sonnet y Haiku: los dos 10/10 válidos; 0,010 $ frente a 0,001 $ por plan (D57) | `npm run eval:plan`, informe en `docs/eval-plan.md` |
 | E2E (Playwright, contra staging) | Ciclo completo con 9 perfiles: wizard, plan con IA real, calibración, sesión normal, Molestia, Plan, Progreso, Ajustes y retirar el consentimiento; check-in del coach | `node scripts/e2e/ciclo.mjs scripts/e2e/perfiles/p01-hombro-3d.json`, `scripts/e2e/checkin.mjs`. `alta.mjs` (alta real por la UI), `reanudar.mjs` (sesión a medias) y `memoria.mjs` (progresión entre días) y `borrar-cuenta.mjs` (cancela la suscripción), `cancelar-premium.mjs` (baja programada) y `exclusiones.mjs` (plan reparado, «Ver qué hemos quitado» y cambios uno a uno) pasaron en verde el 20 y el 21/11; `alta.mjs` solo se para en el envío del email de confirmación, por el SMTP integrado de Supabase |
-| Vídeo de la demo | Recorrido completo grabado contra staging el 20/11 (4:37, webm 390×844, sin errores en pantalla ni en la consola): wizard, registro, consentimiento, cribado, plan con IA real, calibración, Molestia, fin de sesión, Progreso, Premium y Ajustes | `node scripts/demo/grabar.mjs`, con subtítulos en `docs/entrega/demo.srt` |
+| Vídeo de la demo | Recorrido completo grabado contra staging el 21/11 (4:34, webm 390×844, sin errores en pantalla ni en la consola): wizard, registro, consentimiento, cribado, plan con IA real, «Ver qué hemos quitado», calibración, Molestia, fin de sesión, Progreso, Premium y Ajustes | `node scripts/demo/grabar.mjs`, con subtítulos en `docs/entrega/demo.srt` |
 
 ## 9. Proceso de construcción con IA
 
@@ -251,7 +251,7 @@ Fuente: `docs/01-contexto-y-criterios.md` §2.
 
 | Criterio | Estado | Evidencia |
 |---|---|---|
-| App desplegada | ✅ | https://buddy-xi-eight.vercel.app (responde 200 el 21/11), `main` en `MAIN_HASH` |
+| App desplegada | ✅ | https://buddy-xi-eight.vercel.app (responde 200 el 21/11), `main` con la PR #35 (21/11) |
 | Con backend real | ✅ | Supabase de prod con las 12 migraciones aplicadas; Server Actions y route handlers en `src/app` |
 | Al menos una integración de punta a punta | ✅ tres, en prod (20/11): Anthropic (wizard → `/api/plan` → plan guardado), Stripe (Checkout → webhook → premium) y Resend (bienvenida y compra) | Sección 2 (estado comprobado), `scripts/demo/grabar.mjs`, `scripts/e2e/ciclo.mjs` |
 | PRD con GStack | ✅ | `docs/02-prd-v1.md` (v1.1), `docs/04-revision-ceo-prd-v1.md` |
