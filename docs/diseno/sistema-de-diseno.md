@@ -2,6 +2,8 @@
 
 > Versión del 12/11/2026, con las decisiones D38–D42 (`docs/01`). Pendiente de `/plan-design-review`. Prototipo navegable: `docs/diseno/prototipo.html` (se abre en el navegador; el menú de la izquierda lleva a cada pantalla y estado).
 
+> **Actualización del 18/11/2026 (auditoría de diseño):** manda `DESIGN.md`. La elevación 2026 es la dirección B, "Revista de Venice" (D59): cifra de portada, filas numeradas y tira de la semana. La letra pixelada es Silkscreen (D58), la pestaña activa es la celda limón (D60) y las reglas de la sesión están en D63–D67 (`docs/01`). Maquetas en `docs/diseno/auditoria-2026-11-18/maquetas-decisiones.html`. El prototipo conserva la dirección anterior; solo se ha cambiado su fuente pixelada.
+
 ## 1. Dirección
 **"Venice 89 × arcade":** la cultura de gimnasio de Los Ángeles de los 80 y 90 (púrpura y oro) y los videojuegos retro, aplicados a un producto moderno y amable. El color es solo inspiración: ningún nombre, escudo ni marca de terceros.
 
@@ -56,7 +58,7 @@ Escala (px): 12 · 13 · 14 · 15 (cuerpo) · 17 · 20 · 24 · 28 (título de p
 - Bordes de 2 px en tinta y sombra dura de 4–5 px en morado, sin desenfoque: es el "botón de recreativa".
 
 ## 4 bis. Fluido y revisión anti "app genérica" (12/11)
-- Nada de anchos fijos: el teléfono del prototipo es un contenedor (`container-type: inline-size`) y títulos, números y márgenes se miden con `clamp()` contra su ancho. Comprobado a 320, 375 y 430 px con el selector de ancho del prototipo. Por debajo de 340 px, la botonera de la sesión pasa a 2 × 2.
+- Nada de anchos fijos: el teléfono del prototipo es un contenedor (`container-type: inline-size`) y títulos, números y márgenes se miden con `clamp()` contra su ancho. Comprobado a 320, 375 y 430 px con el selector de ancho del prototipo. (La botonera de la sesión tiene 3 botones desde D23 y cabe en una fila a 320 px; D66.)
 - Fuera las cajas con cabecera sombreada y las tarjetas rellenas: listas y secciones usan reglas de imprenta (título en Archivo cursiva con filete de 3 px y líneas finas entre filas). Las únicas cajas con relleno son los datos de la sesión (peso y repeticiones).
 - Un elemento destacado por pantalla como máximo: la pegatina limón girada (plan) o el banner "NIVEL ARRIBA" (sesión).
 - Los cambios del coach van numerados con cifras grandes, no con barra lateral de color.
@@ -78,11 +80,11 @@ Escala (px): 12 · 13 · 14 · 15 (cuerpo) · 17 · 20 · 24 · 28 (título de p
 | Aviso | `info` / `ok` / `warn` / `danger`, con icono |
 | Hoja inferior | Molestia, Sustituir |
 | Etiqueta pixelada | Estado o contexto (`PLAN LISTO`, `PREMIUM`, `CALIBRACIÓN`) |
-| Pop arcade | Celebración de 1,1 s en Press Start 2P; no bloquea el siguiente toque. Textos: "SERIE 2 HECHA / A POR LA 3" y "EJERCICIO HECHO / AL SIGUIENTE" |
+| Pop arcade | Celebración de 1,1 s (0,6 s la de serie, D18) en Silkscreen (D58); no bloquea el siguiente toque. Textos: "SERIE 2 HECHA / A POR LA 3" y "EJERCICIO HECHO / AL SIGUIENTE" |
 | Botonera de la sesión | 4 botones con icono y texto en dos líneas: **Cambiar ejercicio** (abre alternativas), **Hacer al final** (lo pasa al final, con Deshacer), **Saltar hoy** ("No cuenta para tu progreso y no te penaliza", con Deshacer) y **Tengo molestia** (magenta, abre la hoja de parada) |
 | Subida de carga | Cuando la doble progresión sube peso: banner "NIVEL ARRIBA **+2,5 KG**" con el porqué ("Hoy subes de 42,5 a 45 kg…") y "subes 2,5" en la línea de la unidad, bajo el peso |
 | Descanso | "Llevas 1:42 de descanso": cuenta hacia arriba, sin alarma (PRD §9) |
-| Aviso breve (toast) | Confirma una acción inmediata con Deshacer, durante 4 s |
+| Aviso breve (toast) | Confirma una acción inmediata con Deshacer, durante 5 s (D8), en el pie encima de los botones (D66) |
 | Vacío con marca de agua | Título + explicación + una acción |
 
 ## 6. Movimiento

@@ -6,6 +6,7 @@ import { refilterForUser } from "@/lib/app/refilter-core";
 import { activityCatalog, equipmentCatalog } from "@/lib/catalog";
 import { evaluateScreening, SCREENING_QUESTIONS } from "@/lib/domain/screening";
 import { JOINTS } from "@/lib/domain/types";
+import { scheduleWelcome } from "@/lib/email/transactional";
 import { logError } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -163,6 +164,9 @@ export async function entrar(input: unknown): Promise<{ ok: true; next: ReturnTy
     if (error?.code?.startsWith("over_")) return { ok: false, error: "limite" };
     return { ok: false, error: "credenciales" };
   }
+  // Solo entra quien tiene el email confirmado. Cubre el enlace abierto en otro navegador, donde
+  // /auth/confirm no abre sesión; si la bienvenida ya salió, email_log impide repetirla (U10).
+  scheduleWelcome(data.user.id);
   return { ok: true, next: nextScreenForAccount(await accountProgress(supabase, data.user.id)) };
 }
 

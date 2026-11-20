@@ -45,6 +45,7 @@ Tu única tarea es elegir, para cada hueco, un ejercicio del catálogo cuya "reg
 Reglas:
 - Usa solo IDs del catálogo recibido. No repitas un ejercicio dentro de la misma sesión.
 - Mantén exactamente el número de sesiones y de huecos, en el mismo orden.
+- Los huecos de región "brazo" o "core" son complementos al final de la sesión: elige ahí aislamiento de brazo o ejercicios de core de esa región.
 - Prefiere máquinas y ejercicios fáciles de aprender; varía los ejercicios entre sesiones cuando el catálogo lo permita.
 - Si hay deportes, evita cargar en exceso los mismos grupos que ese deporte ya trabaja.
 - Cada grupo principal (pecho, espalda, hombros, cuadriceps, isquiotibiales, gluteos) debe aparecer en al menos 2 sesiones de la semana: usa el campo "grupos" de cada ejercicio.

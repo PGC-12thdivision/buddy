@@ -198,6 +198,64 @@ describe.skipIf(!enabled)("RLS en staging", () => {
     expect(data!.every((row) => row.reps === 10)).toBe(true);
   });
 
+  it("U7: una sola sesión abierta; A solo cierra la suya, sin cambiar tipo ni inicio, y no la reabre", async () => {
+    await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("user_id", userA).is("ended_at", null);
+    const first = randomUUID();
+    must(await clientA.from("workout_sessions").insert({ id: first, kind: "normal" }), "primera sesión de A");
+    const second = await clientA.from("workout_sessions").insert({ id: randomUUID(), kind: "normal" });
+    expect(second.error?.code).toBe("23505");
+
+    const kind = await clientA.from("workout_sessions").update({ kind: "calibracion" }).eq("id", first);
+    expect(kind.error).not.toBeNull();
+    const started = await clientA.from("workout_sessions").update({ started_at: "2020-01-01T00:00:00Z" }).eq("id", first);
+    expect(started.error).not.toBeNull();
+    must(await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", first), "cerrar");
+    const row = await admin.from("workout_sessions").select("kind, ended_at").eq("id", first).single();
+    expect(row.data?.kind).toBe("normal");
+    expect(row.data?.ended_at).not.toBeNull();
+
+    const reopen = await clientA.from("workout_sessions").update({ ended_at: null }).eq("id", first);
+    expect(reopen.error).not.toBeNull();
+  });
+
+  it("U7: A no puede escribir su carga de trabajo ni cambiar el estado de una serie", async () => {
+    const write = await clientA.from("exercise_state").insert({ exercise_id: exerciseId, working_weight_kg: 500 });
+    expect(write.error).not.toBeNull();
+    const session = randomUUID();
+    must(await clientA.from("workout_sessions").insert({ id: session, kind: "normal" }), "sesión de A");
+    const id = randomUUID();
+    must(
+      await clientA.from("set_logs").insert({ id, session_id: session, exercise_id: exerciseId, set_index: 100, weight_kg: 0, reps: 0, status: "detenida" }),
+      "detenida",
+    );
+    const flip = await clientA.from("set_logs").update({ status: "hecha" }).eq("id", id);
+    expect(flip.error).not.toBeNull();
+    await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", session);
+  });
+
+  it("U7: dos series con distinto ID y el mismo número en la misma sesión no duplican", async () => {
+    const set = { session_id: sessionB, exercise_id: exerciseId, set_index: 7, weight_kg: 40, reps: 10, status: "hecha" };
+    must(await clientB.from("set_logs").insert({ id: randomUUID(), ...set }), "primera");
+    const again = await clientB.from("set_logs").insert({ id: randomUUID(), ...set });
+    expect(again.error?.code).toBe("23505");
+  });
+
+  it("U7: A puede guardar una fila neutra 'detenida' y corregir el RIR de su serie", async () => {
+    const session = randomUUID();
+    must(await clientA.from("workout_sessions").insert({ id: session, kind: "calibracion" }), "sesión de A");
+    const id = randomUUID();
+    must(
+      await clientA.from("set_logs").insert({ id, session_id: session, exercise_id: exerciseId, set_index: 1, weight_kg: 20, reps: 10, rir: 4, status: "hecha" }),
+      "serie de calibración",
+    );
+    must(await clientA.from("set_logs").update({ rir: 2 }).eq("id", id), "corregir RIR");
+    must(
+      await clientA.from("set_logs").insert({ id: randomUUID(), session_id: session, exercise_id: exerciseId, set_index: 2, weight_kg: 0, reps: 0, status: "detenida" }),
+      "detenida",
+    );
+    await clientA.from("workout_sessions").update({ ended_at: new Date().toISOString() }).eq("id", session);
+  });
+
   it("un usuario con sesión lee el catálogo y un anónimo no", async () => {
     const withSession = await clientA.from("exercises").select("id").limit(1);
     expect(withSession.error).toBeNull();
@@ -279,6 +337,41 @@ describe.skipIf(!enabled)("RLS en staging", () => {
       p_user: userA, p_plan: {}, p_ai_call: null, p_input_tokens: 0, p_output_tokens: 0, p_cost_usd: 0,
     });
     expect(save.error).not.toBeNull();
+  });
+
+  // U9 (KTD8, KTD16): necesita la migración aplicar_evento_stripe en staging.
+  it("apply_stripe_event: solo el servidor; evento y estado juntos; duplicados y clientes ajenos sin efecto", async () => {
+    const created = await admin.auth.admin.createUser({ email: `rls-stripe-${Date.now()}@buddy.test`, password, email_confirm: true });
+    const userF = created.data.user!.id;
+    const customer = `cus_test_${randomUUID()}`;
+    const event = `evt_test_${randomUUID()}`;
+    const args = (overrides: Record<string, string | null> = {}) => ({
+      p_event_id: event, p_customer_id: customer, p_subscription_id: `sub_test_${randomUUID()}`, p_status: "active", ...overrides,
+    });
+    const status = async () =>
+      (await admin.from("account_status").select("subscription_status").eq("user_id", userF).single()).data?.subscription_status;
+    const stored = async (id: string) =>
+      (await admin.from("stripe_events").select("event_id", { count: "exact", head: true }).eq("event_id", id)).count;
+    try {
+      expect((await clientA.rpc("apply_stripe_event", args())).error).not.toBeNull();
+      must(await admin.from("account_status").update({ stripe_customer_id: customer }).eq("user_id", userF), "cliente");
+
+      expect((await admin.rpc("apply_stripe_event", args({ p_customer_id: `cus_ajeno_${randomUUID()}` }))).data).toBe("cliente_desconocido");
+      expect(await stored(event)).toBe(0);
+
+      // Un estado que la tabla no admite falla dentro de la transacción: no queda el evento.
+      expect((await admin.rpc("apply_stripe_event", args({ p_status: "no_valido" }))).error).not.toBeNull();
+      expect(await stored(event)).toBe(0);
+      expect(await status()).toBe("none");
+
+      expect((await admin.rpc("apply_stripe_event", args())).data).toBe("aplicado");
+      expect(await status()).toBe("active");
+      expect((await admin.rpc("apply_stripe_event", args({ p_status: "canceled" }))).data).toBe("duplicado");
+      expect(await status()).toBe("active");
+    } finally {
+      await admin.from("stripe_events").delete().eq("event_id", event);
+      await admin.auth.admin.deleteUser(userF);
+    }
   });
 
   it("borrar la cuenta deja cero filas del usuario", async () => {

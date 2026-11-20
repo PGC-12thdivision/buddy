@@ -60,12 +60,13 @@ export const BASIC_PRESET_EQUIPMENT = [
   "press_hombro_maquina",
   "mancuernas",
   "banco",
+  "esterilla",
   "cinta",
   "bici_estatica",
   "eliptica",
 ] as const;
 
-export const FREE_WEIGHT_PRESET_EQUIPMENT = ["mancuernas", "barra", "banco", "rack", "kettlebells"] as const;
+export const FREE_WEIGHT_PRESET_EQUIPMENT = ["mancuernas", "barra", "barra_z", "banco", "rack", "kettlebells", "esterilla"] as const;
 
 export function presetEquipment(preset: GymPreset, catalogIds: readonly string[]): string[] {
   if (preset === "completo") return [...catalogIds];

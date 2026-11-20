@@ -153,6 +153,19 @@
     background: var(--background);
     color: var(--foreground);
   }
+  /* En pantallas grandes, la columna se enmarca como un mueble de recreativa (auditoría 18/11, P2.2). */
+  @media (min-width: 1024px) and (min-height: 800px) {
+    .wz-frame {
+      padding-block: 32px;
+    }
+    .wz-column {
+      min-height: calc(100dvh - 64px);
+      overflow: clip;
+      border: 3px solid var(--foreground);
+      border-radius: 6px;
+      box-shadow: 8px 8px 0 var(--secondary);
+    }
+  }
   .wz-pad {
     padding-inline: clamp(14px, 5cqi, 22px);
   }
@@ -580,5 +593,738 @@
     line-height: 1;
     color: var(--secondary);
     opacity: 0.06;
+  }
+
+  /* ---------------------------------------------------------------------------
+     Dirección B, "Revista de Venice" (D59; DESIGN.md §4): portada con cifra, filas numeradas y
+     tira de la semana.
+     --------------------------------------------------------------------------- */
+  .wz-band[data-cover] {
+    padding-bottom: 18px;
+  }
+  .wz-kicker {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+  .wz-heroes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 6px clamp(32px, 10cqi, 56px);
+    margin-top: 12px;
+  }
+  .wz-hero-label {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--band-muted);
+  }
+  .wz-hero-num {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(56px, 18cqi, 96px);
+    font-weight: 900;
+    font-style: italic;
+    font-stretch: 125%;
+    line-height: 0.9;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .wz-hero-num small {
+    margin-left: 4px;
+    font-size: 0.3em;
+    color: var(--accent-foreground);
+  }
+  /* Cifras sobre papel (columna lateral de Hoy en escritorio): morado, nunca limón sobre crema (§2). */
+  .wz-heroes[data-tone="paper"] {
+    margin-top: 0;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--foreground);
+  }
+  .wz-heroes[data-tone="paper"] .wz-hero-label {
+    color: var(--muted-foreground);
+  }
+  .wz-heroes[data-tone="paper"] .wz-hero-num {
+    font-size: 96px;
+    color: var(--secondary);
+  }
+  .wz-heroes[data-tone="paper"] .wz-hero-num small {
+    color: var(--foreground);
+  }
+  .wz-week {
+    display: grid;
+    grid-template-columns: repeat(var(--days, 7), minmax(0, 52px));
+    gap: 6px;
+  }
+  .wz-week-day {
+    display: flex;
+    aspect-ratio: 1;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--foreground);
+    border-radius: 2px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .wz-week-day[data-state="done"] {
+    border-color: var(--ok);
+    background: var(--ok);
+    color: #fff;
+  }
+  .wz-week-day[data-state="next"] {
+    border-width: 3px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: 3px 3px 0 var(--secondary);
+  }
+  .wz-week-day[data-state="todo"] {
+    background: var(--foreground);
+    color: var(--background);
+  }
+  .wz-num-row {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    min-height: 52px;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--muted-foreground);
+  }
+  .wz-num {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 900;
+    font-style: italic;
+    font-stretch: 125%;
+    color: var(--secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  .wz-num-val {
+    text-align: right;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+  .wz-num-val b {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .wz-num-val span {
+    font-size: 13px;
+    color: var(--muted-foreground);
+  }
+
+  /* ---------------------------------------------------------------------------
+     Sesión del día y calibración (plan.md U7; diseño D8, D12, D16, D18, D22, D23).
+     --------------------------------------------------------------------------- */
+  .ss-band {
+    padding-top: 2px;
+    padding-bottom: 10px;
+  }
+  .ss-band-row {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--band-muted);
+  }
+  /* Título de hasta 2 líneas: el nombre del ejercicio se lee entero (revisión de capturas, D22). */
+  .ss-band .wz-title {
+    display: -webkit-box;
+    margin: 6px 0 0;
+    overflow: hidden;
+    font-size: clamp(18px, 6cqi, 26px);
+    line-height: 1.05;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  /* A 320 px la etiqueta se recorta antes de chocar con "Tengo molestia" (auditoría de la dirección B). */
+  .ss-band-row .wz-tag {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wz-tag[data-calib] {
+    background: #2ed3c1;
+    color: #1a0f24;
+  }
+  /* "Tengo molestia" en el marcador: magenta claro sobre morado, 4,9:1 (diseño D23). */
+  .ss-ouch {
+    display: inline-flex;
+    min-height: 44px;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border: 2px solid #ff5fa2;
+    border-radius: 4px;
+    background: transparent;
+    color: #ff5fa2;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .ss-ouch .wz-icon {
+    width: 20px;
+    height: 20px;
+  }
+  .ss-xp {
+    display: grid;
+    gap: 2px;
+    height: 10px;
+    padding: 1px;
+    border: 2px solid var(--primary);
+    border-radius: 3px;
+  }
+  .ss-xp i {
+    background: rgb(255 255 255 / 0.15);
+  }
+  .ss-xp i[data-on] {
+    background: var(--primary);
+  }
+  .ss-sets {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .ss-guide {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.35;
+  }
+  .ss-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .ss-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 6px 10px;
+    border-radius: 6px;
+    background: var(--card);
+  }
+  .ss-stat-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .ss-stat-num {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 15cqi, 60px);
+    font-weight: 900;
+    font-style: italic;
+    font-stretch: 125%;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ss-stat-unit {
+    font-size: 13px;
+    color: var(--muted-foreground);
+  }
+  .ss-stat-unit b {
+    color: var(--ok);
+  }
+  .ss-pm {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .ss-pm button,
+  .ss-rir button {
+    min-height: 48px;
+    border: 2px solid var(--foreground);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 900;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .ss-pm button:active:not(:disabled),
+  .ss-rir button:active:not(:disabled) {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .ss-pm button:disabled,
+  .ss-rir button:disabled {
+    border-style: dashed;
+    color: var(--muted-foreground);
+    cursor: not-allowed;
+  }
+  .ss-rir {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: clamp(5px, 2cqi, 8px);
+  }
+  .ss-rir button {
+    min-height: 60px;
+    border-width: 3px;
+    font-stretch: 125%;
+  }
+  .ss-rest {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 15px;
+    color: var(--muted-foreground);
+  }
+  .ss-rest b {
+    font-family: var(--font-display);
+    font-size: 17px;
+    color: var(--foreground);
+    font-variant-numeric: tabular-nums;
+  }
+  .ss-dock {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .ss-dock button {
+    display: flex;
+    min-height: 48px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px;
+    border: 2px solid var(--secondary);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--secondary);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.1;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .ss-dock button:disabled {
+    border-style: dashed;
+    border-color: var(--muted-foreground);
+    color: var(--muted-foreground);
+    cursor: not-allowed;
+  }
+  .ss-dock .wz-icon {
+    width: 20px;
+    height: 20px;
+  }
+  /* Banner "NIVEL ARRIBA": el único destacado de la pantalla, solo en la primera serie (D22). */
+  .ss-levelup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    border: 3px solid var(--foreground);
+    border-radius: 4px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: 4px 4px 0 var(--secondary);
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .ss-levelup-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 900;
+    font-style: italic;
+    font-stretch: 125%;
+  }
+  .ss-levelup .wz-tag {
+    background: var(--accent);
+    color: var(--primary);
+  }
+  /* Pop arcade: 0,6 s en el centro, sin bloquear toques (diseño D18). Decorativo. */
+  .ss-pop {
+    position: fixed;
+    top: 42%;
+    left: 50%;
+    z-index: 40;
+    padding: 14px 18px;
+    border: 3px solid var(--primary);
+    border-radius: 2px;
+    background: var(--secondary);
+    color: #fff;
+    font-family: var(--font-pixel);
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    animation: ss-pop 0.6s steps(4) forwards;
+  }
+  .ss-pop b {
+    display: block;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--primary);
+  }
+  .ss-pop[data-long] {
+    animation-duration: 1.1s;
+    animation-timing-function: steps(6);
+  }
+  @keyframes ss-pop {
+    0% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0.4);
+    }
+    25%,
+    80% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  /* Aviso breve con Deshacer, encima del pie (diseño D8). */
+  .ss-toast {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 6px 6px 14px;
+    border-radius: 4px;
+    background: var(--foreground);
+    color: var(--background);
+    font-size: 15px;
+  }
+  .ss-toast button {
+    min-height: 44px;
+    padding: 0 10px;
+    border: 0;
+    background: none;
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  /* Hoja inferior (diseño D16; DESIGN.md §8). */
+  .ss-sheet-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgb(18 10 28 / 0.55);
+  }
+  .ss-sheet {
+    display: flex;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90dvh;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding: 18px clamp(14px, 5vw, 22px) max(18px, env(safe-area-inset-bottom));
+    border-top: 3px solid var(--foreground);
+    border-radius: 6px 6px 0 0;
+    background: var(--background);
+    color: var(--foreground);
+  }
+  .ss-sheet h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .ss-sheet p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--muted-foreground);
+  }
+  .ss-alt {
+    display: flex;
+    min-height: 56px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 1px solid var(--muted-foreground);
+    background: none;
+    color: var(--foreground);
+    font-size: 16px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ss-alt small {
+    display: block;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+  .wz-cta.ss-cta-sober {
+    background: var(--card);
+    box-shadow: none;
+  }
+  /* Dibujo de técnica (feedback de Pablo, 18/11): ilustración de Everkinetic adaptada. Solo el trazo,
+     como máscara pintada con la tinta del tema; fotograma 1 en papel, fotograma 2 en celda limón y
+     flecha morada entre los dos. */
+  .ss-drawing {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+  }
+  .ss-drawing-frames {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+    align-items: center;
+  }
+  .ss-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: clamp(112px, 32vw, 176px);
+    padding: 22px 6px 6px;
+    border: 2px solid var(--foreground);
+    border-radius: 6px;
+    background: var(--card);
+  }
+  .ss-frame[data-end] {
+    background: var(--primary);
+  }
+  .ss-frame-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 1px 6px;
+    border-right: 2px solid var(--foreground);
+    border-bottom: 2px solid var(--foreground);
+    border-bottom-right-radius: 4px;
+    background: var(--foreground);
+    color: var(--background);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .ss-frame-art {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    background: var(--foreground);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+  }
+  .ss-frame[data-end] .ss-frame-art {
+    background: var(--primary-foreground);
+  }
+  .ss-drawing-arrow svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: var(--secondary);
+    stroke-width: 3;
+  }
+  .ss-drawing figcaption {
+    font-size: 11px;
+    color: var(--muted-foreground);
+  }
+  .ss-drawing figcaption a {
+    color: inherit;
+  }
+  .ss-thumb {
+    display: flex;
+    width: 56px;
+    height: 48px;
+    flex: none;
+    padding: 3px;
+    border: 2px solid var(--foreground);
+    border-radius: 4px;
+    background: var(--primary);
+  }
+  .ss-thumb .ss-frame-art {
+    background: var(--primary-foreground);
+  }
+  .ss-howto {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ss-sheet .ss-howto .ss-guide {
+    color: var(--foreground);
+  }
+  /* Acceso compacto a la técnica en la serie: dibujo pequeño, texto recortado y flecha (fila de lista). */
+  .ss-howto-row {
+    display: flex;
+    min-height: 48px;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+    border: 0;
+    border-block: 1px solid var(--muted-foreground);
+    background: none;
+    color: var(--foreground);
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ss-howto-row > .ss-howto-text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+  .ss-howto-row b {
+    color: var(--secondary);
+    font-weight: 800;
+    text-decoration: underline;
+  }
+  .ss-howto-row small {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.3;
+    color: var(--muted-foreground);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  /* Versión mínima, en la fila "Serie 2 de 3": sin filetes ni texto, para no quitar alto (D22). */
+  .ss-howto-row[data-compact] {
+    width: auto;
+    min-height: 44px;
+    flex: none;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    font-size: 14px;
+  }
+  .ss-howto-row[data-compact] .ss-thumb {
+    width: 44px;
+    height: 38px;
+  }
+  /* Plan del ejercicio en la pantalla de paso: la carga en cifra y lo que toca. */
+  .ss-plan {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.35;
+  }
+  .ss-plan-kg {
+    flex: none;
+    font-family: var(--font-display);
+    font-size: 44px;
+    font-weight: 900;
+    font-style: italic;
+    font-stretch: 125%;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .ss-plan-kg small {
+    margin-left: 2px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+  /* Series del ejercicio: hechas (turquesa, se tocan para corregir), la de ahora (limón) y pendientes. */
+  .ss-setgrid {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ss-setcell {
+    display: flex;
+    min-height: 48px;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    padding: 4px 6px;
+    border: 2px solid var(--foreground);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--foreground);
+    font-size: 13px;
+    line-height: 1.2;
+    text-align: left;
+  }
+  .ss-setcell b {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 900;
+    font-style: italic;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ss-setcell-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .ss-setcell-top .wz-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--ok);
+  }
+  .ss-setcell[data-state="hecha"] {
+    border-color: var(--ok);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .ss-setcell[data-state="ahora"] {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .ss-setcell[data-state="pendiente"] {
+    border-style: dashed;
+    border-color: var(--muted-foreground);
+    color: var(--muted-foreground);
+  }
+  .ss-rir button[aria-pressed="true"] {
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 }
