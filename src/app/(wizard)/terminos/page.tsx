@@ -8,6 +8,10 @@ export const metadata: Metadata = { title: "Términos y aviso médico · BUDDY" 
 // también "en los términos"). Página pública: se enlaza desde la bienvenida, el registro y Ajustes.
 const UPDATED = "20 de noviembre de 2026";
 
+// Datos de ejemplo para la demo (decisión de Pablo, 20/11): se sustituyen por los reales antes de abrir
+// BUDDY a usuarios (TODOS.md, bloqueantes legales).
+const RESPONSIBLE = { name: "John Doe", email: "john.doe@example.com" };
+
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-2">
@@ -63,7 +67,7 @@ export default function Terminos() {
             <li>El plan, el registro de sesiones y la carga sugerida de cada día son gratis.</li>
             <li>Las funciones con IA (como el coach que explica tu semana) son premium. Al crear la cuenta tienes 14 días de prueba sin tarjeta.</li>
             <li>Los pagos se gestionan con Stripe. <b>Mientras BUDDY sea una demostración, Stripe funciona en modo de prueba y no se cobra dinero real.</b></li>
-            <li>Puedes cancelar la suscripción en cualquier momento desde Ajustes → Gestionar.</li>
+            <li>Puedes cancelar la suscripción en cualquier momento desde Ajustes → Gestionar. Sigues con premium hasta el final del periodo ya pagado, y Ajustes te dice hasta qué día.</li>
           </ul>
         </Section>
 
@@ -83,7 +87,11 @@ export default function Terminos() {
             <li>Conservamos tus datos mientras tengas cuenta. Al borrarla, se eliminan.</li>
             <li>
               Tienes derecho a acceder, rectificar, borrar y llevarte tus datos, a oponerte a su uso y a reclamar ante la
-              Agencia Española de Protección de Datos (aepd.es).
+              Agencia Española de Protección de Datos (aepd.es). Para ejercerlos, escribe a{" "}
+              <a href={`mailto:${RESPONSIBLE.email}`} className="underline">
+                {RESPONSIBLE.email}
+              </a>
+              .
             </li>
           </ul>
         </Section>
@@ -96,7 +104,19 @@ export default function Terminos() {
           </p>
         </Section>
 
-        <Section id="t-cambios" title="7. Cambios y ley aplicable">
+        <Section id="t-responsable" title="7. Responsable y contacto">
+          <p>
+            Responsable de BUDDY y del tratamiento de tus datos: <b>{RESPONSIBLE.name}</b>. Para cualquier duda,
+            solicitud o reclamación, escribe a{" "}
+            <a href={`mailto:${RESPONSIBLE.email}`} className="font-bold underline">
+              {RESPONSIBLE.email}
+            </a>
+            .
+          </p>
+          <p className="text-[13px] text-muted-foreground">Datos de ejemplo mientras BUDDY es una demostración.</p>
+        </Section>
+
+        <Section id="t-cambios" title="8. Cambios y ley aplicable">
           <p>
             Podemos actualizar estos términos. Si el cambio es importante, te avisaremos en la app. Se rigen por la ley
             española.

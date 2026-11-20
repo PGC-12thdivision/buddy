@@ -33,7 +33,9 @@ export async function requireAppContext() {
   const hasStripeCustomer = Boolean(account.data?.stripe_customer_id);
   const trialDaysLeft = !paying && trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / DAY_MS)) : null;
 
-  return { supabase, userId, plan, premium, paying, hasStripeCustomer, trialDaysLeft, completedSessions: sessions.count ?? 0 };
+  const stripeCustomerId = account.data?.stripe_customer_id ?? null;
+
+  return { supabase, userId, plan, premium, paying, hasStripeCustomer, stripeCustomerId, trialDaysLeft, completedSessions: sessions.count ?? 0 };
 }
 
 export const FOCUS_TEXT: Record<string, string> = {

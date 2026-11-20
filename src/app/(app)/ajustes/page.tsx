@@ -2,7 +2,9 @@ import type { Route } from "next";
 import Link from "next/link";
 import { AppScreen, Disclaimer } from "@/components/app/screen";
 import { TextButton, TextLink } from "@/components/wizard/ui";
+import { scheduledCancelDate } from "@/lib/app/billing";
 import { requireAppContext } from "@/lib/app/context";
+import { getStripe } from "@/lib/stripe";
 import { parseTheme } from "@/lib/theme";
 import { FOCUS_LABELS, type WizardAnswers } from "@/lib/wizard/answers";
 import { CuentaAcciones } from "./cuenta";
@@ -25,16 +27,22 @@ function RowLink({ href, label, value }: { href: Route; label: string; value: st
   );
 }
 
+// "20 dic." en hora de Madrid: la fecha en la que deja de ser premium tras cancelar.
+const formatDay = (date: Date) =>
+  new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", timeZone: "Europe/Madrid" }).format(date);
+
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export default async function AjustesPage() {
-  const { supabase, userId, premium, paying, hasStripeCustomer, trialDaysLeft } = await requireAppContext();
-  const [claims, health, gym, answers, settings] = await Promise.all([
+  const { supabase, userId, premium, paying, hasStripeCustomer, stripeCustomerId, trialDaysLeft } = await requireAppContext();
+  const [claims, health, gym, answers, settings, cancelsOn] = await Promise.all([
     supabase.auth.getClaims(),
     supabase.from("health_profile").select("limitations").eq("user_id", userId).maybeSingle(),
     supabase.from("gym_profiles").select("equipment_type_ids").eq("user_id", userId).maybeSingle(),
     supabase.from("onboarding_answers").select("focus, days_per_week").eq("user_id", userId).maybeSingle(),
     supabase.from("user_settings").select("theme, show_rest_timer").eq("user_id", userId).maybeSingle(),
+    // Solo quien paga puede tener una baja programada: al resto no se le consulta Stripe.
+    paying && stripeCustomerId ? scheduledCancelDate(getStripe(), stripeCustomerId) : Promise.resolve(null),
   ]);
   const email = typeof claims.data?.claims?.email === "string" ? claims.data.claims.email : "";
   const zones = health.data?.limitations.length ?? 0;
@@ -69,7 +77,13 @@ export default async function AjustesPage() {
           <div className="wz-rule-row">
             <span>Estado</span>
             <span className="wz-rule-value font-bold">
-              {premium && trialDaysLeft !== null ? `Prueba premium, ${trialDaysLeft} días` : premium ? "Premium" : "Gratis"}
+              {premium && trialDaysLeft !== null
+                ? `Prueba premium, ${trialDaysLeft} días`
+                : premium && cancelsOn
+                  ? `Premium hasta el ${formatDay(cancelsOn)}`
+                  : premium
+                    ? "Premium"
+                    : "Gratis"}
             </span>
           </div>
           {/* Formularios POST a las rutas de Stripe (plan.md U9): precio y cliente los pone el servidor. */}
