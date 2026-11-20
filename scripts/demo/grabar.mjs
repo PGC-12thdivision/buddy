@@ -387,10 +387,21 @@ try {
   await settle();
   scene(
     "plan",
-    "Mi plan: tres sesiones de cuerpo completo. La IA solo puede elegir ejercicios del catálogo, y su respuesta se valida con zod y con los topes de volumen en código. Ningún ejercicio carga la rodilla: la limitación se aplicó después, en código, y la IA nunca la vio. Los que solo la rozan llevan un aviso de técnica. La primera sesión es de calibración, y el aviso médico también está aquí.",
+    "Mi plan: tres sesiones de cuerpo completo. La IA solo puede elegir ejercicios del catálogo, y su respuesta se valida con zod y con los topes de volumen en código. Ningún ejercicio carga la rodilla: la limitación se aplicó después, en código, y la IA nunca la vio. La primera sesión es de calibración, y el aviso médico también está aquí.",
   );
   await snap("plan");
   await read(3);
+  // Exclusiones visibles (dictamen del 20/11): qué se ha quitado, por qué zona y qué queda en su lugar.
+  const quitado = page.locator("details[data-exclusiones] summary");
+  if (await quitado.count()) {
+    scene(
+      "plan-quitado",
+      "Y me lo explica: «Ver qué hemos quitado» dice qué ejercicios han salido, que es porque cargan la rodilla, y qué hay en su lugar. Los que solo trabajan un poco una zona que marqué llevan una etiqueta gris y un aviso de técnica en la sesión.",
+    );
+    await tap(quitado);
+    await read(5);
+    await snap("plan-quitado");
+  }
   await glide(900, 8);
   await read(2);
   await glide(900, 8);

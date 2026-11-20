@@ -13,6 +13,8 @@ Por dónde empezar:
 | [3 mejoras con Claude Code](entrega/3-mejoras-claude-code.md) | Tres mejoras (D58, D68 y D74) con problema, por qué, prompt real y resultado |
 | [Guion del Loom](entrega/guion-loom-4min.md) | Guion de 4 minutos por bloques, versión de 60 segundos y checklist antes de grabar |
 | [Opciones de voz](entrega/opciones-voz.md) | Opciones para narrar el Loom, ordenadas por recomendación |
+| [Envío de la entrega](entrega/envio.md) | Qué piden, dónde está cada cosa, el paquete y el correo a No Code Hackers |
+| [Pendiente de Pablo](entrega/pendiente-pablo-20-11.md) | Lo hecho y lo único que queda: grabar el Loom y enviar el correo |
 
 ## Uso
 
@@ -39,6 +41,8 @@ Por dónde empezar:
 | [03 · Stack, entornos y logística](03-stack-y-logistica.md) | Stack elegido, entornos y fases de trabajo |
 | [04 · Revisión CEO del PRD](04-revision-ceo-prd-v1.md) | Revisión del PRD con GStack (28/10), su razonamiento y las decisiones CEO-D1…D17 |
 | [Revisión del catálogo](catalogo-revision-2026-11-18.md) | Revisión de las etiquetas de articulaciones del catálogo de ejercicios (18/11) |
+| [Auditoría de textos del catálogo](catalogo/auditoria-textos-20-11.md) | Textos de 55 ejercicios revisados por un entrenador, un fisio y un experto en lenguaje claro (20/11) |
+| [Debate de etiquetas](catalogo/debate-etiquetas/dictamen-final.md) | Seis expertos y un moderador sobre 6 etiquetas dudosas y cómo mostrar las exclusiones; dictamen y decisiones (20/11) |
 
 ## Diseño
 

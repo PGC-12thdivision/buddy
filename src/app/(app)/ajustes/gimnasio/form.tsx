@@ -7,6 +7,7 @@ import { EquipmentPicker } from "@/components/wizard/pickers";
 import { Cta, Note, TextLink } from "@/components/wizard/ui";
 import type { EquipmentOption } from "@/lib/catalog";
 import type { GymPreset } from "@/lib/wizard/answers";
+import type { PlanChange } from "@/lib/domain/exclusion-summary";
 import { RefilterNote } from "../resultado";
 
 export function GimnasioAjustes({
@@ -22,7 +23,7 @@ export function GimnasioAjustes({
   const [preset, setPreset] = useState(initialPreset);
   const [selected, setSelected] = useState(initialSelected);
   const [pending, setPending] = useState(false);
-  const [result, setResult] = useState<{ changed: number; holes: number } | "error" | null>(null);
+  const [result, setResult] = useState<{ changed: number; holes: number; changes: PlanChange[] } | "error" | null>(null);
   const complete = preset !== undefined && selected.length > 0;
 
   async function save() {
@@ -32,7 +33,7 @@ export function GimnasioAjustes({
     const res = await guardarGimnasio({ gymPreset: preset, equipmentTypeIds: selected });
     setPending(false);
     if (res.ok) {
-      setResult({ changed: res.changed, holes: res.holes });
+      setResult({ changed: res.changed, holes: res.holes, changes: res.changes });
       router.refresh();
     } else if (res.error === "sin_sesion") router.push("/entrar");
     else setResult("error");
@@ -60,7 +61,7 @@ export function GimnasioAjustes({
           No hemos podido guardar el cambio. Inténtalo de nuevo.
         </Note>
       ) : result ? (
-        <RefilterNote changed={result.changed} holes={result.holes} />
+        <RefilterNote changed={result.changed} holes={result.holes} changes={result.changes} />
       ) : null}
       <Cta disabled={!complete || pending} onClick={save}>
         {pending ? "Guardando…" : "Guardar"}

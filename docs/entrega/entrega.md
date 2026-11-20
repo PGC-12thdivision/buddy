@@ -1,6 +1,6 @@
 # BUDDY: documento de entrega
 
-Proyecto final del bootcamp Vibe Code Builder (No Code Hackers). Entrega: viernes 20/11/2026 (D38).
+Proyecto final del bootcamp Vibe Code Builder (No Code Hackers). Entrega: viernes 20/11/2026 (D38); se envía con el Loom el 22/11/2026.
 Autor: Pablo. Construido con Claude Code.
 
 > BUDDY no es consejo médico ni sustituye a un entrenador certificado.
@@ -24,7 +24,7 @@ Una web app, pensada primero para el móvil, para quien entrena por su cuenta en
 | Producción | https://buddy-xi-eight.vercel.app |
 | Repo público | https://github.com/PGC-12thdivision/buddy |
 | Staging (preview con Vercel Authentication: solo entra Pablo) | https://buddy-git-staging-let-me-think12th-division.vercel.app |
-| Loom | ⚠️ pendiente de grabar (guion en `docs/entrega/guion-loom-4min.md`) |
+| Loom | Lo graba Pablo el 21/11 (guion en `docs/entrega/guion-loom-4min.md`); el enlace va en el correo de entrega |
 | Índice de la documentación | [`docs/README.md`](../README.md) |
 | Guía de uso (no técnica) | [`docs/guia-de-uso.md`](../guia-de-uso.md) |
 | Documentación técnica | [`docs/tecnica/README.md`](../tecnica/README.md) y [`docs/tecnica/base-de-datos.md`](../tecnica/base-de-datos.md) |
@@ -34,10 +34,10 @@ Acceso a los servicios (no hay credenciales en este documento ni en el repo):
 - **Staging** tiene Vercel Authentication: solo entra quien tenga sesión en el equipo de Vercel.
 - **Correos:** sin dominio propio, la confirmación de Supabase solo llega a los miembros del equipo del proyecto y Resend solo envía a la dirección de Pablo (D7, D34).
 
-Estado comprobado el 20/11/2026:
-- `main` está en `35eeefb`, el merge de la PR #24, staging → main, del 20/11.
-- La URL de producción responde 200.
-- Las 10 migraciones de `supabase/migrations/` están aplicadas en el proyecto de prod (`pfxyjotwlwvegqyzrrwl`), según el listado de migraciones de Supabase.
+Estado comprobado el 21/11/2026:
+- `main` incluye la PR #35 (exclusiones visibles, 21/11) y la URL de producción responde 200.
+- Las 12 migraciones de `supabase/migrations/` están aplicadas en staging y en prod (`pfxyjotwlwvegqyzrrwl`).
+- En prod ya ha funcionado todo de punta a punta con la cuenta de Pablo (20/11): un plan generado con IA (`ai_calls`: 1 llamada `ok`), el pago con la tarjeta 4242 (suscripción `active` por el webhook) y los correos de bienvenida y de compra (`email_log`: 2 `sent`). Comprobado con consultas de solo lectura y recuentos, sin datos personales.
 
 ## 3. Cómo probarlo
 
@@ -63,17 +63,17 @@ Estado comprobado el 20/11/2026:
 | Unidad | Qué incluye | Estado | Evidencia |
 |---|---|---|---|
 | U1 | Base: tema, proxy, clientes de Supabase, variables validadas | ✅ | `src/proxy.ts`, `src/lib/supabase/*`, `src/lib/env.ts` y su test |
-| U2 | Esquema, RLS y catálogo semilla (117 ejercicios tras D70) | ✅ | `supabase/migrations/*` (10), `src/lib/supabase/rls.integration.test.ts` |
+| U2 | Esquema, RLS y catálogo semilla (117 ejercicios tras D70) | ✅ | `supabase/migrations/*` (12), `src/lib/supabase/rls.integration.test.ts` |
 | U3 | Dominio puro: cribado, exclusión, plantilla, topes, calibración, progresión, es premium, límites de IA | ✅ | `src/lib/domain/*.ts` con sus `.test.ts` |
 | U4 | Wizard, registro 18+, confirmación, consentimiento, limitaciones y cribado | ✅ | `src/app/(wizard)/*`, `src/app/auth/confirm/route.ts`, `src/app/(wizard)/actions.test.ts` |
 | U5 | Plan con IA (Sonnet 5.5, D57), límites y registro de llamadas | ✅ | `src/lib/ai/plan.ts`, `src/app/api/plan/route.ts`, `docs/eval-plan.md` |
-| U6 | App: Hoy, Plan, Progreso y refiltrado | ✅ | `src/app/(app)/*`, `src/app/actions/refilter.ts` |
+| U6 | App: Hoy, Plan, Progreso y refiltrado, con exclusiones visibles (21/11): «Ver qué hemos quitado», cambios uno a uno y distintivo «Trabaja un poco» | ✅ | `src/app/(app)/*`, `src/app/actions/refilter.ts`, `src/lib/domain/exclusion-summary.ts` |
 | U7 | Calibración, sesión del día, Molestia y fin de sesión | ✅ | `src/app/(sesion)/sesion/[id]/*`, `src/components/session/*`, `src/app/actions/session.ts` |
 | U8 | Coach que explica (check-in premium) | ✅ en staging | `src/lib/ai/checkin.ts`, `src/app/api/checkin/route.ts`, `src/app/(app)/checkin/*`, `scripts/e2e/checkin.mjs` |
-| U9 | Stripe: Checkout, webhook, portal y prueba de 14 días | ✅ código y webhook de prod configurado (20/11) | `src/app/api/stripe/*`, `src/lib/domain/premium.ts`, migración `aplicar_evento_stripe` |
-| U10 | Resend: bienvenida, confirmación de compra e inactividad (cron diario) | ✅ código · ⚠️ envío real sin confirmar | `src/lib/email/*`, `src/app/api/cron/inactividad`, `vercel.json` (cron a las 8:00 UTC) |
+| U9 | Stripe: Checkout, webhook, portal y prueba de 14 días | ✅ pago de prueba en prod hecho (20/11); al cancelar, Ajustes dice «Premium hasta el …» | `src/app/api/stripe/*`, `src/lib/domain/premium.ts`, migración `aplicar_evento_stripe` |
+| U10 | Resend: bienvenida, confirmación de compra e inactividad (cron diario) | ✅ bienvenida y compra enviadas en prod (20/11). La de inactividad necesita 14 días sin entrenar: probada en staging | `src/lib/email/*`, `src/app/api/cron/inactividad`, `vercel.json` (cron a las 8:00 UTC) |
 | U11 | Ajustes: gimnasio, limitaciones, foco y días, tema, retirar consentimiento y borrar cuenta | ✅ | `src/app/(app)/ajustes/*`, `src/app/actions/account.ts` y su test |
-| U12 | Cierre: accesibilidad, paso a prod | ⚠️ en curso. Hecho: el merge a `main` y las migraciones en prod. Pendiente de confirmar: la prueba con VoiceOver o TalkBack y la de pago en prod | PR #24 |
+| U12 | Cierre: accesibilidad, paso a prod | ✅ merge a `main`, migraciones y pago en prod. ⚠️ Sin probar con VoiceOver o TalkBack (lector de pantalla real) | PRs #24–#36 |
 | U13–U20 | Tras la línea de corte: panel de admin, cola local, estancamiento, semana adaptada, actividades, gráficas completas, sesión exprés y Pregúntale a BUDDY | No construidas, por decisión de alcance (PRD §20) | `plan.md`, U13–U20 |
 
 ## 5. Arquitectura
@@ -127,7 +127,7 @@ flowchart TB
 | 3 | **La IA nunca toca cargas** | Calibración y doble progresión son funciones puras. El servidor fija la carga al guardar (migración `cargas_solo_servidor`) | `src/lib/domain/calibration.ts`, `progression.ts` y sus tests |
 | 4 | Topes de volumen en código | Un único validador: ≥2 veces por semana por grupo con algún ejercicio posible (D45), ≤20 series por grupo y semana y ≥2 series por ejercicio. Las series las calcula el código (D53) | `src/lib/domain/plan-build.ts` y su test; `src/lib/ai/checkin.test.ts` |
 | 5 | Cribado | Un "Sí" de riesgo bloquea en la misma pantalla y no se guardan las respuestas (D51). El articular exige marcar la zona | `src/lib/domain/screening.ts`, `src/app/(wizard)/actions.test.ts` |
-| 6 | Limitaciones → exclusión determinista | Etiquetas `joints` (excluye) y `joints_light` (avisa, D70). El refiltrado es gratis al cambiar limitaciones o equipo (D35), y ninguna sesión se queda vacía (D68) | `src/lib/domain/exclusion.ts`, `src/app/actions/refilter.test.ts` |
+| 6 | Limitaciones → exclusión determinista | Etiquetas `joints` (excluye) y `joints_light` (avisa, D70), revisadas por un panel de agentes expertos (`docs/catalogo/debate-etiquetas/`). El refiltrado es gratis al cambiar limitaciones o equipo (D35), y ninguna sesión se queda vacía (D68). La exclusión es visible: el plan dice qué se ha quitado y por qué zona, y un plan guardado que incumpla una limitación tras un cambio de catálogo se repara al abrir la app | `src/lib/domain/exclusion.ts`, `exclusion-summary.ts` y sus tests, `src/app/actions/refilter.test.ts`, `scripts/e2e/exclusiones.mjs` |
 | 7 | Molestia = parar | Para el ejercicio hoy. Deja una fila neutra "detenida" y no sube la carga (D65). Si se repite, recomienda un profesional y ofrece añadir la zona | `src/components/session/session-runner.tsx`, `src/app/actions/session.test.ts` |
 | 8 | RGPD | Ver la sección 7 | — |
 | 9 | Fotos nunca persistidas | La función está aplazada (D27): no se ha construido | `TODOS.md` |
@@ -164,11 +164,11 @@ flowchart TB
 
 | Tipo | Qué cubre | Cómo se ejecuta |
 |---|---|---|
-| Unitarios (Vitest) | Dominio puro, Server Actions, rutas de la API, webhook, cron, campos permitidos del prompt y log seguro. El 20/11/2026: **1038 tests en verde** en 43 archivos. Hay 23 tests omitidos: los de RLS y de evaluación, que solo se ejecutan con su modo | `npm test` |
+| Unitarios (Vitest) | Dominio puro, Server Actions, rutas de la API, webhook, cron, campos permitidos del prompt y log seguro. El 21/11/2026: **1053 tests en verde** en 44 archivos. Hay 23 tests omitidos: los de RLS y de evaluación, que solo se ejecutan con su modo | `npm test` |
 | RLS (integración contra staging) | Aislamiento entre usuarios, tablas de solo servidor y funciones `SECURITY DEFINER` no ejecutables | `npm run test:rls` |
 | Evaluación de la IA | 10 perfiles fijos con Sonnet y Haiku: los dos 10/10 válidos; 0,010 $ frente a 0,001 $ por plan (D57) | `npm run eval:plan`, informe en `docs/eval-plan.md` |
-| E2E (Playwright, contra staging) | Ciclo completo con 9 perfiles: wizard, plan con IA real, calibración, sesión normal, Molestia, Plan, Progreso, Ajustes y retirar el consentimiento; check-in del coach | `node scripts/e2e/ciclo.mjs scripts/e2e/perfiles/p01-hombro-3d.json`, `scripts/e2e/checkin.mjs`. `alta.mjs` (alta real por la UI), `reanudar.mjs` (sesión a medias) y `memoria.mjs` (progresión entre días) y `borrar-cuenta.mjs` (cancela la suscripción) están en `main` desde el PR #26 y pasaron en verde el 20/11; `alta.mjs` solo se para en el envío del email de confirmación, por el SMTP integrado de Supabase |
-| Vídeo de la demo | Recorrido completo grabado contra staging el 20/11 (4:37, webm 390×844, sin errores en pantalla ni en la consola): wizard, registro, consentimiento, cribado, plan con IA real, calibración, Molestia, fin de sesión, Progreso, Premium y Ajustes | `node scripts/demo/grabar.mjs`, con subtítulos en `docs/entrega/demo.srt` |
+| E2E (Playwright, contra staging) | Ciclo completo con 9 perfiles: wizard, plan con IA real, calibración, sesión normal, Molestia, Plan, Progreso, Ajustes y retirar el consentimiento; check-in del coach | `node scripts/e2e/ciclo.mjs scripts/e2e/perfiles/p01-hombro-3d.json`, `scripts/e2e/checkin.mjs`. `alta.mjs` (alta real por la UI), `reanudar.mjs` (sesión a medias) y `memoria.mjs` (progresión entre días) y `borrar-cuenta.mjs` (cancela la suscripción), `cancelar-premium.mjs` (baja programada) y `exclusiones.mjs` (plan reparado, «Ver qué hemos quitado» y cambios uno a uno) pasaron en verde el 20 y el 21/11; `alta.mjs` solo se para en el envío del email de confirmación, por el SMTP integrado de Supabase |
+| Vídeo de la demo | Recorrido completo grabado contra staging el 21/11 (4:34, webm 390×844, sin errores en pantalla ni en la consola): wizard, registro, consentimiento, cribado, plan con IA real, «Ver qué hemos quitado», calibración, Molestia, fin de sesión, Progreso, Premium y Ajustes | `node scripts/demo/grabar.mjs`, con subtítulos en `docs/entrega/demo.srt` |
 
 ## 9. Proceso de construcción con IA
 
@@ -251,19 +251,19 @@ Fuente: `docs/01-contexto-y-criterios.md` §2.
 
 | Criterio | Estado | Evidencia |
 |---|---|---|
-| App desplegada | ✅ | https://buddy-xi-eight.vercel.app (responde 200 el 20/11), `main` en `35eeefb` |
-| Con backend real | ✅ | Supabase de prod con las 10 migraciones aplicadas; Server Actions y route handlers en `src/app` |
-| Al menos una integración de punta a punta | ✅ en staging (Anthropic: wizard → `/api/plan` → plan guardado; grabado en el vídeo de la demo). ⚠️ En prod, pendiente de confirmar con una prueba real | `scripts/demo/grabar.mjs`, `scripts/e2e/ciclo.mjs` |
+| App desplegada | ✅ | https://buddy-xi-eight.vercel.app (responde 200 el 21/11), `main` con la PR #35 (21/11) |
+| Con backend real | ✅ | Supabase de prod con las 12 migraciones aplicadas; Server Actions y route handlers en `src/app` |
+| Al menos una integración de punta a punta | ✅ tres, en prod (20/11): Anthropic (wizard → `/api/plan` → plan guardado), Stripe (Checkout → webhook → premium) y Resend (bienvenida y compra) | Sección 2 (estado comprobado), `scripts/demo/grabar.mjs`, `scripts/e2e/ciclo.mjs` |
 | PRD con GStack | ✅ | `docs/02-prd-v1.md` (v1.1), `docs/04-revision-ceo-prd-v1.md` |
 | Plan de construcción con Compound Engineering | ✅ | `plan.md` |
-| "Algo pequeño que funcione entero" | ✅ en staging (recorrido completo grabado en vídeo). ⚠️ En prod, pendiente de confirmar | Vídeo de la demo, `escenas.json` |
+| "Algo pequeño que funcione entero" | ✅ en staging (recorrido completo grabado en vídeo) y en prod (alta, plan, pago y correos con la cuenta de Pablo, 20/11) | Vídeo de la demo, sección 2 |
 
 ### B. Comprometido con Alex (16/09/2026)
 
 | Criterio | Estado | Evidencia |
 |---|---|---|
 | Proyecto | ✅ | Repo público y app en prod |
-| Loom | ⚠️ pendiente de grabar | `docs/entrega/guion-loom-4min.md`, `docs/entrega/opciones-voz.md` |
+| Loom | Lo graba Pablo el 21/11 | `docs/entrega/guion-loom-4min.md`, `docs/entrega/opciones-voz.md` |
 
 ### C. Listón de calidad: Retos 1–9
 
@@ -277,15 +277,15 @@ Fuente: `docs/01-contexto-y-criterios.md` §2.
 | 4 Supabase | Auth | ✅ | `src/app/(wizard)/actions.ts`, `src/app/auth/confirm/route.ts` |
 | 4 | Modelo de datos | ✅ | `plan.md` "Modelo de datos", `supabase/migrations/20261112131103_esquema_inicial.sql` |
 | 4 | RLS | ✅ | Migraciones, `src/lib/supabase/rls.integration.test.ts` |
-| 4 | Migraciones | ✅ | `supabase/migrations/` (10), aplicadas en staging y prod |
+| 4 | Migraciones | ✅ | `supabase/migrations/` (12), aplicadas en staging y prod |
 | 5 Diseño UI | Paleta, tipografía y componentes | ✅ | `DESIGN.md`, `docs/diseno/sistema-de-diseno.md` |
 | 5 | Estados vacío, carga y error | ✅ | `DESIGN.md`. En la app: generando, hueco vacío con motivo y errores con `role="alert"` |
 | 5 | Móvil | ✅ | Regla de 360×640 (D22 de diseño, D66), capturas de `scripts/e2e` |
 | 6 Salto profesional | Repo con README | ✅ | `README.md`, con la sección "Documentación" que enlaza el índice `docs/README.md` |
-| 6 | Flujo de ramas | ✅ | `feature/*` → `staging` → `main`, PRs #1–#24 |
+| 6 | Flujo de ramas | ✅ | `feature/*` → `staging` → `main`, PRs #1–#36 |
 | 6 | Vercel prod + staging | ✅ | Las dos URLs de la sección 2 |
-| 6 | Stripe test: pago → BBDD → acceso inmediato, error claro si falla | ✅ código y tests (`src/app/api/stripe/*`). Webhook de prod configurado el 20/11. ⚠️ Falta un pago de prueba de punta a punta en prod (tarjeta 4242) | `src/app/api/stripe/webhook`, `src/app/(app)/premium/page.tsx` |
-| 6 | Resend: 3 emails (bienvenida, confirmación de compra con el nombre del producto en el asunto y enlace, inactividad > 2 semanas) | ✅ código y tests. ⚠️ El envío real a Pablo en prod está pendiente de confirmar (necesita `RESEND_API_KEY`, `EMAIL_ALLOWLIST` y `CRON_SECRET` en Production) | `src/lib/email/*`, `src/app/api/cron/inactividad`, `vercel.json` |
+| 6 | Stripe test: pago → BBDD → acceso inmediato, error claro si falla | ✅ pago de prueba de punta a punta en prod (tarjeta 4242, 20/11): webhook → `active` → premium. Al cancelar en el portal, la baja queda programada y Ajustes lo dice | `src/app/api/stripe/webhook`, `src/app/(app)/premium/page.tsx` |
+| 6 | Resend: 3 emails (bienvenida, confirmación de compra con el nombre del producto en el asunto y enlace, inactividad > 2 semanas) | ✅ bienvenida y confirmación de compra enviadas en prod (20/11, `email_log`). Inactividad: cron diario configurado, se dispara a los 14 días sin entrenar | `src/lib/email/*`, `src/app/api/cron/inactividad`, `vercel.json` |
 | 6 | Documento de 3 mejoras con Claude Code (problema, por qué, prompt, resultado) | ✅ | [`docs/entrega/3-mejoras-claude-code.md`](3-mejoras-claude-code.md): D58 (fuente pixelada), D68 (ninguna sesión vacía) y D74 (dibujos reales) |
 | 9 Documentación | Técnica: arquitectura | ✅ | `plan.md`, sección 5 de este documento |
 | 9 | Técnica: diagrama de BBDD | ✅ | [`docs/tecnica/base-de-datos.md`](../tecnica/base-de-datos.md): diagrama ER en mermaid sacado de las migraciones y tabla de RLS |
@@ -295,4 +295,4 @@ Fuente: `docs/01-contexto-y-criterios.md` §2.
 | 9 | Guía de uso no técnica | ✅ | [`docs/guia-de-uso.md`](../guia-de-uso.md), con los textos de la UI real |
 | 9 | Documento de entrega (accesos, alcance frente a fase 2, mantenimiento y costes) | ✅ | Este documento: accesos (sección 2), alcance frente a fase 2, costes y mantenimiento (sección 10) |
 | 9 | Todo enlazado desde un índice | ✅ | [`docs/README.md`](../README.md), enlazado desde el `README.md` raíz |
-| Todos | Loom explicando el trabajo | ⚠️ pendiente de grabar | `docs/entrega/guion-loom-4min.md` |
+| Todos | Loom explicando el trabajo | Lo graba Pablo el 21/11 | `docs/entrega/guion-loom-4min.md` |

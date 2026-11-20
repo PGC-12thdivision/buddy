@@ -1,6 +1,6 @@
 # Guion del Loom: BUDDY en 4 minutos
 
-Para grabar el 20/11/2026. Unas 580 palabras habladas, a unas 150 por minuto. El texto entre comillas se dice tal cual, pero sin leerlo: es mejor que suene a ti que a guion. Si un bloque se alarga, recorta del bloque 6 ("Cómo lo construí"), no de la demo.
+Para grabar el 21/11/2026 (actualizado tras el debate de etiquetas del 20/11). Unas 580 palabras habladas, a unas 150 por minuto. El texto entre comillas se dice tal cual, pero sin leerlo: es mejor que suene a ti que a guion. Si un bloque se alarga, recorta del bloque 6 ("Cómo lo construí"), no de la demo.
 
 - **URL de la demo:** producción, https://buddy-xi-eight.vercel.app
 - **Cuenta:** una de demo preparada de antemano (ver la checklist del final). Sin dominio propio, el email de confirmación solo te llega a ti (D7, D34).
@@ -18,13 +18,15 @@ Para grabar el 20/11/2026. Unas 580 palabras habladas, a unas 150 por minuto. El
 ## 2. Alta, wizard, cribado y plan con IA (0:25–1:15)
 
 **Pantalla:** `/foco` → `/experiencia` → `/semana` → `/deportes` → `/gimnasio` → `/registro` → `/consentimiento` → `/limitaciones` → `/seguridad` → `/resumen` → `/generando` → `/plan`.
-**Ratón:** pulsa "Empezar" y responde rápido: Más músculo, de 6 meses a 2 años, 3 días y 45 minutos, Pádel y el preset Completo. En el registro no hace falta teclear en directo: corta a la cuenta ya confirmada. Marca la casilla del consentimiento despacio, elige "Rodilla", responde el cribado (Sí solo en la pregunta articular) y pulsa "Generar mi plan". En el plan, baja despacio con la rueda.
+**Ratón:** pulsa "Empezar" y responde rápido: Más músculo, de 6 meses a 2 años, 3 días y 45 minutos, Pádel y el preset Completo. En el registro no hace falta teclear en directo: corta a la cuenta ya confirmada. Marca la casilla del consentimiento despacio, elige "Rodilla", responde el cribado (Sí solo en la pregunta articular) y pulsa "Generar mi plan". En el plan, abre "Ajustado a las zonas que marcaste · Ver qué hemos quitado", deja que se lea y baja despacio con la rueda. Si alguna fila lleva la etiqueta gris "Trabaja un poco: …", señálala.
 
 > "El alta es una pregunta por pantalla: mi foco, mi experiencia, cuántos días tengo, si hago otro deporte y qué máquinas hay en mi gimnasio. Luego creo la cuenta, solo para mayores de 18.
 >
 > Hasta aquí no me ha pedido nada de salud. Antes de hacerlo, pide consentimiento explícito, con la casilla sin marcar. Marco la rodilla como limitación y paso el cribado: un sí de riesgo bloquea el plan, y la pregunta articular me obliga a marcar la zona.
 >
-> Genero el plan. Claude elige los ejercicios, pero solo de un catálogo cerrado, y sin ver nada de mi salud. La rodilla se aplica después, en código: ningún ejercicio del plan carga la rodilla, y los que solo la rozan, como esta sentadilla a banco alto, llevan un aviso de técnica."
+> Genero el plan. Claude elige los ejercicios, pero solo de un catálogo cerrado, y sin ver nada de mi salud. La rodilla se aplica después, en código: ningún ejercicio del plan carga la rodilla. Y no lo hace a escondidas: aquí me dice qué ha quitado, que es porque carga la rodilla, y qué tengo en su lugar. Si un ejercicio solo trabaja un poco una zona que marqué, lleva esta etiqueta gris y un aviso de técnica en la sesión. Las etiquetas de cada ejercicio las revisó un panel de seis expertos simulados con agentes, y ante la duda, el ejercicio sale."
+
+**Si no hay etiqueta gris en tu plan,** quita la frase de la etiqueta: depende de los ejercicios que elija la IA. Con la rodilla, la llevan el gemelo en prensa y el gemelo sentado; con "Espalda baja", el remo sentado en polea y el remo en polea con agarre ancho ("Trabaja un poco: zona lumbar"). El vídeo de respaldo enseña el bloque abierto.
 
 ## 3. La sesión del día: calibración y peso por reglas (1:15–2:00)
 
@@ -92,7 +94,7 @@ Para cuando haya que recortar o si Loom corta. Pantallas: bienvenida → plan �
   - [ ] **Cuenta A, recién confirmada:** se queda en el consentimiento, para grabar en directo el consentimiento, las limitaciones, el cribado y la generación del plan.
   - [ ] **Cuenta B, con el plan ya generado:** para la sesión de calibración, la Molestia y Premium, si la generación tarda en directo.
 - [ ] **Generación con IA:** la cuenta A tiene libre su generación (gratis: 1 plan y 1 cambio al mes). No regeneres antes de grabar.
-- [ ] **Stripe:** la cuenta que va a pagar todavía no es premium de pago. Tarjeta de test: `4242 4242 4242 4242`, fecha futura y cualquier CVC. Comprueba antes que el webhook de prod está configurado: si no, la vuelta se queda esperando. ⚠️ No consta en el repo que el webhook de prod esté dado de alta.
+- [ ] **Stripe:** la cuenta que va a pagar todavía no es premium de pago. Tarjeta de test: `4242 4242 4242 4242`, fecha futura y cualquier CVC. Comprueba antes que el webhook de prod está configurado: si no, la vuelta se queda esperando. El webhook de prod está dado de alta y verificado (20/11).
 - [ ] **Tema:** claro, que es el tema por defecto (D61) y se lee mejor en vídeo. El oscuro solo si quieres enseñarlo un segundo en Ajustes.
 - [ ] **Navegador:** Chrome en una ventana limpia (perfil sin extensiones ni marcadores a la vista) y zoom al 100 %.
 - [ ] **Viewport móvil:** DevTools → modo dispositivo, 390 × 844 (iPhone 12/13/14) y DPR 2. Esconde el panel de DevTools para que no salga en el vídeo.
