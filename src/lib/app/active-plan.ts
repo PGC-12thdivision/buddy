@@ -29,13 +29,16 @@ export type ActivePlan = {
   sessions: ActiveSession[];
 };
 
-export async function loadActivePlan(supabase: Client, userId: string): Promise<ActivePlan | null> {
-  const { data: plan } = await supabase
+// excludeId: tras guardar una versión nueva en la misma petición. Next memoriza los fetch GET idénticos
+// dentro de una petición, así que la segunda lectura tiene que ser distinta para no recibir la antigua.
+export async function loadActivePlan(supabase: Client, userId: string, excludeId?: string): Promise<ActivePlan | null> {
+  let query = supabase
     .from("plans")
     .select("id, version, focus, days_per_week, template, source, created_at")
     .eq("user_id", userId)
-    .eq("is_active", true)
-    .maybeSingle();
+    .eq("is_active", true);
+  if (excludeId) query = query.neq("id", excludeId);
+  const { data: plan } = await query.maybeSingle();
   if (!plan) return null;
 
   const { data: sessions } = await supabase.from("plan_sessions").select("id, day_index, label").eq("plan_id", plan.id).order("day_index");

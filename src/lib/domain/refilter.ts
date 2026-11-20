@@ -26,7 +26,8 @@ export function alternativesFor(
   );
 }
 
-// Motivo cerrado, nunca la zona (diseño §11.27): es «limitación» si algún ejercicio del mismo
+// Motivo cerrado que se guarda, nunca la zona (diseño §11.27). La pantalla del plan nombra la zona al vuelo
+// (holeText, decisión de Pablo del 20/11), sin guardarla. Es «limitación» si algún ejercicio del mismo
 // patrón y grupo con equipo disponible está fuera por una limitación; si no, falta equipo.
 function holeReason(exercise: Exercise, ctx: RefilterContext): HoleReason {
   const blockedByLimitation = ctx.catalog.some(

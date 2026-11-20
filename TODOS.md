@@ -49,3 +49,13 @@ Trabajo aplazado con su contexto, para retomarlo tras la entrega del bootcamp (c
 
 ### Aviso de seguridad de Next.js
 - **Qué:** al arrancar `npm run dev`, Next 16.4.3 avisa de una vulnerabilidad conocida y recomienda actualizar. No se ha tocado la versión: revisarlo y actualizar en una rama propia, con build y tests.
+
+## Aplazado en el debate de etiquetas (20/11/2026)
+
+### Regla de preferencia: elegir la alternativa sin aviso leve
+- **Qué:** cuando hay que sustituir un ejercicio, preferir una alternativa que no trabaje de forma leve ninguna zona marcada (sin `lightMatches`), si existe.
+- **Por qué se aplaza:** hay cuatro sitios que eligen ejercicios (`refilterPlan`, `fillHoles`, `repairFloor` y `fitCeiling`). Si solo se aplica en uno, la regla se cumpliría a veces y confundiría más de lo que ayuda. Decisión de Pablo del 20/11; dictamen en `docs/catalogo/debate-etiquetas/dictamen-final.md` §3.
+- **Cómo:** un criterio de orden común (primero sin coincidencia leve, luego el orden del catálogo) usado por las cuatro funciones, con tests en cada una.
+
+### Rellenar huecos de pierna con la rodilla marcada
+- **Qué:** con la rodilla marcada no queda ningún ejercicio de cuádriceps (todos cargan la rodilla), y `fillHoles` rellena el hueco de pierna (empuje) con un gemelo. El panel lo acepta, pero el texto podría explicar que el cuádriceps queda sin trabajar a propósito.

@@ -42,7 +42,7 @@ const isCalibrationDone = (view: ExerciseView, saved: SavedSet[]) => {
 // Aviso de contribución leve, sobrio y sin animación. Solo llega si las limitaciones del usuario
 // coinciden con las zonas de implicación leve del ejercicio.
 function LightWarning({ view }: { view: ExerciseView }) {
-  return view.lightWarning ? <Note tone="warn">{view.lightWarning}</Note> : null;
+  return view.lightWarning ? <Note>{view.lightWarning}</Note> : null;
 }
 
 // Técnica a la vista (feedback de Pablo, 18/11): dibujo del movimiento y texto del catálogo. En la
