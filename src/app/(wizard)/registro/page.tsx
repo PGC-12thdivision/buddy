@@ -40,6 +40,11 @@ export default function Registro() {
       return;
     }
     clearEvents();
+    if (result.next) {
+      // Sesión abierta al registrarse (sin confirmación de email): se sigue sin pasar por el correo.
+      router.push(result.next);
+      return;
+    }
     window.sessionStorage.setItem(EMAIL_KEY, email);
     router.push("/revisa-tu-correo");
   }

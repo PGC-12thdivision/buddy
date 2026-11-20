@@ -39,7 +39,11 @@ const registroSchema = z.object({
 });
 
 type RegistroField = "email" | "password" | "adult" | "form";
-export type RegistroResult = { ok: true } | { ok: false; errors: Partial<Record<RegistroField, string>> };
+// `next` solo llega si Supabase abrió sesión al registrarse (proyecto con "Confirm email" desactivado):
+// entonces no hay correo que revisar y se sigue directamente.
+export type RegistroResult =
+  | { ok: true; next?: ReturnType<typeof nextScreenForAccount> }
+  | { ok: false; errors: Partial<Record<RegistroField, string>> };
 
 const REGISTRO_MESSAGES: Record<Exclude<RegistroField, "form">, string> = {
   email: "Escribe un email válido.",
@@ -129,6 +133,11 @@ export async function registrarse(input: unknown): Promise<RegistroResult> {
   ]);
   // La cuenta ya existe: un fallo aquí no se le muestra; el resumen detecta respuestas que falten.
   for (const write of writes) if (write.error) logError("registro_guardar", write.error);
+  // Sin confirmación de email, signUp ya devuelve sesión: misma bienvenida que tras confirmar.
+  if (data.session) {
+    scheduleWelcome(user.id);
+    return { ok: true, next: nextScreenForAccount(await accountProgress(supabase, user.id)) };
+  }
   return { ok: true };
 }
 

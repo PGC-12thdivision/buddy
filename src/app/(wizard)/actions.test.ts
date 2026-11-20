@@ -147,6 +147,24 @@ describe("registro", () => {
     expect(JSON.stringify(admin.ops)).not.toContain("otro");
   });
 
+  it("sin confirmación de email (signUp devuelve sesión) sigue al consentimiento y programa la bienvenida", async () => {
+    setup({ serverResponses: { "consents.select": { data: [] } } });
+    server.auth.signUp.mockResolvedValue({
+      data: { user: { id: "nuevo", identities: [{ id: "i" }] }, session: { access_token: "t" } },
+      error: null,
+    });
+    scheduleWelcome.mockClear();
+    expect(await actions.registrarse(registro())).toEqual({ ok: true, next: "/consentimiento" });
+    expect(scheduleWelcome).toHaveBeenCalledWith("nuevo");
+  });
+
+  it("con confirmación de email no programa la bienvenida hasta confirmar", async () => {
+    server.auth.signUp.mockResolvedValue({ data: { user: { id: "nuevo", identities: [{ id: "i" }] }, session: null }, error: null });
+    scheduleWelcome.mockClear();
+    expect(await actions.registrarse(registro())).toEqual({ ok: true });
+    expect(scheduleWelcome).not.toHaveBeenCalled();
+  });
+
   it("con un email que ya existe responde lo mismo y no escribe nada", async () => {
     server.auth.signUp.mockResolvedValue({ data: { user: { id: "ofuscado", identities: [] } }, error: null });
     expect(await actions.registrarse(registro())).toEqual({ ok: true });
