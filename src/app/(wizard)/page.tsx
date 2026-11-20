@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CtaLink, TextLink } from "@/components/wizard/ui";
 import { StepView } from "@/components/wizard/wizard-provider";
@@ -32,7 +33,10 @@ export default async function Bienvenida() {
       <div className="wz-stripes" aria-hidden="true" />
       <main className="wz-foot wz-pad" aria-label="Empezar">
         <p className="m-0 text-xs text-muted-foreground">
-          BUDDY no es consejo médico ni sustituye a un entrenador certificado. Tú respondes de la veracidad de tus respuestas.
+          BUDDY no es consejo médico ni sustituye a un entrenador certificado. Tú respondes de la veracidad de tus respuestas.{" "}
+          <Link href="/terminos" className="underline">
+            Términos y aviso médico
+          </Link>
         </p>
         <CtaLink href="/foco">Empezar</CtaLink>
         <TextLink href="/entrar">Ya tengo cuenta</TextLink>
