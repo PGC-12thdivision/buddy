@@ -303,7 +303,9 @@ try {
           const fold = await page.evaluate(() => {
             const bottom = (sel) => document.querySelector(sel)?.getBoundingClientRect().bottom ?? 0;
             const cta = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Serie hecha")?.getBoundingClientRect();
-            const dock = document.querySelector(".ss-dock")?.getBoundingClientRect().top ?? 0;
+            // Borde superior del pie fijo (aviso o botonera, según el momento: el aviso sustituye a la botonera).
+            const foot = [...document.querySelectorAll(".wz-foot .ss-toast, .wz-foot .ss-dock")].map((e) => e.getBoundingClientRect().top);
+            const dock = foot.length ? Math.min(...foot) : window.innerHeight;
             return { pm: bottom(".ss-pm"), dockTop: dock, ctaBottom: cta?.bottom ?? 0, h: window.innerHeight };
           });
           if (fold.pm > fold.dockTop || fold.ctaBottom > fold.h) finding("media", `Sesión ${n}: +/− o "Serie hecha" fuera de la pantalla (${JSON.stringify(fold)})`);
@@ -333,6 +335,11 @@ try {
           const fixed = await page.getByText(/^Serie 1 corregida.$/).waitFor({ timeout: 10000 }).then(() => true).catch(() => false);
           if (!fixed) finding("media", `Sesión ${n}: no se pudo corregir la serie 1`);
           s.editar++;
+          continue;
+        }
+        // Con la última serie guardándose, el botón queda desactivado hasta que se abre /fin: se espera.
+        if (await page.getByRole("button", { name: "Serie hecha" }).first().isDisabled()) {
+          await page.waitForTimeout(500);
           continue;
         }
         await click("button", "Serie hecha");

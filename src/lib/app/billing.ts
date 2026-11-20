@@ -29,6 +29,18 @@ export async function ensureStripeCustomer(stripe: Stripe, userId: string, exist
   return data.stripe_customer_id;
 }
 
+// Estados de Stripe en los que la suscripción todavía puede cobrar.
+const OPEN_STATUSES = new Set(["active", "trialing", "past_due", "unpaid", "incomplete", "paused"]);
+
+// Al borrar la cuenta se cancelan en el acto las suscripciones abiertas del cliente: sin cuenta no
+// se puede entrar al portal para cancelarlas (revisión de la entrega, 20/11). Lanza si Stripe falla.
+export async function cancelOpenSubscriptions(stripe: Stripe, customerId: string): Promise<number> {
+  const list = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 20 });
+  const open = list.data.filter((s) => OPEN_STATUSES.has(s.status));
+  for (const sub of open) await stripe.subscriptions.cancel(sub.id);
+  return open.length;
+}
+
 // Los formularios de pago solo se aceptan desde la propia app (además de las cookies SameSite).
 export function isSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
