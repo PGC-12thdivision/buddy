@@ -125,6 +125,13 @@ export default function Registro() {
           ) : null}
         </div>
         <p className="wz-help">Tus respuestas se guardan en tu cuenta. Aún no te pedimos nada de salud.</p>
+        <p className="wz-help">
+          Al crear tu cuenta aceptas los{" "}
+          <Link href="/terminos" className="font-bold underline">
+            términos y el aviso médico
+          </Link>
+          .
+        </p>
         {errors.form ? (
           <Note tone="danger" role="alert">
             {errors.form}

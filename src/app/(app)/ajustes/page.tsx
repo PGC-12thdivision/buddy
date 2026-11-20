@@ -94,6 +94,9 @@ export default async function AjustesPage() {
             <span className="min-w-0 truncate text-right text-[14px] text-muted-foreground">{email}</span>
           </div>
           <CuentaAcciones />
+          <div className="wz-rule-row">
+            <TextLink href="/terminos">Términos y aviso médico</TextLink>
+          </div>
           <SalirButton />
         </section>
       </div>
