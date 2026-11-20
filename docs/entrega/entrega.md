@@ -1,4 +1,4 @@
-﻿# BUDDY: documento de entrega
+# BUDDY: documento de entrega
 
 Proyecto final del bootcamp Vibe Code Builder (No Code Hackers). Entrega: viernes 20/11/2026 (D38).
 Autor: Pablo. Construido con Claude Code.
@@ -55,7 +55,7 @@ Estado comprobado el 20/11/2026:
    - CVC: cualquiera de 3 cifras;
    - código postal: cualquiera.
 
-   ⚠️ No consta en el repo que el endpoint del webhook de Stripe de producción esté dado de alta, ni que `STRIPE_WEBHOOK_SECRET` esté en Production: pendiente de confirmar. Sin el webhook, la vuelta del pago no activa premium.
+   El webhook de producción está dado de alta (20/11/2026): endpoint con los 4 eventos comprobado por la API de Stripe y `STRIPE_WEBHOOK_SECRET` en Production (la ruta ya verifica firmas: un POST sin firmar responde 400).
 8. **Ajustes:** cambia el gimnasio o las limitaciones (refiltrado gratis), el tema, retira el consentimiento o borra la cuenta.
 
 ## 4. Funcionalidades por unidad (`plan.md`)
@@ -70,7 +70,7 @@ Estado comprobado el 20/11/2026:
 | U6 | App: Hoy, Plan, Progreso y refiltrado | ✅ | `src/app/(app)/*`, `src/app/actions/refilter.ts` |
 | U7 | Calibración, sesión del día, Molestia y fin de sesión | ✅ | `src/app/(sesion)/sesion/[id]/*`, `src/components/session/*`, `src/app/actions/session.ts` |
 | U8 | Coach que explica (check-in premium) | ✅ en staging | `src/lib/ai/checkin.ts`, `src/app/api/checkin/route.ts`, `src/app/(app)/checkin/*`, `scripts/e2e/checkin.mjs` |
-| U9 | Stripe: Checkout, webhook, portal y prueba de 14 días | ✅ código · ⚠️ configuración de prod sin confirmar | `src/app/api/stripe/*`, `src/lib/domain/premium.ts`, migración `aplicar_evento_stripe` |
+| U9 | Stripe: Checkout, webhook, portal y prueba de 14 días | ✅ código y webhook de prod configurado (20/11) | `src/app/api/stripe/*`, `src/lib/domain/premium.ts`, migración `aplicar_evento_stripe` |
 | U10 | Resend: bienvenida, confirmación de compra e inactividad (cron diario) | ✅ código · ⚠️ envío real sin confirmar | `src/lib/email/*`, `src/app/api/cron/inactividad`, `vercel.json` (cron a las 8:00 UTC) |
 | U11 | Ajustes: gimnasio, limitaciones, foco y días, tema, retirar consentimiento y borrar cuenta | ✅ | `src/app/(app)/ajustes/*`, `src/app/actions/account.ts` y su test |
 | U12 | Cierre: accesibilidad, paso a prod | ⚠️ en curso. Hecho: el merge a `main` y las migraciones en prod. Pendiente de confirmar: la prueba con VoiceOver o TalkBack y la de pago en prod | PR #24 |
@@ -122,7 +122,7 @@ flowchart TB
 
 | # | Guardarraíl (`CLAUDE.md`) | Cómo se cumple | Evidencia |
 |---|---|---|---|
-| 1 | No es consejo médico | Disclaimer en la bienvenida, en la pantalla del plan y en los términos | `src/app/(wizard)/page.tsx`, pantalla Plan (captura `07-plan.png` del vídeo). ⚠️ Términos: pendiente de confirmar |
+| 1 | No es consejo médico | Disclaimer en la bienvenida, en la pantalla del plan y en los términos | `src/app/(wizard)/page.tsx`, pantalla Plan (captura `07-plan.png` del vídeo) y página `/terminos` (`src/app/(wizard)/terminos/page.tsx`, 20/11), enlazada desde la bienvenida, el registro y Ajustes |
 | 2 | Catálogo cerrado | El esquema zod lleva el enum de IDs del catálogo filtrado; si no valida, se reintenta y después se muestra un error claro. Nunca se guarda una salida sin validar | `src/lib/ai/plan.ts`, `src/lib/ai/plan.test.ts`, `src/app/api/plan/route.test.ts` |
 | 3 | **La IA nunca toca cargas** | Calibración y doble progresión son funciones puras. El servidor fija la carga al guardar (migración `cargas_solo_servidor`) | `src/lib/domain/calibration.ts`, `progression.ts` y sus tests |
 | 4 | Topes de volumen en código | Un único validador: ≥2 veces por semana por grupo con algún ejercicio posible (D45), ≤20 series por grupo y semana y ≥2 series por ejercicio. Las series las calcula el código (D53) | `src/lib/domain/plan-build.ts` y su test; `src/lib/ai/checkin.test.ts` |
@@ -164,10 +164,10 @@ flowchart TB
 
 | Tipo | Qué cubre | Cómo se ejecuta |
 |---|---|---|
-| Unitarios (Vitest) | Dominio puro, Server Actions, rutas de la API, webhook, cron, campos permitidos del prompt y log seguro. El 20/11/2026: **1029 tests en verde** en 41 archivos. Hay 23 tests omitidos: los de RLS y de evaluación, que solo se ejecutan con su modo | `npm test` |
+| Unitarios (Vitest) | Dominio puro, Server Actions, rutas de la API, webhook, cron, campos permitidos del prompt y log seguro. El 20/11/2026: **1038 tests en verde** en 43 archivos. Hay 23 tests omitidos: los de RLS y de evaluación, que solo se ejecutan con su modo | `npm test` |
 | RLS (integración contra staging) | Aislamiento entre usuarios, tablas de solo servidor y funciones `SECURITY DEFINER` no ejecutables | `npm run test:rls` |
 | Evaluación de la IA | 10 perfiles fijos con Sonnet y Haiku: los dos 10/10 válidos; 0,010 $ frente a 0,001 $ por plan (D57) | `npm run eval:plan`, informe en `docs/eval-plan.md` |
-| E2E (Playwright, contra staging) | Ciclo completo con 9 perfiles: wizard, plan con IA real, calibración, sesión normal, Molestia, Plan, Progreso, Ajustes y retirar el consentimiento; check-in del coach | `node scripts/e2e/ciclo.mjs scripts/e2e/perfiles/p01-hombro-3d.json`, `scripts/e2e/checkin.mjs`. `alta.mjs` (alta real por la UI), `reanudar.mjs` (sesión a medias) y `memoria.mjs` (progresión entre días) están en el commit `7104c38` de la rama `feature/cierre-entrega`; su paso a `main` y su último resultado, pendientes de confirmar |
+| E2E (Playwright, contra staging) | Ciclo completo con 9 perfiles: wizard, plan con IA real, calibración, sesión normal, Molestia, Plan, Progreso, Ajustes y retirar el consentimiento; check-in del coach | `node scripts/e2e/ciclo.mjs scripts/e2e/perfiles/p01-hombro-3d.json`, `scripts/e2e/checkin.mjs`. `alta.mjs` (alta real por la UI), `reanudar.mjs` (sesión a medias) y `memoria.mjs` (progresión entre días) y `borrar-cuenta.mjs` (cancela la suscripción) están en `main` desde el PR #26 y pasaron en verde el 20/11; `alta.mjs` solo se para en el envío del email de confirmación, por el SMTP integrado de Supabase |
 | Vídeo de la demo | Recorrido completo grabado contra staging el 20/11 (4:37, webm 390×844, sin errores en pantalla ni en la consola): wizard, registro, consentimiento, cribado, plan con IA real, calibración, Molestia, fin de sesión, Progreso, Premium y Ajustes | `node scripts/demo/grabar.mjs`, con subtítulos en `docs/entrega/demo.srt` |
 
 ## 9. Proceso de construcción con IA
@@ -239,7 +239,7 @@ Solo datos que constan en el repo o en la base de datos. Lo que no consta se mar
 | Actualizar Next.js | Pendiente | Aviso de seguridad de Next 16.4.3 al arrancar (`TODOS.md`): en una rama propia, con build y tests |
 | Rotar claves | Si se filtra una, o al cambiar de responsable | Supabase, Anthropic, Stripe, Resend y `CRON_SECRET`. Cambiarlas en Vercel por entorno. Las claves nuevas de Supabase se rotan sin caída (D26) |
 | Cron de inactividad | Diario, 8:00 UTC (`vercel.json`) | Revisar `email_log` (filas `failed`). En staging se lanza a mano con `CRON_SECRET` y el bypass de Vercel |
-| Webhook de Stripe | Al pasar a modo real | Dar de alta el endpoint de prod y su `STRIPE_WEBHOOK_SECRET` en Production (hoy pendiente de confirmar, sección 3) |
+| Webhook de Stripe | Al pasar a modo real | Pasar a claves live y dar de alta un endpoint live con su propio `STRIPE_WEBHOOK_SECRET` (el de modo test está configurado desde el 20/11) |
 
 ---
 
@@ -284,7 +284,7 @@ Fuente: `docs/01-contexto-y-criterios.md` §2.
 | 6 Salto profesional | Repo con README | ✅ | `README.md`, con la sección "Documentación" que enlaza el índice `docs/README.md` |
 | 6 | Flujo de ramas | ✅ | `feature/*` → `staging` → `main`, PRs #1–#24 |
 | 6 | Vercel prod + staging | ✅ | Las dos URLs de la sección 2 |
-| 6 | Stripe test: pago → BBDD → acceso inmediato, error claro si falla | ✅ código y tests (`src/app/api/stripe/*`). ⚠️ El pago de punta a punta en prod está pendiente de confirmar: el webhook de prod no consta como configurado | `src/app/api/stripe/webhook`, `src/app/(app)/premium/page.tsx` |
+| 6 | Stripe test: pago → BBDD → acceso inmediato, error claro si falla | ✅ código y tests (`src/app/api/stripe/*`). Webhook de prod configurado el 20/11. ⚠️ Falta un pago de prueba de punta a punta en prod (tarjeta 4242) | `src/app/api/stripe/webhook`, `src/app/(app)/premium/page.tsx` |
 | 6 | Resend: 3 emails (bienvenida, confirmación de compra con el nombre del producto en el asunto y enlace, inactividad > 2 semanas) | ✅ código y tests. ⚠️ El envío real a Pablo en prod está pendiente de confirmar (necesita `RESEND_API_KEY`, `EMAIL_ALLOWLIST` y `CRON_SECRET` en Production) | `src/lib/email/*`, `src/app/api/cron/inactividad`, `vercel.json` |
 | 6 | Documento de 3 mejoras con Claude Code (problema, por qué, prompt, resultado) | ✅ | [`docs/entrega/3-mejoras-claude-code.md`](3-mejoras-claude-code.md): D58 (fuente pixelada), D68 (ninguna sesión vacía) y D74 (dibujos reales) |
 | 9 Documentación | Técnica: arquitectura | ✅ | `plan.md`, sección 5 de este documento |
