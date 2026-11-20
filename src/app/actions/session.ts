@@ -6,6 +6,7 @@ import { loadActivePlan } from "@/lib/app/active-plan";
 import { calibrationTarget } from "@/lib/app/session-data";
 import { loadSessionScope, type SessionScope } from "@/lib/app/session-guard";
 import { refilterForUser } from "@/lib/app/refilter-core";
+import type { PlanChange } from "@/lib/domain/exclusion-summary";
 import { calibrationStartLoad } from "@/lib/domain/calibration";
 import { calibrationState, isRepeatedDiscomfort, workingWeightAfter, type CalibrationState, type LoggedSet } from "@/lib/domain/session";
 import { JOINTS, type Experience, type Joint } from "@/lib/domain/types";
@@ -341,7 +342,7 @@ const limitacionSchema = z.object({
   zones: z.array(z.enum(JOINTS)).min(1).max(JOINTS.length),
 });
 
-export type LimitacionResult = { ok: true; changed: number; holes: number } | Fail<"no_valido" | "sin_consentimiento" | "fallo">;
+export type LimitacionResult = { ok: true; changed: number; holes: number; changes: PlanChange[] } | Fail<"no_valido" | "sin_consentimiento" | "fallo">;
 
 // "Añadir y ajustar mi plan" (diseño D16): une las zonas a las limitaciones y refiltra gratis (D35).
 // No toca el cribado. Solo zonas que carga o implica de forma leve ese ejercicio según el catálogo.
@@ -366,7 +367,7 @@ export async function anadirLimitacion(input: unknown): Promise<LimitacionResult
   }
   const refiltered = await refilterForUser(supabase, userId);
   if (!refiltered.ok) return { ok: false, error: "fallo" };
-  return { ok: true, changed: refiltered.changed, holes: refiltered.holes };
+  return { ok: true, changed: refiltered.changed, holes: refiltered.holes, changes: refiltered.changes };
 }
 
 // --- Terminar --------------------------------------------------------------------------------

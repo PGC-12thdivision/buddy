@@ -6,13 +6,14 @@ import { guardarLimitaciones } from "@/app/actions/account";
 import { ZonePicker } from "@/components/wizard/pickers";
 import { Cta, Note, TextLink } from "@/components/wizard/ui";
 import type { Joint } from "@/lib/domain/types";
+import type { PlanChange } from "@/lib/domain/exclusion-summary";
 import { RefilterNote } from "../resultado";
 
 export function LimitacionesAjustes({ initial }: { initial: Joint[] }) {
   const router = useRouter();
   const [zones, setZones] = useState<Joint[]>(initial);
   const [pending, setPending] = useState(false);
-  const [result, setResult] = useState<{ changed: number; holes: number } | "error" | "sin_refiltrar" | null>(null);
+  const [result, setResult] = useState<{ changed: number; holes: number; changes: PlanChange[] } | "error" | "sin_refiltrar" | null>(null);
 
   async function save() {
     if (pending) return;
@@ -21,7 +22,7 @@ export function LimitacionesAjustes({ initial }: { initial: Joint[] }) {
     const res = await guardarLimitaciones({ limitations: zones });
     setPending(false);
     if (res.ok) {
-      setResult({ changed: res.changed, holes: res.holes });
+      setResult({ changed: res.changed, holes: res.holes, changes: res.changes });
       router.refresh();
     } else if (res.error === "sin_sesion") router.push("/entrar");
     else if (res.error === "sin_consentimiento") router.push("/consentimiento");
@@ -48,7 +49,7 @@ export function LimitacionesAjustes({ initial }: { initial: Joint[] }) {
           No hemos podido guardar el cambio. Inténtalo de nuevo.
         </Note>
       ) : result ? (
-        <RefilterNote changed={result.changed} holes={result.holes} />
+        <RefilterNote changed={result.changed} holes={result.holes} changes={result.changes} />
       ) : null}
       <Cta disabled={pending} onClick={save}>
         {pending ? "Guardando…" : "Guardar"}

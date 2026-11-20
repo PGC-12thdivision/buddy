@@ -73,6 +73,10 @@ describe("refiltrarPlan", () => {
       if (s.exercise_id) expect(byId.get(s.exercise_id)!.joints).not.toContain("rodilla");
       else expect(s.gap_reason).toMatch(/^sin_alternativa_/);
     }
+    // La respuesta dice qué ejercicio ha salido y por qué zona (dictamen del 20/11).
+    if (!result.ok || !("changes" in result)) throw new Error("sin cambios");
+    expect(result.changes.length).toBeGreaterThan(0);
+    for (const change of result.changes) expect(change.zones).toEqual(["rodilla"]);
   });
 
   it("si falla la lectura del gimnasio no vacía el plan: no guarda nada", async () => {
@@ -84,7 +88,7 @@ describe("refiltrarPlan", () => {
 
   it("si nada cambia no guarda una versión nueva", async () => {
     plan!.sessions[0].slots = [slot(0, "prensa")];
-    expect(await refiltrarPlan()).toEqual({ ok: true, changed: 0, holes: 0 });
+    expect(await refiltrarPlan()).toEqual({ ok: true, changed: 0, holes: 0, changes: [] });
     expect(rpc).not.toHaveBeenCalled();
   });
 });

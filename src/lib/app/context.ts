@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { accountProgress, sessionUserId } from "@/lib/wizard/account";
 import { nextScreenForAccount } from "@/lib/wizard/progress";
 import { loadActivePlan } from "./active-plan";
+import { healPlanIfNeeded } from "./refilter-core";
 
 // Contexto de las pantallas de la app (Hoy, Plan, Progreso, Ajustes). Comprobación de página: sin
 // sesión, a entrar; sin consentimiento, cribado o plan, a la pantalla del wizard que toca.
@@ -24,6 +25,9 @@ export async function requireAppContext() {
     supabase.from("workout_sessions").select("id", { count: "exact", head: true }).eq("user_id", userId).not("ended_at", "is", null),
   ]);
   if (!plan) redirect("/resumen");
+  // Un plan guardado nunca puede incumplir una limitación, ni siquiera tras un cambio de catálogo.
+  const healed = await healPlanIfNeeded(supabase, userId, plan);
+  const activePlan = healed ? ((await loadActivePlan(supabase, userId, plan.id)) ?? plan) : plan;
 
   const now = new Date();
   const trialEnd = account.data ? new Date(account.data.trial_ends_at) : null;
@@ -35,7 +39,7 @@ export async function requireAppContext() {
 
   const stripeCustomerId = account.data?.stripe_customer_id ?? null;
 
-  return { supabase, userId, plan, premium, paying, hasStripeCustomer, stripeCustomerId, trialDaysLeft, completedSessions: sessions.count ?? 0 };
+  return { supabase, userId, plan: activePlan, premium, paying, hasStripeCustomer, stripeCustomerId, trialDaysLeft, completedSessions: sessions.count ?? 0 };
 }
 
 export const FOCUS_TEXT: Record<string, string> = {

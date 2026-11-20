@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { exerciseCatalog, sanitizeEquipment } from "@/lib/catalog";
 import { applyConstraints, setsPerSlot, type BuiltSession } from "@/lib/domain/plan-build";
 import type { SessionKind } from "@/lib/domain/template";
+import { planChanges, type PlanChange } from "@/lib/domain/exclusion-summary";
 import type { Focus, Joint } from "@/lib/domain/types";
 import { logError } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,7 +16,7 @@ import { loadActivePlan, type ActivePlan } from "./active-plan";
 // El userId lo pone siempre quien llama, sacado de los claims (KTD15).
 
 export type RefilterResult =
-  | { ok: true; changed: number; holes: number }
+  | { ok: true; changed: number; holes: number; changes: PlanChange[] }
   | { ok: false; error: "sin_plan" | "fallo" };
 
 const KIND_BY_LABEL: Record<string, SessionKind> = { "Cuerpo completo": "cuerpo_completo", Torso: "torso", Pierna: "pierna" };
@@ -84,6 +85,7 @@ export async function refilterForUser(supabase: SupabaseClient<Database>, userId
   const minutes = answers.data?.minutes_per_session ?? 45;
 
   const sessions = activeToBuilt(plan, minutes);
+  const beforeIds = sessions.flatMap((s) => s.slots.map((slot) => slot.exerciseId));
   const before = sessions.map((s) => s.slots.map((slot) => `${slot.exerciseId}:${slot.sets}`).join("|")).join("/");
   // Con las limitaciones prima el guardarraíl 6: el plan se guarda aunque algún grupo quede por debajo
   // del suelo por falta de ejercicios posibles (KTD20); los topes de techo y mínimo sí se ajustan.
@@ -93,7 +95,9 @@ export async function refilterForUser(supabase: SupabaseClient<Database>, userId
   let changed = 0;
   plan.sessions.forEach((s, i) => s.slots.forEach((slot, j) => (changed += sessions[i].slots[j].exerciseId !== slot.exerciseId ? 1 : 0)));
   const holes = sessions.flatMap((s) => s.slots).filter((slot) => slot.exerciseId === null).length;
-  if (before === after) return { ok: true, changed: 0, holes };
+  if (before === after) return { ok: true, changed: 0, holes, changes: [] };
+  // Lista antes → después para el aviso de Ajustes (dictamen del 20/11): solo vive en esta respuesta.
+  const changes = planChanges(beforeIds, sessions.flatMap((s) => s.slots.map((slot) => slot.exerciseId)), catalog, limitations);
 
   const saved = await createAdminClient().rpc("save_plan", {
     p_user: userId,
@@ -108,5 +112,36 @@ export async function refilterForUser(supabase: SupabaseClient<Database>, userId
     logError("refiltrar_plan", saved.error);
     return { ok: false, error: "fallo" };
   }
-  return { ok: true, changed, holes };
+  return { ok: true, changed, holes, changes };
+}
+
+// Reparación del plan guardado: si el catálogo cambia (p. ej. una zona pasa a joints, migración del
+// 21/11), un plan ya guardado puede tener un ejercicio que ahora carga una zona limitada. Se comprueba
+// al abrir la app y, si pasa, se refiltra en el acto (guardarraíl 6). Son dos lecturas pequeñas.
+export async function healPlanIfNeeded(supabase: SupabaseClient<Database>, userId: string, plan: ActivePlan): Promise<boolean> {
+  const ids = [...new Set(plan.sessions.flatMap((s) => s.slots.map((slot) => slot.exerciseId)).filter((id): id is string => id !== null))];
+  if (ids.length === 0) return false;
+  const [health, exercises] = await Promise.all([
+    supabase.from("health_profile").select("limitations").eq("user_id", userId).maybeSingle(),
+    supabase.from("exercises").select("id, joints").in("id", ids),
+  ]);
+  const limitations = (health.data?.limitations ?? []) as Joint[];
+  if (limitations.length === 0 || !exercises.data) return false;
+  const broken = exercises.data.some((e) => (e.joints as Joint[]).some((j) => limitations.includes(j)));
+  if (!broken) return false;
+  const result = await refilterForUser(supabase, userId);
+  return result.ok && result.changed > 0;
+}
+
+// Datos para explicar las exclusiones en la pantalla del plan (dictamen del 20/11): catálogo, equipo y
+// limitaciones del propio usuario. Se calculan al vuelo y solo se muestran en su pantalla.
+export async function loadExclusionInputs(supabase: SupabaseClient<Database>, userId: string) {
+  const [health, gym, catalog] = await Promise.all([
+    supabase.from("health_profile").select("limitations").eq("user_id", userId).maybeSingle(),
+    supabase.from("gym_profiles").select("equipment_type_ids").eq("user_id", userId).maybeSingle(),
+    exerciseCatalog(),
+  ]);
+  const limitations = (health.data?.limitations ?? []) as Joint[];
+  const equipmentIds = sanitizeEquipment(gym.data?.equipment_type_ids ?? [], [...new Set(catalog.map((e) => e.equipmentTypeId))]);
+  return { catalog, equipmentIds, limitations };
 }

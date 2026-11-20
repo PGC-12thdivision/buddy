@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { generateAndSavePlan, type GenerationStatus } from "@/lib/app/plan-generation";
 import { refilterForUser } from "@/lib/app/refilter-core";
+import type { PlanChange } from "@/lib/domain/exclusion-summary";
 import { equipmentCatalog, exerciseCatalog, sanitizeEquipment } from "@/lib/catalog";
 import { FREE_PLAN_CHANGES_PER_MONTH, nextMonthStartText, PREMIUM_REGENERATIONS_PER_MONTH } from "@/lib/domain/ai-limits";
 import { isPremium } from "@/lib/domain/premium";
@@ -34,7 +35,7 @@ async function claims() {
   return { supabase, userId };
 }
 
-export type RefilteredResult = { ok: true; changed: number; holes: number };
+export type RefilteredResult = { ok: true; changed: number; holes: number; changes: PlanChange[] };
 
 // --- Mi gimnasio -----------------------------------------------------------------------------
 
@@ -64,15 +65,15 @@ export async function guardarGimnasio(input: unknown): Promise<RefilteredResult 
   }
   // Sin consentimiento vigente el plan está pausado y no hay limitaciones que leer: refiltrar ahora
   // rellenaría huecos con ejercicios de la zona antigua. Se refiltra al volver a consentir.
-  if (!(await hasActiveConsent(supabase, userId))) return { ok: true, changed: 0, holes: 0 };
+  if (!(await hasActiveConsent(supabase, userId))) return { ok: true, changed: 0, holes: 0, changes: [] };
   return refilter(supabase, userId);
 }
 
 async function refilter(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<RefilteredResult | Fail<"fallo">> {
   const result = await refilterForUser(supabase, userId);
-  if (result.ok) return { ok: true, changed: result.changed, holes: result.holes };
+  if (result.ok) return { ok: true, changed: result.changed, holes: result.holes, changes: result.changes };
   // Sin plan activo no hay nada que refiltrar: el plan nuevo ya saldrá con los datos guardados.
-  if (result.error === "sin_plan") return { ok: true, changed: 0, holes: 0 };
+  if (result.error === "sin_plan") return { ok: true, changed: 0, holes: 0, changes: [] };
   return { ok: false, error: "fallo" };
 }
 
