@@ -77,6 +77,9 @@ vi.mock("@/lib/app/refilter-core", () => ({ refilterForUser: (...args: unknown[]
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ origin: "https://buddy.test" }) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: async () => server }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => admin }));
+const cancelOpenSubscriptions = vi.fn(async () => 1);
+vi.mock("@/lib/app/billing", () => ({ cancelOpenSubscriptions: (...args: unknown[]) => cancelOpenSubscriptions(...(args as [])) }));
+vi.mock("@/lib/stripe", () => ({ getStripe: () => ({ fake: "stripe" }) }));
 const scheduleWelcome = vi.fn();
 vi.mock("@/lib/email/transactional", () => ({ scheduleWelcome: (userId: string) => scheduleWelcome(userId) }));
 
@@ -269,6 +272,28 @@ describe("acciones con sesión", () => {
     setup({ userId: "u1" });
     expect(await actions.borrarCuenta()).toEqual({ ok: true });
     expect(admin.auth.admin.deleteUser).toHaveBeenCalledWith("u1");
+  });
+
+  it("borrar la cuenta cancela antes la suscripción de Stripe del cliente guardado", async () => {
+    setup({ userId: "u1", adminResponses: { "account_status.select": { data: { stripe_customer_id: "cus_1" } } } });
+    cancelOpenSubscriptions.mockClear();
+    expect(await actions.borrarCuenta()).toEqual({ ok: true });
+    expect(cancelOpenSubscriptions).toHaveBeenCalledWith({ fake: "stripe" }, "cus_1");
+    expect(admin.auth.admin.deleteUser).toHaveBeenCalledWith("u1");
+  });
+
+  it("si Stripe falla al cancelar, la cuenta no se borra", async () => {
+    setup({ userId: "u1", adminResponses: { "account_status.select": { data: { stripe_customer_id: "cus_1" } } } });
+    cancelOpenSubscriptions.mockRejectedValueOnce(new Error("stripe caído"));
+    expect(await actions.borrarCuenta()).toEqual({ ok: false, error: "fallo" });
+    expect(admin.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("sin cliente de Stripe no llama a Stripe", async () => {
+    setup({ userId: "u1" });
+    cancelOpenSubscriptions.mockClear();
+    expect(await actions.borrarCuenta()).toEqual({ ok: true });
+    expect(cancelOpenSubscriptions).not.toHaveBeenCalled();
   });
 });
 
