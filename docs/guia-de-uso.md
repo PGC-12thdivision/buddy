@@ -139,7 +139,9 @@ En **Ajustes** puedes cambiar:
 | **Retirar el consentimiento** | "Tu plan se pausa y borramos tus datos de salud. Podrás volver a darlo." |
 | **Cerrar sesión** | Sales de la app en ese dispositivo |
 
-Si al cambiar el equipo o las limitaciones un ejercicio no tiene sustituto, verás "Queda 1 hueco vacío". BUDDY nunca te pone un ejercicio que cargue una zona que marcaste.
+Al cambiar el equipo o las limitaciones, BUDDY te dice qué ejercicios han cambiado y por qué, por ejemplo "Remo con mancuerna → Remo sentado en polea (carga la muñeca)". Si un ejercicio no tiene sustituto, verás "Queda 1 hueco vacío", y en tu plan, qué zona lo deja sin ejercicio. BUDDY nunca te pone un ejercicio que cargue una zona que marcaste.
+
+En la pestaña Plan, si marcaste alguna zona, toca **"Ajustado a las zonas que marcaste · Ver qué hemos quitado"** para ver qué ejercicios hemos quitado y qué tienes en su lugar. Si un ejercicio trabaja un poco una zona que marcaste, lleva debajo una línea gris, por ejemplo "Trabaja un poco: zona lumbar", y en la sesión verás un consejo de técnica.
 
 ## 11. Borrar la cuenta
 
