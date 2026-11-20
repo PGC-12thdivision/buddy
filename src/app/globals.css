@@ -991,6 +991,10 @@
     animation-duration: 1.1s;
     animation-timing-function: steps(6);
   }
+  /* Fin de sesión: sobre el titular "Sesión completada" del marcador, no sobre el resumen. */
+  .ss-pop[data-end] {
+    top: 110px;
+  }
   @keyframes ss-pop {
     0% {
       opacity: 1;
@@ -1303,6 +1307,19 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+  /* "Quedaban 4+" en una línea: a 320 px saltaba a dos y descuadraba la fila. */
+  .ss-setcell-answer {
+    white-space: nowrap;
+  }
+  @media (max-width: 359px) {
+    .ss-setcell {
+      padding: 4px;
+    }
+    .ss-setcell-answer {
+      font-size: 11.5px;
+      letter-spacing: -0.01em;
+    }
   }
   .ss-setcell-top .wz-icon {
     width: 16px;

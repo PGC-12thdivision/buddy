@@ -86,7 +86,7 @@ function SetGrid({ rows, noun, onEdit }: { rows: SetRow[]; noun: "Serie" | "Prue
               </span>
               <b>{`${formatKg(row.weightKg)} kg`}</b>
               <span>{`${row.reps} reps`}</span>
-              {row.answer ? <span>{row.answer}</span> : null}
+              {row.answer ? <span className="ss-setcell-answer">{row.answer}</span> : null}
             </button>
           ) : (
             <div className="ss-setcell" data-state={row.state} aria-label={setRowLabel(row, noun)} role="group">
