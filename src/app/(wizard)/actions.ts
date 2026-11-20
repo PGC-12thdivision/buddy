@@ -6,7 +6,9 @@ import { refilterForUser } from "@/lib/app/refilter-core";
 import { activityCatalog, equipmentCatalog } from "@/lib/catalog";
 import { evaluateScreening, SCREENING_QUESTIONS } from "@/lib/domain/screening";
 import { JOINTS } from "@/lib/domain/types";
+import { cancelOpenSubscriptions } from "@/lib/app/billing";
 import { scheduleWelcome } from "@/lib/email/transactional";
+import { getStripe } from "@/lib/stripe";
 import { logError } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -39,7 +41,11 @@ const registroSchema = z.object({
 });
 
 type RegistroField = "email" | "password" | "adult" | "form";
-export type RegistroResult = { ok: true } | { ok: false; errors: Partial<Record<RegistroField, string>> };
+// `next` solo llega si Supabase abrió sesión al registrarse (proyecto con "Confirm email" desactivado):
+// entonces no hay correo que revisar y se sigue directamente.
+export type RegistroResult =
+  | { ok: true; next?: ReturnType<typeof nextScreenForAccount> }
+  | { ok: false; errors: Partial<Record<RegistroField, string>> };
 
 const REGISTRO_MESSAGES: Record<Exclude<RegistroField, "form">, string> = {
   email: "Escribe un email válido.",
@@ -129,6 +135,11 @@ export async function registrarse(input: unknown): Promise<RegistroResult> {
   ]);
   // La cuenta ya existe: un fallo aquí no se le muestra; el resumen detecta respuestas que falten.
   for (const write of writes) if (write.error) logError("registro_guardar", write.error);
+  // Sin confirmación de email, signUp ya devuelve sesión: misma bienvenida que tras confirmar.
+  if (data.session) {
+    scheduleWelcome(user.id);
+    return { ok: true, next: nextScreenForAccount(await accountProgress(supabase, user.id)) };
+  }
   return { ok: true };
 }
 
@@ -311,7 +322,24 @@ export async function borrarCuenta(): Promise<{ ok: true } | Fail> {
   const supabase = await createClient();
   const userId = await sessionUserId(supabase);
   if (!userId) return NO_SESSION;
-  const { error } = await createAdminClient().auth.admin.deleteUser(userId);
+  const admin = createAdminClient();
+  // Primero se cancela la suscripción de Stripe, si la hay: si falla, la cuenta no se borra para que
+  // nadie siga pagando sin poder entrar a cancelar.
+  const account = await admin.from("account_status").select("stripe_customer_id").eq("user_id", userId).maybeSingle();
+  if (account.error) {
+    logError("borrar_cuenta", account.error);
+    return { ok: false, error: "fallo" };
+  }
+  const customerId = (account.data as { stripe_customer_id: string | null } | null)?.stripe_customer_id;
+  if (customerId) {
+    try {
+      await cancelOpenSubscriptions(getStripe(), customerId);
+    } catch (caught) {
+      logError("borrar_cuenta_stripe", caught);
+      return { ok: false, error: "fallo" };
+    }
+  }
+  const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) {
     logError("borrar_cuenta", error);
     return { ok: false, error: "fallo" };

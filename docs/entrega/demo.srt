@@ -1,0 +1,250 @@
+1
+00:00:01,213 --> 00:00:07,731
+Quien entrena solo en el gimnasio no sabe qué
+rutina seguir ni cuándo subir peso.
+
+2
+00:00:07,781 --> 00:00:13,812
+Un entrenador es caro y las apps genéricas
+no conocen ni tu gimnasio ni tus
+
+3
+00:00:13,862 --> 00:00:14,866
+limitaciones.
+
+4
+00:00:14,916 --> 00:00:16,975
+BUDDY es para esa persona.
+
+5
+00:00:17,025 --> 00:00:22,164
+Y desde la primera pantalla lo dice
+claro: no es consejo médico.
+
+6
+00:00:22,214 --> 00:00:25,207
+Una pregunta por pantalla.
+
+7
+00:00:25,257 --> 00:00:27,665
+Mi foco: más músculo.
+
+8
+00:00:27,715 --> 00:00:32,569
+Mi experiencia: de seis meses a dos años.
+
+9
+00:00:32,619 --> 00:00:35,747
+Tres días a la semana, 45 minutos.
+
+10
+00:00:35,797 --> 00:00:42,757
+La plantilla la decide el código, no la
+IA: con tres días, cuerpo completo.
+
+11
+00:00:42,807 --> 00:00:47,935
+Además juego al pádel.
+
+12
+00:00:47,985 --> 00:00:56,768
+Y marco el equipo de mi gimnasio:
+tipos de máquina, no marcas.
+
+13
+00:00:56,818 --> 00:01:02,174
+Ahora creo la cuenta, con
+confirmación de mayoría de edad.
+
+14
+00:01:02,224 --> 00:01:05,716
+Todavía no me ha pedido nada de salud.
+
+15
+00:01:05,766 --> 00:01:11,523
+Confirmo el email desde el
+enlace que llega al correo.
+
+16
+00:01:11,573 --> 00:01:17,232
+Antes de cualquier dato de salud,
+consentimiento explícito: la casilla no viene
+
+17
+00:01:17,282 --> 00:01:22,218
+marcada y explica que Anthropic actúa
+como encargado del tratamiento.
+
+18
+00:01:22,268 --> 00:01:23,571
+Marco la rodilla.
+
+19
+00:01:23,621 --> 00:01:30,018
+Sin texto libre: son etiquetas de
+articulaciones, y la exclusión es determinista.
+
+20
+00:01:30,068 --> 00:01:32,748
+El cribado tiene ocho preguntas.
+
+21
+00:01:32,798 --> 00:01:36,075
+Cualquier sí de riesgo bloquea el plan.
+
+22
+00:01:36,125 --> 00:01:42,474
+La articular es la excepción: obliga a
+marcar la zona, como acabo de hacer.
+
+23
+00:01:42,524 --> 00:01:46,726
+Reviso el resumen y genero mi plan.
+
+24
+00:01:46,776 --> 00:01:48,170
+Aquí trabaja Claude, desde el servidor.
+
+25
+00:01:48,220 --> 00:01:51,095
+Solo recibe el catálogo filtrado por equipo,
+mi foco y mis días: nada de salud.
+
+26
+00:01:51,145 --> 00:01:54,441
+Mi plan: tres sesiones de cuerpo completo.
+
+27
+00:01:54,491 --> 00:02:01,053
+La IA solo puede elegir ejercicios del
+catálogo, y su respuesta se valida con zod y
+
+28
+00:02:01,103 --> 00:02:03,841
+con los topes de volumen en código.
+
+29
+00:02:03,891 --> 00:02:10,453
+Ningún ejercicio carga la rodilla: la
+limitación se aplicó después, en código, y la
+
+30
+00:02:10,503 --> 00:02:11,727
+IA nunca la vio.
+
+31
+00:02:11,777 --> 00:02:15,631
+Los que solo la rozan llevan
+un aviso de técnica.
+
+32
+00:02:15,681 --> 00:02:21,446
+La primera sesión es de calibración, y el
+aviso médico también está aquí.
+
+33
+00:02:21,496 --> 00:02:26,101
+Esto es Hoy: la sesión que toca.
+
+34
+00:02:26,151 --> 00:02:27,265
+Empiezo.
+
+35
+00:02:27,315 --> 00:02:31,623
+Cada ejercicio enseña la
+técnica con un dibujo.
+
+36
+00:02:31,673 --> 00:02:35,889
+La primera vez no hay peso
+fijado: se calibra.
+
+37
+00:02:35,939 --> 00:02:41,680
+Calibración: empiezo con una carga
+baja y hago la serie de prueba.
+
+38
+00:02:41,730 --> 00:02:48,874
+Los números grandes son el peso y las
+repeticiones, con más y menos para una mano.
+
+39
+00:02:48,924 --> 00:02:54,386
+¿Cuántas más podría haber hecho?
+
+40
+00:02:54,436 --> 00:03:04,548
+Si digo cuatro o más, la regla
+sube un salto de la máquina.
+
+41
+00:03:04,598 --> 00:03:10,921
+Con dos o tres, el peso queda fijado.
+
+42
+00:03:10,971 --> 00:03:19,016
+Lo decide una función pura
+con tests, no la IA.
+
+43
+00:03:19,066 --> 00:03:30,340
+Si algo duele, el botón Molestia
+está siempre a la vista.
+
+44
+00:03:30,390 --> 00:03:42,259
+Se para ese ejercicio hoy, sin
+subir carga, y queda marcado.
+
+45
+00:03:42,309 --> 00:03:45,438
+Nunca se empuja.
+
+46
+00:03:45,488 --> 00:03:51,728
+Por hoy, suficiente: termino la sesión.
+
+47
+00:03:51,778 --> 00:03:54,785
+Fin de sesión: lo que hice hoy.
+
+48
+00:03:54,835 --> 00:04:01,786
+En la próxima, BUDDY precarga el peso
+que toca con la doble progresión.
+
+49
+00:04:01,836 --> 00:04:09,879
+Progreso: el peso de trabajo de cada
+ejercicio, gratis para todos.
+
+50
+00:04:09,929 --> 00:04:16,227
+Premium son las funciones con IA, como
+el coach del check-in semanal.
+
+51
+00:04:16,277 --> 00:04:23,403
+Al registrarte tienes 14 días de prueba, y
+el pago va con Stripe en modo test.
+
+52
+00:04:23,453 --> 00:04:29,647
+En Ajustes cambio mi gimnasio o mis
+limitaciones y el plan se refiltra gratis, sin
+
+53
+00:04:29,697 --> 00:04:29,876
+IA.
+
+54
+00:04:29,926 --> 00:04:33,912
+Y puedo retirar el
+consentimiento o borrar mi cuenta.
+
+55
+00:04:33,962 --> 00:04:38,821
+Eso es BUDDY: la IA elige
+ejercicios; las reglas, los pesos.

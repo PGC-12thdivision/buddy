@@ -6,13 +6,19 @@ Web app (móvil primero) para quien entrena por su cuenta en el gimnasio: un pla
 
 Proyecto final del bootcamp Vibe Code Builder (No Code Hackers).
 
+- **Producción:** https://buddy-xi-eight.vercel.app
+
 ## Documentación
-- [Contexto, criterios y decisiones](docs/01-contexto-y-criterios.md)
-- [PRD v1](docs/02-prd-v1.md)
-- [Stack, entornos y logística](docs/03-stack-y-logistica.md)
+Índice completo: **[docs/README.md](docs/README.md)**.
+
+- [Documento de entrega](docs/entrega/entrega.md): accesos, alcance, costes y mantenimiento.
+- [Guía de uso](docs/guia-de-uso.md): para quien usa la app.
+- [Documentación técnica](docs/tecnica/README.md) y [base de datos](docs/tecnica/base-de-datos.md).
+- [3 mejoras con Claude Code](docs/entrega/3-mejoras-claude-code.md).
+- [PRD v1.1](docs/02-prd-v1.md), [plan de construcción](plan.md) y [DESIGN.md](DESIGN.md).
 
 ## Arranque local
-Requisitos: Node 24.
+Requisitos: Node 24. Paso a paso, variables y tests en la [documentación técnica](docs/tecnica/README.md).
 
 ```powershell
 npm install

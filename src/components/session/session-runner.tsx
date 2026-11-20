@@ -151,16 +151,20 @@ export function SessionRunner({ data }: { data: SessionData }) {
   const [picked, setPicked] = useState<Joint[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Prueba de calibración guardándose: la pantalla sigue en calibración hasta que responde el
+  // servidor, aunque la prueba nueva ya cierre la calibración en el cliente (E2E p07, 20/11).
+  const [calibSaving, setCalibSaving] = useState<string | null>(null);
   const [finishing, startFinish] = useTransition();
   const finishedRef = useRef(false);
 
   const current = queue.length > 0 ? slots[queue[0]] : null;
   const ownSets = useMemo(() => (current ? saved.filter((s) => s.exerciseId === current.exerciseId) : []), [current, saved]);
   const doneCount = ownSets.filter((s) => s.status === "hecha").length;
-  const calibrating = current !== null && current.calibration !== null && !isCalibrationDone(current, saved);
   const completed = slots.length - queue.length;
 
   const currentKey = current ? `${current.exerciseId}:${queue[0]}` : "";
+  const calibrating =
+    current !== null && current.calibration !== null && (calibSaving === currentKey || !isCalibrationDone(current, saved));
   const values = current ? (edit?.key === currentKey ? edit : preload(current, saved)) : { weight: 0, reps: 0 };
   const weight = values.weight;
   const reps = values.reps;
@@ -286,12 +290,14 @@ export function SessionRunner({ data }: { data: SessionData }) {
       status: "hecha",
     };
     setBusy(true);
+    setCalibSaving(currentKey);
     setAnswer(null);
     setSaved((all) => [...all, set]);
     setLastSetAt(clock());
     setNow(clock());
     const res = await saveOne(set);
     setBusy(false);
+    setCalibSaving(null);
     if (!res) {
       setAnswer(answering);
       return;
@@ -673,6 +679,8 @@ export function SessionRunner({ data }: { data: SessionData }) {
   );
 
   // El aviso va dentro del pie, encima de los botones: nunca tapa "Serie hecha" ni "Empezar" (D8).
+  // Mientras se ve, ocupa el hueco de la botonera secundaria en vez de apilarse sobre ella: así el
+  // pie no crece y no tapa los +/− en 360×640 con nombres largos (E2E p07, 20/11).
   // La región de estado existe siempre para que el lector de pantalla anuncie cada aviso.
   const toastEl = (
     <div role="status" className="contents">
@@ -882,7 +890,7 @@ export function SessionRunner({ data }: { data: SessionData }) {
         </main>
         <div className="wz-foot wz-pad">
           {toastEl}
-          {dock}
+          {toast ? null : dock}
           <button type="button" className="wz-cta" onClick={() => setAnswer({ key: currentKey, reps: target })} disabled={busy}>
             Serie hecha
           </button>
@@ -968,7 +976,7 @@ export function SessionRunner({ data }: { data: SessionData }) {
       </main>
       <div className="wz-foot wz-pad">
         {toastEl}
-        {dock}
+        {toast ? null : dock}
         <button type="button" className="wz-cta" onClick={setDone} disabled={busy}>
           Serie hecha
         </button>
