@@ -41,6 +41,24 @@ export async function cancelOpenSubscriptions(stripe: Stripe, customerId: string
   return open.length;
 }
 
+// Fecha en la que acaba una suscripción ya cancelada desde el portal. El portal cancela "al final del
+// periodo": la suscripción sigue activa (y premium) hasta esa fecha, y Ajustes lo dice (20/11). Si
+// Stripe no responde, se devuelve null y la pantalla se muestra sin la fecha.
+export async function scheduledCancelDate(stripe: Stripe, customerId: string): Promise<Date | null> {
+  try {
+    const list = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
+    for (const sub of list.data) {
+      if (!OPEN_STATUSES.has(sub.status)) continue;
+      if (sub.cancel_at) return new Date(sub.cancel_at * 1000);
+      const periodEnd = sub.items.data[0]?.current_period_end;
+      if (sub.cancel_at_period_end && periodEnd) return new Date(periodEnd * 1000);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // Los formularios de pago solo se aceptan desde la propia app (además de las cookies SameSite).
 export function isSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
