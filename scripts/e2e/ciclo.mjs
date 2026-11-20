@@ -337,6 +337,11 @@ try {
           s.editar++;
           continue;
         }
+        // Con la última serie guardándose, el botón queda desactivado hasta que se abre /fin: se espera.
+        if (await page.getByRole("button", { name: "Serie hecha" }).first().isDisabled()) {
+          await page.waitForTimeout(500);
+          continue;
+        }
         await click("button", "Serie hecha");
         s.sets++;
         continue;
