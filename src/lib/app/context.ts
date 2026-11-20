@@ -44,5 +44,10 @@ export const FOCUS_TEXT: Record<string, string> = {
 };
 
 // Título con datos (diseño D17): "3 DÍAS, CUERPO COMPLETO".
-export const planTitle = (days: number, template: string) =>
-  `${days} días, ${template === "cuerpo_completo" ? "cuerpo completo" : "torso y pierna"}`;
+// Sale de las etiquetas reales de los días: un día rehecho por D68 se llama "Cuerpo completo" y
+// el título lo refleja ("4 días, cuerpo completo y pierna").
+export function planTitle(days: number, labels: string[]): string {
+  const kinds = [...new Set(labels.map((label) => label.toLowerCase()))];
+  const text = kinds.length > 1 ? `${kinds.slice(0, -1).join(", ")} y ${kinds.at(-1)}` : (kinds[0] ?? "");
+  return text ? `${days} días, ${text}` : `${days} días`;
+}

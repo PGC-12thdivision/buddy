@@ -60,7 +60,7 @@ export default async function PlanPage() {
   return (
     <AppScreen
       kicker={FOCUS_TEXT[plan.focus]}
-      title={planTitle(plan.daysPerWeek, plan.template)}
+      title={planTitle(plan.daysPerWeek, plan.sessions.map((s) => s.label))}
       heroes={[
         { label: "Días", value: String(plan.daysPerWeek) },
         ...(minutes ? [{ label: "Minutos", value: String(minutes) }] : []),
